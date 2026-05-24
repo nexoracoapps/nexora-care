@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   }
 
   const token = new AccessToken(accountSid, apiKey, apiSecret, {
-    identity: `user_${payload.userId || 'admin'}`,
+    identity: `user_${payload.id || 'admin'}`,
     ttl: 3600,
   });
 

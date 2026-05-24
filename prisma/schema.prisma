@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Branch {
+  id               String            @id @default(cuid())
+  name             String
+  nameAr           String?
+  address          String?
+  phone            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  users            User[]
+  customers        Customer[]
+  serviceProviders ServiceProvider[]
+  appointments     Appointment[]
+}
+
+model User {
+  id           String             @id @default(cuid())
+  username     String             @unique
+  password     String
+  email        String?            @unique
+  phone        String?
+  role         String             @default("STAFF")
+  photoUrl     String?
+  branchId     String?
+  branch       Branch?            @relation(fields: [branchId], references: [id])
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  auditLogs    AuditLog[]
+  fcmTokens    FcmToken[]
+  absences     StaffAbsence[]
+  ratings      SpecialistRating[]
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  branchId     String?
+  branch       Branch?       @relation(fields: [branchId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+  callLogs     CallLog[]
+}
+
+model Service {
+  id           String        @id @default(cuid())
+  name         String
+  nameAr       String?
+  price        Float         @default(0)
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
+model ServiceProvider {
+  id           String             @id @default(cuid())
+  name         String
+  type         String             @default("THERAPIST")
+  bio          String?
+  photoUrl     String?
+  branchId     String?
+  branch       Branch?            @relation(fields: [branchId], references: [id])
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  appointments Appointment[]
+  absences     StaffAbsence[]
+  ratings      SpecialistRating[]
+}
+
+model Appointment {
+  id                String             @id @default(cuid())
+  dateTime          DateTime
+  status            String             @default("SCHEDULED")
+  serviceStatus     String             @default("PENDING")
+  paymentStatus     String             @default("UNPAID")
+  paymentMethod     String?
+  notes             String?
+  deliveryNotes     String?
+  nextVisit         String?
+  amount            Float?
+  customerId        String?
+  customer          Customer?          @relation(fields: [customerId], references: [id])
+  serviceId         String?
+  service           Service?           @relation(fields: [serviceId], references: [id])
+  serviceProviderId String?
+  serviceProvider   ServiceProvider?   @relation(fields: [serviceProviderId], references: [id])
+  branchId          String?
+  branch            Branch?            @relation(fields: [branchId], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  ratings           SpecialistRating[]
+}
+
+model StaffAbsence {
+  id         String           @id @default(cuid())
+  providerId String?
+  provider   ServiceProvider? @relation(fields: [providerId], references: [id])
+  userId     String?
+  user       User?            @relation(fields: [userId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
+  createdAt  DateTime         @default(now())
+}
+
+model CallLog {
+  id              String    @id @default(cuid())
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  customerName    String?
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  durationSeconds Int?
+  status          String    @default("COMPLETED")
+  notes           String?
+}
+
+model FcmToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String?
+  action     String
+  changes    String?
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model RoleDefinition {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  label       String
+  labelAr     String   @default("")
+  color       String   @default("#6366f1")
+  icon        String   @default("👤")
+  isSystem    Boolean  @default(false)
+  isAdmin     Boolean  @default(false)
+  permissions String   @default("{}")
+  sortOrder   Int      @default(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SpecialistRating {
+  id            String           @id @default(cuid())
+  rating        Int
+  feedback      String?
+  reviewerName  String?
+  appointmentId String?
+  appointment   Appointment?     @relation(fields: [appointmentId], references: [id])
+  providerId    String?
+  provider      ServiceProvider? @relation(fields: [providerId], references: [id])
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id])
+  createdAt     DateTime         @default(now())
+}

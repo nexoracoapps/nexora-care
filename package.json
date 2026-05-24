@@ -13,7 +13,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:export": "tsx scripts/export-db.ts",
-    "db:backup": "Copy-Item prisma/dev.db backups/dev-$(Get-Date -Format 'yyyy-MM-dd-HHmm').db"
+    "db:backup": "Copy-Item prisma/dev.db backups/dev-$(Get-Date -Format 'yyyy-MM-dd-HHmm').db",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

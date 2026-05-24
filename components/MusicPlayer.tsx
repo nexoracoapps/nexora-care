@@ -158,7 +158,7 @@ export default function MusicPlayer() {
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     startAudio(); // ensure audio starts if button is first interaction
-    if (startedRef.current) setMuted(v => !v);
+    if (startedRef.current) setMuted(!muted);
   };
   const active = playing && !muted;
 

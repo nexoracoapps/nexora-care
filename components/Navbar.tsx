@@ -22,7 +22,7 @@ const navItems: { href: string; labelKey: string; icon: string; roles: string[];
   { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,  permKey: 'manageServices' },
   { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,   permKey: 'manageServices' },
   { href: '/users',        labelKey: 'users',            icon: '👤', roles: PRIV,  permKey: 'viewUsers' },
-  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: PRIV,  permKey: 'createEditUsers' },
+  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: PRIV,  permKey: 'managePermissions' },
   { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,  permKey: 'manageBranches' },
   { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,  permKey: 'recordPayments' },
   { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,  permKey: 'viewReports' },

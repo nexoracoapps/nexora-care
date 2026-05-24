@@ -3,46 +3,44 @@ import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
 
-const include = { branch: { select: { id: true, name: true, nameAr: true } } };
-
-export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
-  if (!payload) return apiError('Unauthorized', 401);
-
-  const { searchParams } = new URL(req.url);
-  const branchId = searchParams.get('branchId');
-
-  const where: Record<string, unknown> = {};
-  if (branchId) where.branchId = branchId;
-  else if (payload.role === 'STAFF' && payload.branchId) where.branchId = payload.branchId;
-
-  const providers = await prisma.serviceProvider.findMany({
-    where,
-    include,
-    orderBy: { name: 'asc' },
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const ratings = await prisma.specialistRating.findMany({
+    where: { providerId: params.id },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, rating: true, feedback: true, reviewerName: true, createdAt: true },
   });
 
-  return apiOk(providers);
+  return apiOk(ratings.map(r => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.feedback,
+    reviewerName: r.reviewerName ?? 'Anonymous',
+    createdAt: r.createdAt,
+  })));
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const payload = getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
-  if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
-  const { name, type, bio, photoUrl, branchId } = await req.json();
-  if (!name) return apiError('Name is required');
+  const { rating, comment } = await req.json();
+  if (!rating || rating < 1 || rating > 5) return apiError('Rating must be between 1 and 5');
 
-  const provider = await prisma.serviceProvider.create({
+  const saved = await prisma.specialistRating.create({
     data: {
-      name,
-      type: type || 'THERAPIST',
-      bio: bio || null,
-      photoUrl: photoUrl || null,
-      branchId: branchId || payload.branchId || null,
+      rating: Number(rating),
+      feedback: comment || null,
+      reviewerName: payload.username,
+      providerId: params.id,
+      userId: payload.id,
     },
-    include,
   });
 
-  return apiOk(provider, 201);
+  return apiOk(saved, 201);
 }

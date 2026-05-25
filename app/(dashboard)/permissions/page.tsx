@@ -20,61 +20,61 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Customers', groupAr: 'العملاء', icon: '👥', color: '#C4788C',
     items: [
-      { key: 'manageCustomers',  icon: '👥', label: 'View Customers Page',             labelAr: 'عرض صفحة العملاء' },
-      { key: 'createCustomers',  icon: '➕', label: 'Add New Customers',               labelAr: 'إضافة عملاء جدد',          parentKey: 'manageCustomers' },
-      { key: 'editCustomers',    icon: '✏️', label: 'Edit Customer Details',           labelAr: 'تعديل بيانات العملاء',     parentKey: 'manageCustomers' },
-      { key: 'deleteCustomers',  icon: '🗑', label: 'Delete Customers',                labelAr: 'حذف العملاء',              parentKey: 'manageCustomers' },
-      { key: 'makePhoneCalls',   icon: '📞', label: 'Make Phone Calls',                labelAr: 'إجراء مكالمات هاتفية',     parentKey: 'manageCustomers' },
-      { key: 'viewCallLogs',     icon: '📋', label: 'View Call Logs',                  labelAr: 'عرض سجلات المكالمات',      parentKey: 'manageCustomers' },
-      { key: 'clearCallLogs',    icon: '🧹', label: 'Clear All Call Logs',             labelAr: 'مسح سجلات المكالمات',      parentKey: 'manageCustomers' },
-      { key: 'sendWhatsApp',     icon: '💬', label: 'Send WhatsApp Messages',          labelAr: 'إرسال رسائل واتساب',       parentKey: 'manageCustomers' },
-      { key: 'sendSMS',          icon: '📱', label: 'Send SMS Messages',               labelAr: 'إرسال رسائل نصية',         parentKey: 'manageCustomers' },
-      { key: 'sendEmail',        icon: '✉️', label: 'Send Email Messages',             labelAr: 'إرسال رسائل بريد إلكتروني', parentKey: 'manageCustomers' },
-      { key: 'sendBroadcasts',   icon: '📣', label: 'Send Broadcast to All Customers', labelAr: 'إرسال رسائل جماعية',       parentKey: 'manageCustomers' },
+      { key: 'manageCustomers',  icon: '👥', label: 'View Customers Page',              labelAr: 'عرض صفحة العملاء' },
+      { key: 'createCustomers',  icon: '➕', label: 'Add New Customers',                labelAr: 'إضافة عملاء جدد',              parentKey: 'manageCustomers' },
+      { key: 'editCustomers',    icon: '✏️', label: 'Edit Customer Details',            labelAr: 'تعديل بيانات العملاء',         parentKey: 'manageCustomers' },
+      { key: 'deleteCustomers',  icon: '🗑', label: 'Delete Customers',                 labelAr: 'حذف العملاء',                  parentKey: 'manageCustomers' },
+      { key: 'makePhoneCalls',   icon: '📞', label: 'Make Phone Calls',                 labelAr: 'إجراء مكالمات هاتفية',         parentKey: 'manageCustomers' },
+      { key: 'viewCallLogs',     icon: '📋', label: 'View Call Logs',                   labelAr: 'عرض سجلات المكالمات',          parentKey: 'manageCustomers' },
+      { key: 'clearCallLogs',    icon: '🧹', label: 'Clear All Call Logs',              labelAr: 'مسح سجلات المكالمات',          parentKey: 'manageCustomers' },
+      { key: 'sendWhatsApp',     icon: '💬', label: 'Send WhatsApp Messages',           labelAr: 'إرسال رسائل واتساب',           parentKey: 'manageCustomers' },
+      { key: 'sendSMS',          icon: '📱', label: 'Send SMS Messages',                labelAr: 'إرسال رسائل نصية',             parentKey: 'manageCustomers' },
+      { key: 'sendEmail',        icon: '✉️', label: 'Send Email Messages',              labelAr: 'إرسال رسائل بريد إلكتروني',   parentKey: 'manageCustomers' },
+      { key: 'sendBroadcasts',   icon: '📣', label: 'Send Broadcast to All Customers',  labelAr: 'إرسال رسائل جماعية',           parentKey: 'manageCustomers' },
     ],
   },
   {
     group: 'Appointments', groupAr: 'المواعيد', icon: '📅', color: '#0891b2',
     items: [
-      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments Page',                      labelAr: 'عرض صفحة المواعيد' },
-      { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                     labelAr: 'إنشاء مواعيد جديدة',          parentKey: 'manageAppointments' },
-      { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',              labelAr: 'تعديل وإعادة جدولة المواعيد', parentKey: 'manageAppointments' },
-      { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)', labelAr: 'تحديث الحالة',                 parentKey: 'manageAppointments' },
-      { key: 'deleteAppointments',      icon: '🗑', label: 'Delete Appointments',                         labelAr: 'حذف المواعيد',                 parentKey: 'manageAppointments' },
-      { key: 'recordPayments',          icon: '💳', label: 'Record & Revert Payments',                    labelAr: 'تسجيل وإلغاء المدفوعات',       parentKey: 'manageAppointments' },
+      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments Page',                       labelAr: 'عرض صفحة المواعيد' },
+      { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                      labelAr: 'إنشاء مواعيد جديدة',           parentKey: 'manageAppointments' },
+      { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',               labelAr: 'تعديل وإعادة جدولة المواعيد',  parentKey: 'manageAppointments' },
+      { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)',  labelAr: 'تحديث الحالة',                  parentKey: 'manageAppointments' },
+      { key: 'deleteAppointments',      icon: '🗑', label: 'Delete Appointments',                          labelAr: 'حذف المواعيد',                  parentKey: 'manageAppointments' },
+      { key: 'recordPayments',          icon: '💳', label: 'Record & Revert Payments',                     labelAr: 'تسجيل وإلغاء المدفوعات',        parentKey: 'manageAppointments' },
     ],
   },
   {
     group: 'Reports', groupAr: 'التقارير', icon: '📊', color: '#10b981',
     items: [
-      { key: 'viewReports',   icon: '📊', label: 'View Reports Page',     labelAr: 'عرض صفحة التقارير' },
-      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports', labelAr: 'تصدير وطباعة التقارير', parentKey: 'viewReports' },
+      { key: 'viewReports',   icon: '📊', label: 'View Reports Page',      labelAr: 'عرض صفحة التقارير' },
+      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',  labelAr: 'تصدير وطباعة التقارير', parentKey: 'viewReports' },
     ],
   },
   {
     group: 'Users', groupAr: 'المستخدمون', icon: '👤', color: '#f59e0b',
     items: [
-      { key: 'viewUsers',   icon: '👤', label: 'View Users Page',       labelAr: 'عرض صفحة المستخدمين' },
-      { key: 'createUsers', icon: '➕', label: 'Create New Users',      labelAr: 'إنشاء مستخدمين جدد',       parentKey: 'viewUsers' },
-      { key: 'editUsers',   icon: '✏️', label: 'Edit Users & Roles',    labelAr: 'تعديل المستخدمين والأدوار', parentKey: 'viewUsers' },
-      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',          labelAr: 'حذف المستخدمين',            parentKey: 'viewUsers' },
+      { key: 'viewUsers',   icon: '👤', label: 'View Users Page',        labelAr: 'عرض صفحة المستخدمين' },
+      { key: 'createUsers', icon: '➕', label: 'Create New Users',       labelAr: 'إنشاء مستخدمين جدد',        parentKey: 'viewUsers' },
+      { key: 'editUsers',   icon: '✏️', label: 'Edit Users & Roles',     labelAr: 'تعديل المستخدمين والأدوار',  parentKey: 'viewUsers' },
+      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',           labelAr: 'حذف المستخدمين',             parentKey: 'viewUsers' },
     ],
   },
   {
     group: 'Administration', groupAr: 'الإدارة', icon: '⚙️', color: '#8b5cf6',
     items: [
-      { key: 'dashboard',          icon: '🏠', label: 'Dashboard & Analytics',       labelAr: 'لوحة التحكم والتحليلات' },
-      { key: 'manageServices',     icon: '🛠', label: 'Manage Services & Providers', labelAr: 'إدارة الخدمات ومقدمي الخدمة' },
-      { key: 'manageBranches',     icon: '🏢', label: 'Manage Branches',             labelAr: 'إدارة الفروع' },
-      { key: 'manageStaffAbsence', icon: '📆', label: 'Manage Staff Absence',        labelAr: 'إدارة غيابات الموظفين' },
+      { key: 'dashboard',          icon: '🏠', label: 'Dashboard & Analytics',        labelAr: 'لوحة التحكم والتحليلات' },
+      { key: 'manageServices',     icon: '🛠', label: 'Manage Services & Providers',  labelAr: 'إدارة الخدمات ومقدمي الخدمة' },
+      { key: 'manageBranches',     icon: '🏢', label: 'Manage Branches',              labelAr: 'إدارة الفروع' },
+      { key: 'manageStaffAbsence', icon: '📆', label: 'Manage Staff Absence',         labelAr: 'إدارة غيابات الموظفين' },
     ],
   },
   {
     group: 'System', groupAr: 'النظام', icon: '🔧', color: '#ef4444',
     items: [
-      { key: 'systemBackup',      icon: '💾', label: 'System Backup',              labelAr: 'النسخ الاحتياطي للنظام' },
-      { key: 'managePermissions', icon: '🔐', label: 'Manage Roles & Permissions', labelAr: 'إدارة الأدوار والصلاحيات' },
-      { key: 'branchSwitching',   icon: '🔀', label: 'Branch Switching',           labelAr: 'التبديل بين الفروع' },
+      { key: 'systemBackup',      icon: '💾', label: 'System Backup',               labelAr: 'النسخ الاحتياطي للنظام' },
+      { key: 'managePermissions', icon: '🔐', label: 'Manage Roles & Permissions',  labelAr: 'إدارة الأدوار والصلاحيات' },
+      { key: 'branchSwitching',   icon: '🔀', label: 'Branch Switching',            labelAr: 'التبديل بين الفروع' },
     ],
   },
 ];
@@ -87,7 +87,7 @@ function Toggle({ checked, onChange, color, disabled, locked }: {
 }) {
   if (locked) {
     return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
         <div style={{ display:'inline-flex', alignItems:'center', gap:4, background:`${color}18`, border:`1px solid ${color}35`, borderRadius:20, padding:'3px 9px' }}>
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -98,9 +98,9 @@ function Toggle({ checked, onChange, color, disabled, locked }: {
     );
   }
   return (
-    <label style={{ display:'flex', alignItems:'center', justifyContent:'center', cursor: disabled ? 'default' : 'pointer' }}>
+    <label style={{ display:'flex', alignItems:'center', cursor: disabled ? 'default' : 'pointer', flexShrink:0 }}>
       <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} style={{ display:'none' }} />
-      <div style={{ width:40, height:23, borderRadius:12, position:'relative', flexShrink:0, background: checked ? color : 'var(--bg-elevated)', border:`1.5px solid ${checked ? color : 'var(--border)'}`, transition:'background 0.2s, border-color 0.2s', opacity: disabled ? 0.3 : 1 }}>
+      <div style={{ width:40, height:23, borderRadius:12, position:'relative', background: checked ? color : 'var(--bg-elevated)', border:`1.5px solid ${checked ? color : 'var(--border)'}`, transition:'background 0.2s, border-color 0.2s', opacity: disabled ? 0.3 : 1 }}>
         <div style={{ width:15, height:15, borderRadius:'50%', background: checked ? '#fff' : 'var(--text-sub)', position:'absolute', top:3, left: checked ? 21 : 3, transition:'left 0.18s cubic-bezier(.4,0,.2,1)', boxShadow: checked ? '0 1px 4px rgba(0,0,0,0.25)' : 'none' }} />
       </div>
     </label>
@@ -115,21 +115,22 @@ export default function PermissionsPage() {
   const isAdmin  = user?.role === 'ADMIN';
   const canEdit  = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
-  const [roles,    setRoles]    = useState<RoleDefinition[]>([]);
-  const [draft,    setDraft]    = useState<Draft>({});
-  const [fetching, setFetching] = useState(true);
-  const [dirty,    setDirty]    = useState(false);
-  const [saving,   setSaving]   = useState(false);
+  const [roles,        setRoles]        = useState<RoleDefinition[]>([]);
+  const [draft,        setDraft]        = useState<Draft>({});
+  const [fetching,     setFetching]     = useState(true);
+  const [dirty,        setDirty]        = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>('');
 
-  const [modal,        setModal]        = useState<'editRole' | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoleDefinition | null>(null);
-  const [deleting,     setDeleting]     = useState(false);
-  const [editTarget,   setEditTarget]   = useState<RoleDefinition | null>(null);
-  const [editLabel,    setEditLabel]    = useState('');
-  const [editLabelAr,  setEditLabelAr]  = useState('');
-  const [editColor,    setEditColor]    = useState(ROLE_COLORS[0]);
-  const [editIcon,     setEditIcon]     = useState('👤');
-  const [editSaving,   setEditSaving]   = useState(false);
+  const [modal,       setModal]       = useState<'editRole' | null>(null);
+  const [deleteTarget,setDeleteTarget]= useState<RoleDefinition | null>(null);
+  const [deleting,    setDeleting]    = useState(false);
+  const [editTarget,  setEditTarget]  = useState<RoleDefinition | null>(null);
+  const [editLabel,   setEditLabel]   = useState('');
+  const [editLabelAr, setEditLabelAr] = useState('');
+  const [editColor,   setEditColor]   = useState(ROLE_COLORS[0]);
+  const [editIcon,    setEditIcon]    = useState('👤');
+  const [editSaving,  setEditSaving]  = useState(false);
 
   const openEdit = (role: RoleDefinition) => {
     setEditTarget(role); setEditLabel(role.label); setEditLabelAr(role.labelAr);
@@ -153,6 +154,14 @@ export default function PermissionsPage() {
   };
 
   useEffect(() => { loadRoles(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-select first non-admin role, or first role
+  useEffect(() => {
+    if (roles.length > 0 && !selectedRole) {
+      const first = roles.find(r => !r.isAdmin) ?? roles[0];
+      setSelectedRole(first.name);
+    }
+  }, [roles]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = (roleName: string, key: PermissionKey) => {
     const role = roles.find(r => r.name === roleName);
@@ -212,22 +221,28 @@ export default function PermissionsPage() {
   const enabledCount = (roleName: string) => Object.values(draft[roleName] ?? {}).filter(Boolean).length;
   const totalCount   = PERMISSION_GROUPS.flatMap(g => g.items).length;
 
+  const activeRole = roles.find(r => r.name === selectedRole);
+
   return (
     <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="managePermissions">
       <style dangerouslySetInnerHTML={{ __html: `
-        .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
-        .pm-modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); }
+        .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+        .pm-modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); max-height:calc(100vh - 40px); overflow-y:auto; margin:auto; }
         .pm-input { background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:9px 13px; color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.15s; }
         .pm-input:focus { border-color:var(--rose); }
         .pm-lbl { font-size:0.72rem; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; display:block; }
-        .pm-role-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--shadow); transition:box-shadow 0.2s; }
-        .pm-role-card:hover { box-shadow:0 8px 32px rgba(0,0,0,0.15); }
-        .perm-tbl { width:100%; border-collapse:collapse; }
-        .perm-tbl th, .perm-tbl td { vertical-align:middle; }
-        .perm-ghdr td { padding:12px 20px; background:var(--bg-elevated); }
-        .perm-prow:hover td, .perm-srow:hover td { background:rgba(255,255,255,0.015) !important; }
+        .pm-role-tab { display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:12px; cursor:pointer; border:1.5px solid var(--border); background:var(--bg-elevated); font-family:var(--font); font-size:0.84rem; font-weight:700; white-space:nowrap; transition:all 0.15s; flex-shrink:0; }
+        .pm-role-tab:hover { border-color:rgba(196,120,140,0.4); }
+        .pm-perm-row { display:flex; align-items:center; justify-content:space-between; padding:13px 20px; border-bottom:1px solid rgba(255,255,255,0.04); gap:12px; transition:background 0.12s; }
+        .pm-perm-row:hover { background:rgba(255,255,255,0.02); }
+        .pm-perm-row:last-child { border-bottom:none; }
+        .pm-sub-row { display:flex; align-items:center; justify-content:space-between; padding:10px 20px 10px 48px; border-bottom:1px solid rgba(255,255,255,0.03); gap:12px; transition:background 0.12s; }
+        .pm-sub-row:hover { background:rgba(255,255,255,0.015); }
+        .pm-sub-row:last-child { border-bottom:none; }
+        .pm-group-hdr { display:flex; align-items:center; gap:8px; padding:10px 20px; background:var(--bg-elevated); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
         @keyframes floatUp { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-        @media(max-width:640px){ .pm-modal{padding:20px;} }
+        @keyframes panelIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @media(max-width:640px){ .pm-modal{padding:18px;} .pm-perm-row,.pm-sub-row{padding-inline:14px;} .pm-sub-row{padding-inline-start:36px;} }
       `}} />
 
       <div style={{ paddingBottom: dirty ? 88 : 0, transition:'padding-bottom 0.3s' }}>
@@ -238,195 +253,151 @@ export default function PermissionsPage() {
             <h1 className="page-title">{isRTL ? 'الأدوار والصلاحيات' : 'Roles & Permissions'}</h1>
             <p className="page-sub">
               {isAdmin
-                ? (isRTL ? `${roles.length} أدوار — إدارة وتخصيص الصلاحيات لكل دور` : `${roles.length} roles — manage and customize access for each role`)
-                : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف' : 'You can toggle Staff role permissions below')}
+                ? (isRTL ? 'اختر دوراً لعرض صلاحياته وتعديلها' : 'Select a role to view and edit its permissions')
+                : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف' : 'You can toggle Staff role permissions')}
             </p>
           </div>
         </div>
 
-        {/* ── Role cards ── */}
+        {/* ── Role tab selector ── */}
         {fetching ? (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:16, marginBottom:28 }}>
-            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:200, borderRadius:20 }} />)}
+          <div style={{ display:'flex', gap:10, marginBottom:20 }}>
+            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:44, width:120, borderRadius:12 }} />)}
           </div>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:16, marginBottom:28 }}>
+          <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:6, marginBottom:20, scrollbarWidth:'none' }}>
             {roles.map(role => {
-              const cnt  = enabledCount(role.name);
-              const pct  = Math.round(cnt / totalCount * 100);
-              const isMe = user?.role === role.name;
+              const isSelected = selectedRole === role.name;
               return (
-                <div key={role.id} className="pm-role-card" style={{ border: isMe ? `1.5px solid ${role.color}60` : undefined }}>
-                  {/* Gradient banner */}
-                  <div style={{ height:90, background:`linear-gradient(135deg, ${role.color}dd, ${role.color}66)`, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-                    <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(255,255,255,0.20)', backdropFilter:'blur(8px)', border:'2px solid rgba(255,255,255,0.35)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.6rem' }}>
-                      {role.icon}
-                    </div>
-                    {isMe && (
-                      <div style={{ position:'absolute', top:10, insetInlineStart:10, background:'rgba(255,255,255,0.25)', backdropFilter:'blur(4px)', color:'#fff', borderRadius:20, padding:'2px 10px', fontSize:'0.65rem', fontWeight:800 }}>
-                        {isRTL ? '✦ أنت' : '✦ You'}
-                      </div>
-                    )}
-                    {role.isSystem && (
-                      <div style={{ position:'absolute', top:10, insetInlineEnd:10, background:'rgba(0,0,0,0.25)', backdropFilter:'blur(4px)', color:'rgba(255,255,255,0.85)', borderRadius:20, padding:'2px 9px', fontSize:'0.6rem', fontWeight:700 }}>
-                        🔒 {isRTL ? 'نظام' : 'System'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Body */}
-                  <div style={{ padding:'14px 16px 16px' }}>
-                    <div style={{ fontWeight:800, fontSize:'1rem', color:'var(--text)', marginBottom:2 }}>
-                      {isRTL && role.labelAr ? role.labelAr : role.label}
-                    </div>
-                    <div style={{ fontSize:'0.7rem', color:'var(--text-sub)', fontWeight:600, marginBottom:12 }}>{role.name}</div>
-
-                    {/* Permission progress */}
-                    <div style={{ marginBottom:12 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                        <span style={{ fontSize:'0.7rem', color:'var(--text-sub)' }}>{isRTL ? 'الصلاحيات الممكّنة' : 'Permissions enabled'}</span>
-                        <span style={{ fontSize:'0.7rem', fontWeight:800, color:role.color }}>{pct}%</span>
-                      </div>
-                      <div style={{ height:6, borderRadius:3, background:'var(--border)', overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg, ${role.color}, ${role.color}99)`, borderRadius:3, transition:'width 0.4s' }} />
-                      </div>
-                      <div style={{ fontSize:'0.67rem', color:'var(--text-sub)', marginTop:4 }}>{cnt} / {totalCount} {isRTL ? 'صلاحية' : 'permissions'}</div>
-                    </div>
-
-                    {/* Action buttons */}
-                    {isAdmin && (
-                      <div style={{ display:'flex', gap:8 }}>
-                        <button onClick={() => openEdit(role)} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-sub)', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)', transition:'background 0.15s' }}>
-                          ✏️ {isRTL ? 'تعديل' : 'Edit'}
-                        </button>
-                        {!role.isAdmin && (
-                          <button onClick={() => setDeleteTarget(role)} style={{ width:34, borderRadius:10, border:'1px solid rgba(239,68,68,0.2)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:'0.9rem', cursor:'pointer' }}>
-                            🗑
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <button
+                  key={role.name}
+                  className="pm-role-tab"
+                  onClick={() => setSelectedRole(role.name)}
+                  style={{
+                    borderColor: isSelected ? role.color : undefined,
+                    background:  isSelected ? `${role.color}18` : undefined,
+                    color:       isSelected ? role.color : 'var(--text-sub)',
+                    boxShadow:   isSelected ? `0 0 0 1px ${role.color}40` : undefined,
+                  }}
+                >
+                  <span style={{ fontSize:'1rem' }}>{role.icon}</span>
+                  <span>{isRTL && role.labelAr ? role.labelAr : role.label}</span>
+                  {role.isAdmin && <span style={{ fontSize:'0.7rem', opacity:0.7 }}>🔒</span>}
+                </button>
               );
             })}
           </div>
         )}
 
-        {/* ── Permissions matrix ── */}
-        <div className="glass-card" style={{ padding:0, overflow:'hidden', opacity: fetching ? 0.5 : 1, pointerEvents: fetching ? 'none' : 'auto', transition:'opacity 0.2s' }}>
-          {/* Matrix header */}
-          <div style={{ padding:'18px 20px 16px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
-            <div>
-              <div style={{ fontWeight:800, fontSize:'1rem', color:'var(--text)' }}>{isRTL ? 'مصفوفة الصلاحيات' : 'Permissions Matrix'}</div>
-              <div style={{ fontSize:'0.78rem', color:'var(--text-sub)', marginTop:2 }}>
-                {isRTL ? 'فعّل أو أوقف الصلاحيات لكل دور' : 'Toggle permissions for each role'}
+        {/* ── Permission panel for selected role ── */}
+        {activeRole && (
+          <div className="glass-card" style={{ padding:0, overflow:'hidden', animation:'panelIn 0.2s ease' }} key={selectedRole}>
+
+            {/* Panel header */}
+            <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' }}>
+              {/* Role badge */}
+              <div style={{ width:46, height:46, borderRadius:14, background:`linear-gradient(135deg,${activeRole.color}dd,${activeRole.color}66)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.5rem', flexShrink:0 }}>
+                {activeRole.icon}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontWeight:800, fontSize:'1rem', color:activeRole.color }}>
+                  {isRTL && activeRole.labelAr ? activeRole.labelAr : activeRole.label}
+                  {activeRole.isAdmin && <span style={{ marginInlineStart:8, fontSize:'0.65rem', fontWeight:700, background:`${activeRole.color}18`, border:`1px solid ${activeRole.color}35`, borderRadius:20, padding:'2px 8px', color:activeRole.color }}>Full Access</span>}
+                </div>
+                {/* Progress bar */}
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:5 }}>
+                  <div style={{ flex:1, height:5, borderRadius:3, background:'var(--border)', overflow:'hidden', maxWidth:160 }}>
+                    <div style={{ height:'100%', width:`${Math.round(enabledCount(selectedRole)/totalCount*100)}%`, background:`linear-gradient(90deg,${activeRole.color},${activeRole.color}99)`, borderRadius:3, transition:'width 0.4s' }} />
+                  </div>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:activeRole.color, flexShrink:0 }}>
+                    {enabledCount(selectedRole)}/{totalCount}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display:'flex', gap:8, flexShrink:0, flexWrap:'wrap' }}>
+                {isAdmin && (
+                  <>
+                    <button onClick={() => openEdit(activeRole)} style={{ padding:'7px 14px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-sub)', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)' }}>
+                      ✏️ {isRTL ? 'تعديل' : 'Edit'}
+                    </button>
+                    {!activeRole.isAdmin && (
+                      <button onClick={() => setDeleteTarget(activeRole)} style={{ padding:'7px 12px', borderRadius:10, border:'1px solid rgba(239,68,68,0.2)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)' }}>
+                        🗑 {isRTL ? 'حذف' : 'Delete'}
+                      </button>
+                    )}
+                  </>
+                )}
+                {canEdit && dirty && (
+                  <>
+                    <button onClick={() => loadRoles()} style={{ padding:'7px 14px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--text-sub)', fontSize:'0.78rem', fontWeight:600, cursor:'pointer', fontFamily:'var(--font)' }}>
+                      {isRTL ? 'إلغاء' : 'Discard'}
+                    </button>
+                    <button onClick={save} disabled={saving} className="btn btn-primary" style={{ padding:'7px 16px', fontSize:'0.78rem' }}>
+                      {saving ? (isRTL ? 'جاري الحفظ…' : 'Saving…') : (isRTL ? 'حفظ' : 'Save')}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
-            {canEdit && dirty && (
-              <div style={{ display:'flex', gap:8 }}>
-                <button onClick={() => loadRoles()} style={{ padding:'7px 16px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--text-sub)', fontWeight:600, fontSize:'0.82rem', cursor:'pointer', fontFamily:'var(--font)' }}>
-                  {isRTL ? 'إلغاء' : 'Discard'}
-                </button>
-                <button onClick={save} disabled={saving} className="btn btn-primary" style={{ padding:'7px 18px', fontSize:'0.82rem' }}>
-                  {saving ? (isRTL ? 'جاري الحفظ…' : 'Saving…') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
-                </button>
-              </div>
-            )}
-          </div>
 
-          <div style={{ overflowX:'auto' }}>
-            <table className="perm-tbl" style={{ minWidth:500 }}>
-              <thead>
-                <tr style={{ borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)' }}>
-                  <th style={{ padding:'14px 20px', textAlign:'start', width:'40%', minWidth:220 }}>
-                    <span style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-sub)' }}>
-                      {isRTL ? 'الصلاحية' : 'Permission'}
-                    </span>
-                  </th>
-                  {roles.map(role => (
-                    <th key={role.name} style={{ padding:'10px 12px', minWidth:110, borderBottom:`3px solid ${role.color}` }}>
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
-                        <div style={{ width:34, height:34, borderRadius:10, background:`${role.color}18`, border:`1.5px solid ${role.color}40`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem' }}>
-                          {role.icon}
-                        </div>
-                        <span style={{ fontSize:'0.75rem', fontWeight:800, color:role.color, whiteSpace:'nowrap' }}>
-                          {isRTL && role.labelAr ? role.labelAr : role.label}
+            {/* Permission groups */}
+            {PERMISSION_GROUPS.map((group, gi) => (
+              <React.Fragment key={group.group}>
+                {/* Group header */}
+                <div className="pm-group-hdr" style={{ borderTop: gi === 0 ? 'none' : undefined, borderLeft:`3px solid ${group.color}` }}>
+                  <div style={{ width:24, height:24, borderRadius:7, background:`${group.color}20`, border:`1px solid ${group.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.8rem' }}>
+                    {group.icon}
+                  </div>
+                  <span style={{ fontSize:'0.71rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:group.color }}>
+                    {isRTL ? group.groupAr : group.group}
+                  </span>
+                  <span style={{ fontSize:'0.67rem', color:'var(--text-sub)' }}>
+                    · {group.items.length} {isRTL ? 'صلاحيات' : 'permissions'}
+                  </span>
+                </div>
+
+                {/* Permission rows */}
+                {group.items.map(item => {
+                  const isSub     = !!item.parentKey;
+                  const parentOff = isSub && draft[selectedRole] && !draft[selectedRole][item.parentKey as PermissionKey];
+                  const editable  = canToggleRole(activeRole) && !parentOff;
+                  const isLocked  = activeRole.isAdmin;
+
+                  return (
+                    <div key={item.key} className={isSub ? 'pm-sub-row' : 'pm-perm-row'} style={{ opacity: (!isLocked && parentOff) ? 0.38 : 1 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap: isSub ? 8 : 10, flex:1, minWidth:0 }}>
+                        {isSub && (
+                          <span style={{ color:'var(--border)', fontSize:'0.7rem', flexShrink:0, marginInlineEnd:2 }}>└</span>
+                        )}
+                        <span style={{ fontSize: isSub ? '0.85rem' : '0.95rem', opacity: isSub ? 0.75 : 1, flexShrink:0 }}>{item.icon}</span>
+                        <span style={{ fontSize: isSub ? '0.83rem' : '0.88rem', fontWeight: isSub ? 400 : 600, color: isSub ? 'var(--text-sub)' : 'var(--text)', lineHeight:1.4 }}>
+                          {isRTL ? item.labelAr : item.label}
                         </span>
                       </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {PERMISSION_GROUPS.map((group, gi) => (
-                  <React.Fragment key={group.group}>
-                    <tr className="perm-ghdr">
-                      <td colSpan={roles.length + 1} style={{ borderLeft:`3px solid ${group.color}`, borderTop: gi > 0 ? '1px solid var(--border)' : 'none' }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <div style={{ width:26, height:26, borderRadius:8, background:`${group.color}20`, border:`1px solid ${group.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85rem' }}>
-                            {group.icon}
-                          </div>
-                          <span style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:group.color }}>
-                            {isRTL ? group.groupAr : group.group}
-                          </span>
-                          <span style={{ fontSize:'0.67rem', color:'var(--text-sub)', marginInlineStart:2 }}>
-                            · {group.items.length} {isRTL ? 'صلاحيات' : 'permissions'}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                    {group.items.map((item, idx) => {
-                      const isSub = !!item.parentKey;
-                      const isLast = idx === group.items.length - 1;
-                      return (
-                        <tr key={item.key} className={isSub ? 'perm-srow' : 'perm-prow'} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.035)' }}>
-                          <td style={{ padding: isSub ? '10px 16px 10px 48px' : '13px 16px 13px 20px', position:'relative', borderLeft:`2px solid ${isSub ? group.color+'25' : 'transparent'}` }}>
-                            {isSub && (
-                              <>
-                                <div style={{ position:'absolute', left:20, top:0, bottom: isLast ? '50%' : 0, width:1.5, background:'var(--border)' }} />
-                                <div style={{ position:'absolute', left:20, top:'50%', width:14, height:1.5, background:'var(--border)' }} />
-                              </>
-                            )}
-                            <div style={{ display:'flex', alignItems:'center', gap: isSub ? 7 : 9 }}>
-                              <span style={{ fontSize: isSub ? '0.82rem' : '0.92rem', opacity: isSub ? 0.75 : 1, flexShrink:0 }}>{item.icon}</span>
-                              <span style={{ fontSize: isSub ? '0.83rem' : '0.875rem', fontWeight: isSub ? 400 : 600, color: isSub ? 'var(--text-sub)' : 'var(--text)', lineHeight:1.4 }}>
-                                {isRTL ? item.labelAr : item.label}
-                              </span>
-                            </div>
-                          </td>
-                          {roles.map(role => {
-                            const parentOff = isSub && draft[role.name] && !draft[role.name][item.parentKey as PermissionKey];
-                            const editable  = canToggleRole(role) && !parentOff;
-                            return (
-                              <td key={role.name} style={{ textAlign:'center', padding:'9px 12px' }}>
-                                <Toggle
-                                  checked={draft[role.name]?.[item.key] ?? false}
-                                  onChange={() => toggle(role.name, item.key)}
-                                  color={role.color}
-                                  disabled={!editable}
-                                  locked={role.isAdmin}
-                                />
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                      <Toggle
+                        checked={draft[selectedRole]?.[item.key] ?? false}
+                        onChange={() => toggle(selectedRole, item.key)}
+                        color={activeRole.color}
+                        disabled={!editable}
+                        locked={isLocked}
+                      />
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ))}
           </div>
-        </div>
+        )}
 
         {/* Info note */}
         <div style={{ marginTop:14, padding:'11px 16px', background:'rgba(196,120,140,0.05)', border:'1px solid rgba(196,120,140,0.12)', borderRadius:12, display:'flex', alignItems:'flex-start', gap:9 }}>
           <span style={{ flexShrink:0, marginTop:1 }}>ℹ️</span>
           <p style={{ fontSize:'0.8rem', color:'var(--text-sub)', lineHeight:1.6, margin:0 }}>
             {isAdmin
-              ? (isRTL ? 'يمكنك إدارة جميع الأدوار وصلاحياتها. دور مدير النظام لديه صلاحيات كاملة دائماً.' : 'Manage all roles and their permissions. Admin always has full access and cannot be restricted.')
-              : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف فقط.' : 'You can only toggle Staff permissions. Admin and Manager columns are locked.')}
+              ? (isRTL ? 'يمكنك إدارة جميع الأدوار وصلاحياتها. دور مدير النظام لديه صلاحيات كاملة دائماً.' : 'Admin always has full access. Select any other role to toggle its permissions.')
+              : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف فقط.' : 'You can only toggle Staff permissions. Admin and Manager are locked.')}
           </p>
         </div>
       </div>

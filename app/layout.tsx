@@ -8,9 +8,13 @@ export const metadata: Metadata = {
   description: 'Complete clinic & wellness management platform',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
-    shortcut: '/icon.svg',
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png',   sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+    shortcut: '/favicon-32.png',
   },
   appleWebApp: {
     capable: true,

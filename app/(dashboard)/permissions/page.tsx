@@ -13,7 +13,6 @@ interface RoleDefinition {
   color: string; icon: string; isSystem: boolean; isAdmin: boolean;
   permissions: Record<PermissionKey, boolean>; sortOrder: number;
 }
-
 type Draft = Record<string, Record<PermissionKey, boolean>>;
 type PermItem = { key: PermissionKey; label: string; labelAr: string; parentKey?: PermissionKey; icon: string };
 
@@ -21,44 +20,44 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Customers', groupAr: 'العملاء', icon: '👥', color: '#C4788C',
     items: [
-      { key: 'manageCustomers',  icon: '👥', label: 'View Customers Page',              labelAr: 'عرض صفحة العملاء' },
-      { key: 'createCustomers',  icon: '➕', label: 'Add New Customers',                labelAr: 'إضافة عملاء جدد',                    parentKey: 'manageCustomers' },
-      { key: 'editCustomers',    icon: '✏️', label: 'Edit Customer Details',            labelAr: 'تعديل بيانات العملاء',               parentKey: 'manageCustomers' },
-      { key: 'deleteCustomers',  icon: '🗑', label: 'Delete Customers',                 labelAr: 'حذف العملاء',                        parentKey: 'manageCustomers' },
-      { key: 'makePhoneCalls',   icon: '📞', label: 'Make Phone Calls',                 labelAr: 'إجراء مكالمات هاتفية',               parentKey: 'manageCustomers' },
-      { key: 'viewCallLogs',     icon: '📋', label: 'View Call Logs',                   labelAr: 'عرض سجلات المكالمات',                parentKey: 'manageCustomers' },
-      { key: 'clearCallLogs',    icon: '🧹', label: 'Clear All Call Logs',              labelAr: 'مسح سجلات المكالمات',                parentKey: 'manageCustomers' },
-      { key: 'sendWhatsApp',     icon: '💬', label: 'Send WhatsApp Messages',           labelAr: 'إرسال رسائل واتساب',                 parentKey: 'manageCustomers' },
-      { key: 'sendSMS',          icon: '📱', label: 'Send SMS Messages',                labelAr: 'إرسال رسائل نصية',                   parentKey: 'manageCustomers' },
-      { key: 'sendEmail',        icon: '✉️', label: 'Send Email Messages',              labelAr: 'إرسال رسائل بريد إلكتروني',         parentKey: 'manageCustomers' },
-      { key: 'sendBroadcasts',   icon: '📣', label: 'Send Broadcast to All Customers',  labelAr: 'إرسال رسائل جماعية',                parentKey: 'manageCustomers' },
+      { key: 'manageCustomers',  icon: '👥', label: 'View Customers Page',             labelAr: 'عرض صفحة العملاء' },
+      { key: 'createCustomers',  icon: '➕', label: 'Add New Customers',               labelAr: 'إضافة عملاء جدد',          parentKey: 'manageCustomers' },
+      { key: 'editCustomers',    icon: '✏️', label: 'Edit Customer Details',           labelAr: 'تعديل بيانات العملاء',     parentKey: 'manageCustomers' },
+      { key: 'deleteCustomers',  icon: '🗑', label: 'Delete Customers',                labelAr: 'حذف العملاء',              parentKey: 'manageCustomers' },
+      { key: 'makePhoneCalls',   icon: '📞', label: 'Make Phone Calls',                labelAr: 'إجراء مكالمات هاتفية',     parentKey: 'manageCustomers' },
+      { key: 'viewCallLogs',     icon: '📋', label: 'View Call Logs',                  labelAr: 'عرض سجلات المكالمات',      parentKey: 'manageCustomers' },
+      { key: 'clearCallLogs',    icon: '🧹', label: 'Clear All Call Logs',             labelAr: 'مسح سجلات المكالمات',      parentKey: 'manageCustomers' },
+      { key: 'sendWhatsApp',     icon: '💬', label: 'Send WhatsApp Messages',          labelAr: 'إرسال رسائل واتساب',       parentKey: 'manageCustomers' },
+      { key: 'sendSMS',          icon: '📱', label: 'Send SMS Messages',               labelAr: 'إرسال رسائل نصية',         parentKey: 'manageCustomers' },
+      { key: 'sendEmail',        icon: '✉️', label: 'Send Email Messages',             labelAr: 'إرسال رسائل بريد إلكتروني', parentKey: 'manageCustomers' },
+      { key: 'sendBroadcasts',   icon: '📣', label: 'Send Broadcast to All Customers', labelAr: 'إرسال رسائل جماعية',       parentKey: 'manageCustomers' },
     ],
   },
   {
     group: 'Appointments', groupAr: 'المواعيد', icon: '📅', color: '#0891b2',
     items: [
       { key: 'manageAppointments',      icon: '📅', label: 'View Appointments Page',                      labelAr: 'عرض صفحة المواعيد' },
-      { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                     labelAr: 'إنشاء مواعيد جديدة',               parentKey: 'manageAppointments' },
-      { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',              labelAr: 'تعديل وإعادة جدولة المواعيد',       parentKey: 'manageAppointments' },
-      { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)', labelAr: 'تحديث الحالة',                      parentKey: 'manageAppointments' },
-      { key: 'deleteAppointments',      icon: '🗑', label: 'Delete Appointments',                         labelAr: 'حذف المواعيد',                      parentKey: 'manageAppointments' },
-      { key: 'recordPayments',          icon: '💳', label: 'Record & Revert Payments',                    labelAr: 'تسجيل وإلغاء المدفوعات',            parentKey: 'manageAppointments' },
+      { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                     labelAr: 'إنشاء مواعيد جديدة',          parentKey: 'manageAppointments' },
+      { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',              labelAr: 'تعديل وإعادة جدولة المواعيد', parentKey: 'manageAppointments' },
+      { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)', labelAr: 'تحديث الحالة',                 parentKey: 'manageAppointments' },
+      { key: 'deleteAppointments',      icon: '🗑', label: 'Delete Appointments',                         labelAr: 'حذف المواعيد',                 parentKey: 'manageAppointments' },
+      { key: 'recordPayments',          icon: '💳', label: 'Record & Revert Payments',                    labelAr: 'تسجيل وإلغاء المدفوعات',       parentKey: 'manageAppointments' },
     ],
   },
   {
     group: 'Reports', groupAr: 'التقارير', icon: '📊', color: '#10b981',
     items: [
-      { key: 'viewReports',   icon: '📊', label: 'View Reports Page',      labelAr: 'عرض صفحة التقارير' },
-      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',  labelAr: 'تصدير وطباعة التقارير', parentKey: 'viewReports' },
+      { key: 'viewReports',   icon: '📊', label: 'View Reports Page',     labelAr: 'عرض صفحة التقارير' },
+      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports', labelAr: 'تصدير وطباعة التقارير', parentKey: 'viewReports' },
     ],
   },
   {
     group: 'Users', groupAr: 'المستخدمون', icon: '👤', color: '#f59e0b',
     items: [
-      { key: 'viewUsers',   icon: '👤', label: 'View Users Page',        labelAr: 'عرض صفحة المستخدمين' },
-      { key: 'createUsers', icon: '➕', label: 'Create New Users',       labelAr: 'إنشاء مستخدمين جدد',       parentKey: 'viewUsers' },
-      { key: 'editUsers',   icon: '✏️', label: 'Edit Users & Roles',     labelAr: 'تعديل المستخدمين والأدوار', parentKey: 'viewUsers' },
-      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',           labelAr: 'حذف المستخدمين',            parentKey: 'viewUsers' },
+      { key: 'viewUsers',   icon: '👤', label: 'View Users Page',       labelAr: 'عرض صفحة المستخدمين' },
+      { key: 'createUsers', icon: '➕', label: 'Create New Users',      labelAr: 'إنشاء مستخدمين جدد',       parentKey: 'viewUsers' },
+      { key: 'editUsers',   icon: '✏️', label: 'Edit Users & Roles',    labelAr: 'تعديل المستخدمين والأدوار', parentKey: 'viewUsers' },
+      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',          labelAr: 'حذف المستخدمين',            parentKey: 'viewUsers' },
     ],
   },
   {
@@ -101,8 +100,8 @@ function Toggle({ checked, onChange, color, disabled, locked }: {
   return (
     <label style={{ display:'flex', alignItems:'center', justifyContent:'center', cursor: disabled ? 'default' : 'pointer' }}>
       <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} style={{ display:'none' }} />
-      <div style={{ width:38, height:22, borderRadius:11, position:'relative', flexShrink:0, background: checked ? color : 'var(--bg-elevated)', border:`1.5px solid ${checked ? color : 'var(--border)'}`, transition:'background 0.2s, border-color 0.2s', opacity: disabled ? 0.3 : 1 }}>
-        <div style={{ width:14, height:14, borderRadius:'50%', background: checked ? '#fff' : 'var(--text-sub)', position:'absolute', top:2.5, left: checked ? 19 : 3, transition:'left 0.18s cubic-bezier(.4,0,.2,1)', boxShadow: checked ? '0 1px 4px rgba(0,0,0,0.25)' : 'none' }} />
+      <div style={{ width:40, height:23, borderRadius:12, position:'relative', flexShrink:0, background: checked ? color : 'var(--bg-elevated)', border:`1.5px solid ${checked ? color : 'var(--border)'}`, transition:'background 0.2s, border-color 0.2s', opacity: disabled ? 0.3 : 1 }}>
+        <div style={{ width:15, height:15, borderRadius:'50%', background: checked ? '#fff' : 'var(--text-sub)', position:'absolute', top:3, left: checked ? 21 : 3, transition:'left 0.18s cubic-bezier(.4,0,.2,1)', boxShadow: checked ? '0 1px 4px rgba(0,0,0,0.25)' : 'none' }} />
       </div>
     </label>
   );
@@ -122,8 +121,7 @@ export default function PermissionsPage() {
   const [dirty,    setDirty]    = useState(false);
   const [saving,   setSaving]   = useState(false);
 
-  type Modal = 'editRole' | null;
-  const [modal,        setModal]        = useState<Modal>(null);
+  const [modal,        setModal]        = useState<'editRole' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleDefinition | null>(null);
   const [deleting,     setDeleting]     = useState(false);
   const [editTarget,   setEditTarget]   = useState<RoleDefinition | null>(null);
@@ -217,74 +215,92 @@ export default function PermissionsPage() {
   return (
     <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="managePermissions">
       <style dangerouslySetInnerHTML={{ __html: `
-        .pm-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
         .pm-modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); }
         .pm-input { background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:9px 13px; color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.15s; }
         .pm-input:focus { border-color:var(--rose); }
-        .pm-label { font-size:0.72rem; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; display:block; }
-        .perm-table { width:100%; border-collapse:collapse; }
-        .perm-table th, .perm-table td { vertical-align:middle; }
-        .perm-group-hdr td { padding:14px 20px 10px; background:var(--bg-elevated); }
-        .perm-parent-row:hover td { background:rgba(255,255,255,0.015) !important; }
-        .perm-sub-row:hover td { background:rgba(255,255,255,0.01) !important; }
+        .pm-lbl { font-size:0.72rem; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; display:block; }
+        .pm-role-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--shadow); transition:box-shadow 0.2s; }
+        .pm-role-card:hover { box-shadow:0 8px 32px rgba(0,0,0,0.15); }
+        .perm-tbl { width:100%; border-collapse:collapse; }
+        .perm-tbl th, .perm-tbl td { vertical-align:middle; }
+        .perm-ghdr td { padding:12px 20px; background:var(--bg-elevated); }
+        .perm-prow:hover td, .perm-srow:hover td { background:rgba(255,255,255,0.015) !important; }
+        @keyframes floatUp { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
         @media(max-width:640px){ .pm-modal{padding:20px;} }
       `}} />
 
-      <div style={{ paddingBottom: dirty ? 80 : 0, transition: 'padding-bottom 0.3s' }}>
+      <div style={{ paddingBottom: dirty ? 88 : 0, transition:'padding-bottom 0.3s' }}>
 
-        {/* Page header */}
+        {/* ── Page header ── */}
         <div className="page-header">
           <div>
             <h1 className="page-title">{isRTL ? 'الأدوار والصلاحيات' : 'Roles & Permissions'}</h1>
             <p className="page-sub">
               {isAdmin
-                ? (isRTL ? `${roles.length} أدوار — قم بإدارة وتخصيص الصلاحيات` : `${roles.length} roles — manage and customize access`)
-                : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف' : 'You can toggle Staff permissions below')}
+                ? (isRTL ? `${roles.length} أدوار — إدارة وتخصيص الصلاحيات لكل دور` : `${roles.length} roles — manage and customize access for each role`)
+                : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف' : 'You can toggle Staff role permissions below')}
             </p>
           </div>
         </div>
 
-        {/* Role summary cards */}
+        {/* ── Role cards ── */}
         {fetching ? (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))', gap:14, marginBottom:24 }}>
-            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:110, borderRadius:16 }} />)}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:16, marginBottom:28 }}>
+            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:200, borderRadius:20 }} />)}
           </div>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))', gap:14, marginBottom:24 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:16, marginBottom:28 }}>
             {roles.map(role => {
-              const cnt = enabledCount(role.name);
-              const pct = Math.round(cnt / totalCount * 100);
+              const cnt  = enabledCount(role.name);
+              const pct  = Math.round(cnt / totalCount * 100);
               const isMe = user?.role === role.name;
               return (
-                <div key={role.id} className="glass-card" style={{ padding:0, overflow:'hidden', border: isMe ? `1.5px solid ${role.color}50` : undefined, boxShadow: isMe ? `0 4px 24px ${role.color}18` : undefined }}>
+                <div key={role.id} className="pm-role-card" style={{ border: isMe ? `1.5px solid ${role.color}60` : undefined }}>
                   {/* Gradient banner */}
-                  <div style={{ height:6, background:`linear-gradient(90deg, ${role.color}, ${role.color}60)`, borderRadius:'16px 16px 0 0' }} />
+                  <div style={{ height:90, background:`linear-gradient(135deg, ${role.color}dd, ${role.color}66)`, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+                    <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(255,255,255,0.20)', backdropFilter:'blur(8px)', border:'2px solid rgba(255,255,255,0.35)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.6rem' }}>
+                      {role.icon}
+                    </div>
+                    {isMe && (
+                      <div style={{ position:'absolute', top:10, insetInlineStart:10, background:'rgba(255,255,255,0.25)', backdropFilter:'blur(4px)', color:'#fff', borderRadius:20, padding:'2px 10px', fontSize:'0.65rem', fontWeight:800 }}>
+                        {isRTL ? '✦ أنت' : '✦ You'}
+                      </div>
+                    )}
+                    {role.isSystem && (
+                      <div style={{ position:'absolute', top:10, insetInlineEnd:10, background:'rgba(0,0,0,0.25)', backdropFilter:'blur(4px)', color:'rgba(255,255,255,0.85)', borderRadius:20, padding:'2px 9px', fontSize:'0.6rem', fontWeight:700 }}>
+                        🔒 {isRTL ? 'نظام' : 'System'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Body */}
                   <div style={{ padding:'14px 16px 16px' }}>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:9 }}>
-                        <div style={{ width:34, height:34, borderRadius:10, background:`${role.color}18`, border:`1.5px solid ${role.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem' }}>{role.icon}</div>
-                        <div>
-                          <div style={{ fontWeight:800, fontSize:'0.88rem', color:role.color, lineHeight:1.2 }}>{isRTL && role.labelAr ? role.labelAr : role.label}</div>
-                          <div style={{ fontSize:'0.63rem', color:'var(--text-sub)', fontWeight:600 }}>{role.name}</div>
-                        </div>
-                      </div>
-                      {isMe && <div style={{ background:role.color, color:'#fff', borderRadius:20, padding:'2px 8px', fontSize:'0.6rem', fontWeight:800 }}>{isRTL?'أنت':'You'}</div>}
+                    <div style={{ fontWeight:800, fontSize:'1rem', color:'var(--text)', marginBottom:2 }}>
+                      {isRTL && role.labelAr ? role.labelAr : role.label}
                     </div>
-                    {/* Progress bar */}
-                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                      <div style={{ flex:1, height:5, borderRadius:3, background:'var(--border)', overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:role.color, borderRadius:3, transition:'width 0.4s' }} />
+                    <div style={{ fontSize:'0.7rem', color:'var(--text-sub)', fontWeight:600, marginBottom:12 }}>{role.name}</div>
+
+                    {/* Permission progress */}
+                    <div style={{ marginBottom:12 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                        <span style={{ fontSize:'0.7rem', color:'var(--text-sub)' }}>{isRTL ? 'الصلاحيات الممكّنة' : 'Permissions enabled'}</span>
+                        <span style={{ fontSize:'0.7rem', fontWeight:800, color:role.color }}>{pct}%</span>
                       </div>
-                      <span style={{ fontSize:'0.65rem', fontWeight:700, color:'var(--text-sub)', whiteSpace:'nowrap' }}>{cnt}/{totalCount}</span>
+                      <div style={{ height:6, borderRadius:3, background:'var(--border)', overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg, ${role.color}, ${role.color}99)`, borderRadius:3, transition:'width 0.4s' }} />
+                      </div>
+                      <div style={{ fontSize:'0.67rem', color:'var(--text-sub)', marginTop:4 }}>{cnt} / {totalCount} {isRTL ? 'صلاحية' : 'permissions'}</div>
                     </div>
+
                     {/* Action buttons */}
                     {isAdmin && (
-                      <div style={{ display:'flex', gap:6 }}>
-                        <button onClick={() => openEdit(role)} style={{ flex:1, padding:'5px 0', borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-sub)', fontSize:'0.72rem', fontWeight:700, cursor:'pointer' }}>
-                          ✏️ {isRTL?'تعديل':'Edit'}
+                      <div style={{ display:'flex', gap:8 }}>
+                        <button onClick={() => openEdit(role)} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-sub)', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)', transition:'background 0.15s' }}>
+                          ✏️ {isRTL ? 'تعديل' : 'Edit'}
                         </button>
                         {!role.isAdmin && (
-                          <button onClick={() => setDeleteTarget(role)} style={{ width:30, borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:'0.85rem', cursor:'pointer' }}>
+                          <button onClick={() => setDeleteTarget(role)} style={{ width:34, borderRadius:10, border:'1px solid rgba(239,68,68,0.2)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:'0.9rem', cursor:'pointer' }}>
                             🗑
                           </button>
                         )}
@@ -297,24 +313,44 @@ export default function PermissionsPage() {
           </div>
         )}
 
-        {/* Permissions matrix */}
+        {/* ── Permissions matrix ── */}
         <div className="glass-card" style={{ padding:0, overflow:'hidden', opacity: fetching ? 0.5 : 1, pointerEvents: fetching ? 'none' : 'auto', transition:'opacity 0.2s' }}>
+          {/* Matrix header */}
+          <div style={{ padding:'18px 20px 16px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
+            <div>
+              <div style={{ fontWeight:800, fontSize:'1rem', color:'var(--text)' }}>{isRTL ? 'مصفوفة الصلاحيات' : 'Permissions Matrix'}</div>
+              <div style={{ fontSize:'0.78rem', color:'var(--text-sub)', marginTop:2 }}>
+                {isRTL ? 'فعّل أو أوقف الصلاحيات لكل دور' : 'Toggle permissions for each role'}
+              </div>
+            </div>
+            {canEdit && dirty && (
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={() => loadRoles()} style={{ padding:'7px 16px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--text-sub)', fontWeight:600, fontSize:'0.82rem', cursor:'pointer', fontFamily:'var(--font)' }}>
+                  {isRTL ? 'إلغاء' : 'Discard'}
+                </button>
+                <button onClick={save} disabled={saving} className="btn btn-primary" style={{ padding:'7px 18px', fontSize:'0.82rem' }}>
+                  {saving ? (isRTL ? 'جاري الحفظ…' : 'Saving…') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
+                </button>
+              </div>
+            )}
+          </div>
+
           <div style={{ overflowX:'auto' }}>
-            <table className="perm-table" style={{ minWidth:520 }}>
+            <table className="perm-tbl" style={{ minWidth:500 }}>
               <thead>
-                <tr style={{ borderBottom:'2px solid var(--border)' }}>
-                  <th style={{ padding:'16px 20px', textAlign:'start', width:'38%', minWidth:220 }}>
-                    <span style={{ fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-sub)' }}>
+                <tr style={{ borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)' }}>
+                  <th style={{ padding:'14px 20px', textAlign:'start', width:'40%', minWidth:220 }}>
+                    <span style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-sub)' }}>
                       {isRTL ? 'الصلاحية' : 'Permission'}
                     </span>
                   </th>
                   {roles.map(role => (
-                    <th key={role.name} style={{ padding:'12px 10px', minWidth:100, borderBottom:`3px solid ${role.color}` }}>
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                        <div style={{ width:32, height:32, borderRadius:10, background:`${role.color}18`, border:`1.5px solid ${role.color}40`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.95rem' }}>
+                    <th key={role.name} style={{ padding:'10px 12px', minWidth:110, borderBottom:`3px solid ${role.color}` }}>
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                        <div style={{ width:34, height:34, borderRadius:10, background:`${role.color}18`, border:`1.5px solid ${role.color}40`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem' }}>
                           {role.icon}
                         </div>
-                        <span style={{ fontSize:'0.72rem', fontWeight:800, color:role.color, whiteSpace:'nowrap' }}>
+                        <span style={{ fontSize:'0.75rem', fontWeight:800, color:role.color, whiteSpace:'nowrap' }}>
                           {isRTL && role.labelAr ? role.labelAr : role.label}
                         </span>
                       </div>
@@ -325,39 +361,36 @@ export default function PermissionsPage() {
               <tbody>
                 {PERMISSION_GROUPS.map((group, gi) => (
                   <React.Fragment key={group.group}>
-                    {/* Group header */}
-                    <tr className="perm-group-hdr">
+                    <tr className="perm-ghdr">
                       <td colSpan={roles.length + 1} style={{ borderLeft:`3px solid ${group.color}`, borderTop: gi > 0 ? '1px solid var(--border)' : 'none' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <div style={{ width:24, height:24, borderRadius:7, background:`${group.color}20`, border:`1px solid ${group.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.82rem' }}>
+                          <div style={{ width:26, height:26, borderRadius:8, background:`${group.color}20`, border:`1px solid ${group.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85rem' }}>
                             {group.icon}
                           </div>
-                          <span style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:group.color }}>
+                          <span style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:group.color }}>
                             {isRTL ? group.groupAr : group.group}
                           </span>
-                          <span style={{ fontSize:'0.65rem', color:'var(--text-sub)', fontWeight:500, marginInlineStart:4 }}>
-                            {group.items.length} {isRTL ? 'صلاحيات' : 'permissions'}
+                          <span style={{ fontSize:'0.67rem', color:'var(--text-sub)', marginInlineStart:2 }}>
+                            · {group.items.length} {isRTL ? 'صلاحيات' : 'permissions'}
                           </span>
                         </div>
                       </td>
                     </tr>
-
-                    {/* Permission rows */}
                     {group.items.map((item, idx) => {
                       const isSub = !!item.parentKey;
                       const isLast = idx === group.items.length - 1;
                       return (
-                        <tr key={item.key} className={isSub ? 'perm-sub-row' : 'perm-parent-row'} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
-                          <td style={{ padding: isSub ? '10px 16px 10px 44px' : '13px 16px 13px 20px', position:'relative', borderLeft:`2px solid ${isSub ? group.color+'22' : 'transparent'}` }}>
+                        <tr key={item.key} className={isSub ? 'perm-srow' : 'perm-prow'} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.035)' }}>
+                          <td style={{ padding: isSub ? '10px 16px 10px 48px' : '13px 16px 13px 20px', position:'relative', borderLeft:`2px solid ${isSub ? group.color+'25' : 'transparent'}` }}>
                             {isSub && (
                               <>
-                                <div style={{ position:'absolute', left:18, top:0, bottom: isLast ? '50%' : 0, width:1.5, background:'var(--border)' }} />
-                                <div style={{ position:'absolute', left:18, top:'50%', width:12, height:1.5, background:'var(--border)' }} />
+                                <div style={{ position:'absolute', left:20, top:0, bottom: isLast ? '50%' : 0, width:1.5, background:'var(--border)' }} />
+                                <div style={{ position:'absolute', left:20, top:'50%', width:14, height:1.5, background:'var(--border)' }} />
                               </>
                             )}
                             <div style={{ display:'flex', alignItems:'center', gap: isSub ? 7 : 9 }}>
-                              <span style={{ fontSize: isSub ? '0.8rem' : '0.9rem', opacity: isSub ? 0.75 : 1 }}>{item.icon}</span>
-                              <span style={{ fontSize: isSub ? '0.83rem' : '0.87rem', fontWeight: isSub ? 400 : 600, color: isSub ? 'var(--text-sub)' : 'var(--text)', lineHeight:1.4 }}>
+                              <span style={{ fontSize: isSub ? '0.82rem' : '0.92rem', opacity: isSub ? 0.75 : 1, flexShrink:0 }}>{item.icon}</span>
+                              <span style={{ fontSize: isSub ? '0.83rem' : '0.875rem', fontWeight: isSub ? 400 : 600, color: isSub ? 'var(--text-sub)' : 'var(--text)', lineHeight:1.4 }}>
                                 {isRTL ? item.labelAr : item.label}
                               </span>
                             </div>
@@ -366,7 +399,7 @@ export default function PermissionsPage() {
                             const parentOff = isSub && draft[role.name] && !draft[role.name][item.parentKey as PermissionKey];
                             const editable  = canToggleRole(role) && !parentOff;
                             return (
-                              <td key={role.name} style={{ textAlign:'center', padding:'8px 10px' }}>
+                              <td key={role.name} style={{ textAlign:'center', padding:'9px 12px' }}>
                                 <Toggle
                                   checked={draft[role.name]?.[item.key] ?? false}
                                   onChange={() => toggle(role.name, item.key)}
@@ -388,9 +421,9 @@ export default function PermissionsPage() {
         </div>
 
         {/* Info note */}
-        <div style={{ marginTop:16, padding:'12px 16px', background:'rgba(196,120,140,0.05)', border:'1px solid rgba(196,120,140,0.12)', borderRadius:12, display:'flex', alignItems:'flex-start', gap:10 }}>
-          <span style={{ fontSize:'0.9rem', flexShrink:0 }}>ℹ️</span>
-          <p style={{ fontSize:'0.81rem', color:'var(--text-sub)', lineHeight:1.6, margin:0 }}>
+        <div style={{ marginTop:14, padding:'11px 16px', background:'rgba(196,120,140,0.05)', border:'1px solid rgba(196,120,140,0.12)', borderRadius:12, display:'flex', alignItems:'flex-start', gap:9 }}>
+          <span style={{ flexShrink:0, marginTop:1 }}>ℹ️</span>
+          <p style={{ fontSize:'0.8rem', color:'var(--text-sub)', lineHeight:1.6, margin:0 }}>
             {isAdmin
               ? (isRTL ? 'يمكنك إدارة جميع الأدوار وصلاحياتها. دور مدير النظام لديه صلاحيات كاملة دائماً.' : 'Manage all roles and their permissions. Admin always has full access and cannot be restricted.')
               : (isRTL ? 'يمكنك تعديل صلاحيات دور الموظف فقط.' : 'You can only toggle Staff permissions. Admin and Manager columns are locked.')}
@@ -400,14 +433,14 @@ export default function PermissionsPage() {
 
       {/* Floating save bar */}
       {canEdit && dirty && (
-        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', zIndex:200, display:'flex', alignItems:'center', gap:10, background:'var(--bg-surface)', border:'1px solid var(--border)', borderRadius:16, padding:'12px 20px', boxShadow:'0 8px 40px rgba(0,0,0,0.35)', backdropFilter:'blur(12px)', animation:'slideUp 0.25s ease' }}>
-          <span style={{ fontSize:'0.83rem', color:'var(--text-sub)', fontWeight:500, marginInlineEnd:4 }}>
+        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', zIndex:200, display:'flex', alignItems:'center', gap:10, background:'var(--bg-surface)', border:'1px solid var(--border)', borderRadius:16, padding:'12px 20px', boxShadow:'0 8px 40px rgba(0,0,0,0.35)', backdropFilter:'blur(12px)', animation:'floatUp 0.25s ease', whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:'0.82rem', color:'var(--text-sub)', fontWeight:500 }}>
             {isRTL ? 'لديك تغييرات غير محفوظة' : 'You have unsaved changes'}
           </span>
-          <button onClick={() => loadRoles()} style={{ padding:'8px 16px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--text-sub)', fontWeight:600, fontSize:'0.83rem', cursor:'pointer' }}>
+          <button onClick={() => loadRoles()} style={{ padding:'7px 15px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--text-sub)', fontWeight:600, fontSize:'0.82rem', cursor:'pointer', fontFamily:'var(--font)' }}>
             {isRTL ? 'إلغاء' : 'Discard'}
           </button>
-          <button onClick={save} disabled={saving} className="btn btn-primary" style={{ padding:'8px 20px', fontSize:'0.83rem' }}>
+          <button onClick={save} disabled={saving} className="btn btn-primary" style={{ padding:'7px 18px', fontSize:'0.82rem' }}>
             {saving ? (isRTL ? 'جاري الحفظ…' : 'Saving…') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
           </button>
         </div>
@@ -415,7 +448,7 @@ export default function PermissionsPage() {
 
       {/* Edit Role Modal */}
       {modal === 'editRole' && editTarget && (
-        <div className="pm-modal-overlay">
+        <div className="pm-overlay">
           <div className="pm-modal">
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -424,26 +457,24 @@ export default function PermissionsPage() {
               </div>
               <button onClick={() => setModal(null)} style={{ background:'none', border:'none', color:'var(--text-sub)', cursor:'pointer', fontSize:'1.3rem', lineHeight:1, padding:'4px 8px' }}>×</button>
             </div>
-
             {editTarget.isSystem && (
               <div style={{ marginBottom:16, padding:'8px 12px', background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:8, fontSize:'0.78rem', color:'var(--text-sub)' }}>
                 🔒 {isRTL ? 'دور النظام — يمكن تعديل العرض فقط' : 'System role — only display properties can be changed'}
               </div>
             )}
-
             <form onSubmit={handleEditRole}>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-                <div><label className="pm-label">{isRTL ? 'الاسم المعروض' : 'Display Label'}</label><input className="pm-input" value={editLabel} onChange={e => setEditLabel(e.target.value)} required /></div>
-                <div><label className="pm-label">{isRTL ? 'الاسم بالعربية' : 'Arabic Label'}</label><input className="pm-input" value={editLabelAr} onChange={e => setEditLabelAr(e.target.value)} dir="rtl" /></div>
+                <div><label className="pm-lbl">{isRTL ? 'الاسم المعروض' : 'Display Label'}</label><input className="pm-input" value={editLabel} onChange={e => setEditLabel(e.target.value)} required /></div>
+                <div><label className="pm-lbl">{isRTL ? 'الاسم بالعربية' : 'Arabic Label'}</label><input className="pm-input" value={editLabelAr} onChange={e => setEditLabelAr(e.target.value)} dir="rtl" /></div>
               </div>
               <div style={{ marginBottom:14 }}>
-                <label className="pm-label">{isRTL ? 'اللون' : 'Color'}</label>
+                <label className="pm-lbl">{isRTL ? 'اللون' : 'Color'}</label>
                 <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
-                  {ROLE_COLORS.map(c => <button key={c} type="button" onClick={() => setEditColor(c)} style={{ width:28, height:28, borderRadius:8, background:c, border: editColor===c ? '2.5px solid var(--text)' : '2px solid transparent', cursor:'pointer', outline:'none' }} />)}
+                  {ROLE_COLORS.map(c => <button key={c} type="button" onClick={() => setEditColor(c)} style={{ width:28, height:28, borderRadius:8, background:c, border: editColor===c ? '2.5px solid var(--text)' : '2px solid transparent', cursor:'pointer' }} />)}
                 </div>
               </div>
               <div style={{ marginBottom:16 }}>
-                <label className="pm-label">{isRTL ? 'الأيقونة' : 'Icon'}</label>
+                <label className="pm-lbl">{isRTL ? 'الأيقونة' : 'Icon'}</label>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
                   {ROLE_ICONS.map(ic => <button key={ic} type="button" onClick={() => setEditIcon(ic)} style={{ width:34, height:34, borderRadius:8, border: editIcon===ic ? `2px solid ${editColor}` : '2px solid var(--border)', background: editIcon===ic ? `${editColor}15` : 'var(--bg-elevated)', cursor:'pointer', fontSize:'1rem' }}>{ic}</button>)}
                   <input value={editIcon} onChange={e => setEditIcon(e.target.value)} maxLength={2} style={{ width:38, textAlign:'center', fontSize:'1rem', background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:8, padding:4, color:'var(--text)' }} />
@@ -465,7 +496,7 @@ export default function PermissionsPage() {
 
       {/* Delete Confirmation */}
       {deleteTarget && (
-        <div className="pm-modal-overlay">
+        <div className="pm-overlay">
           <div className="pm-modal" style={{ maxWidth:400, textAlign:'center' }}>
             <div style={{ fontSize:'3rem', marginBottom:12 }}>{deleteTarget.icon}</div>
             <h2 style={{ margin:'0 0 8px', fontSize:'1rem', fontWeight:800 }}>

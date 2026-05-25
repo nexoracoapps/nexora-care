@@ -21,14 +21,14 @@ const navItems: { href: string; labelKey: string; icon: string; roles: string[];
   { href: '/appointments', labelKey: 'appointments',     icon: '📅', roles: ALL,   permKey: 'manageAppointments' },
   { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,  permKey: 'manageServices' },
   { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,   permKey: 'manageServices' },
-  { href: '/users',        labelKey: 'users',            icon: '👤', roles: PRIV,  permKey: 'viewUsers' },
-  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: PRIV,  permKey: 'managePermissions' },
-  { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,  permKey: 'manageBranches' },
-  { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,  permKey: 'recordPayments' },
-  { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,  permKey: 'viewReports' },
-  { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: PRIV,  permKey: 'manageStaffAbsence' },
-  { href: '/permissions',  labelKey: 'permissions',      icon: '🛡️', roles: PRIV,  permKey: 'managePermissions' },
-  { href: '/backup',       labelKey: 'backup',           icon: '🔒', roles: ADMIN_,permKey: 'systemBackup' },
+  { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_, permKey: 'viewUsers' },
+  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: ADMIN_, permKey: 'managePermissions' },
+  { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,   permKey: 'manageBranches' },
+  { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,   permKey: 'recordPayments' },
+  { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,   permKey: 'viewReports' },
+  { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: PRIV,   permKey: 'manageStaffAbsence' },
+  { href: '/permissions',  labelKey: 'permissions',      icon: '🛡️', roles: ADMIN_, permKey: 'managePermissions' },
+  { href: '/backup',       labelKey: 'backup',           icon: '🔒', roles: ADMIN_, permKey: 'systemBackup' },
 ];
 
 export default function Navbar() {

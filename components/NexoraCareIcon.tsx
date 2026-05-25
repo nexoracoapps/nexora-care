@@ -11,24 +11,26 @@ export default function NexoraCareIcon({ size = 36 }: { size?: number }) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox="0 0 48 48"
       fill="none"
       style={{ display: 'block', flexShrink: 0 }}
     >
-      {/* Hexagon body */}
-      <path d="M20 2L35 10.5V29.5L20 38L5 29.5V10.5Z" fill="#12092A" />
-      {/* Gradient border */}
-      <path d="M20 2L35 10.5V29.5L20 38L5 29.5V10.5Z" stroke={`url(#${bgId})`} strokeWidth="1.5" />
-      {/* N letter */}
-      <path d="M13 27V13L27 27V13" stroke={`url(#${ltId})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <rect width="48" height="48" rx="10" fill="#0a0b14" />
+      <path d="M24 2L43.0526 13.5V36.5L24 48L4.94744 36.5V13.5L24 2Z" fill={`url(#${bgId})`} fillOpacity="0.15" />
+      <path d="M24 2L43.0526 13.5V36.5L24 48L4.94744 36.5V13.5L24 2Z" stroke={`url(#${bgId})`} strokeWidth="1.5" fill="none" />
+      <path d="M15 34V14L24 30V14" stroke={`url(#${bgId})`} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M24 30L33 14V34" stroke={`url(#${ltId})`} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="15" cy="14" r="2" fill="#3b82f6" />
+      <circle cx="33" cy="34" r="2" fill="#dc2626" />
       <defs>
-        <linearGradient id={bgId} x1="5" y1="2" x2="35" y2="38" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#C4788C" stopOpacity="0.7" />
-          <stop offset="1" stopColor="#7B5EA8" stopOpacity="0.7" />
+        <linearGradient id={bgId} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#3b82f6" />
+          <stop offset="0.55" stopColor="#1d4ed8" />
+          <stop offset="1" stopColor="#9b1c1c" />
         </linearGradient>
-        <linearGradient id={ltId} x1="13" y1="13" x2="27" y2="27" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F0B4C4" />
-          <stop offset="1" stopColor="#C5AFED" />
+        <linearGradient id={ltId} x1="48" y1="0" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#dc2626" />
+          <stop offset="1" stopColor="#1d4ed8" />
         </linearGradient>
       </defs>
     </svg>

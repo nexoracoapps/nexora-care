@@ -8,13 +8,9 @@ export const metadata: Metadata = {
   description: 'Complete clinic & wellness management platform',
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192.png',   sizes: '192x192', type: 'image/png' },
-    ],
-    apple: '/apple-icon.png',
-    shortcut: '/favicon-32.png',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: '/icon.svg',
   },
   appleWebApp: {
     capable: true,
@@ -36,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={initialLang} dir={initialLang === 'ar' ? 'rtl' : 'ltr'} data-theme="nexora" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#C4788C" />
+        <meta name="theme-color" content="#1d4ed8" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>

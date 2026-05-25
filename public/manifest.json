@@ -1,22 +1,29 @@
 {
   "name": "Nexora Care",
-  "short_name": "Nexora",
+  "short_name": "Nexora Care",
   "description": "Complete clinic & wellness management platform",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#12092A",
-  "theme_color": "#C4788C",
+  "background_color": "#0a0b14",
+  "theme_color": "#1d4ed8",
   "lang": "ar",
   "dir": "rtl",
   "categories": ["medical", "business", "productivity"],
   "icons": [
-    { "src": "/favicon-16.png",  "sizes": "16x16",   "type": "image/png" },
-    { "src": "/favicon-32.png",  "sizes": "32x32",   "type": "image/png" },
-    { "src": "/apple-icon.png",  "sizes": "180x180", "type": "image/png" },
-    { "src": "/icon-192.png",    "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png",    "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
   ],
   "screenshots": [],
   "prefer_related_applications": false

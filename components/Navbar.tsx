@@ -24,6 +24,8 @@ const navItems: { href: string; labelKey: string; icon: string; roles: string[];
   { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_, permKey: 'viewUsers' },
   { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: ADMIN_, permKey: 'managePermissions' },
   { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,   permKey: 'manageBranches' },
+  { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,   permKey: 'manageAppointments' },
+  { href: '/revenue',      labelKey: 'revenueNav',       icon: '💰', roles: PRIV,   permKey: 'viewReports' },
   { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,   permKey: 'recordPayments' },
   { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,   permKey: 'viewReports' },
   { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: PRIV,   permKey: 'manageStaffAbsence' },

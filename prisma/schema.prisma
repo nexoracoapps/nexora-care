@@ -65,18 +65,19 @@ model Service {
 }
 
 model ServiceProvider {
-  id           String             @id @default(cuid())
-  name         String
-  type         String             @default("THERAPIST")
-  bio          String?
-  photoUrl     String?
-  branchId     String?
-  branch       Branch?            @relation(fields: [branchId], references: [id])
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  appointments Appointment[]
-  absences     StaffAbsence[]
-  ratings      SpecialistRating[]
+  id                String             @id @default(cuid())
+  name              String
+  type              String             @default("THERAPIST")
+  bio               String?
+  photoUrl          String?
+  branchId          String?
+  branch            Branch?            @relation(fields: [branchId], references: [id])
+  revenuePercentage Float              @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  appointments      Appointment[]
+  absences          StaffAbsence[]
+  ratings           SpecialistRating[]
 }
 
 model Appointment {

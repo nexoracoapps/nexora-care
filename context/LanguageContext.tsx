@@ -406,6 +406,10 @@ const translations = {
     reportsSubtitle: 'Insights for your wellness center',
     print: 'Print',
     printReport: 'Print Report',
+
+    // Calendar
+    calendarNav: 'Calendar',
+    revenueNav: 'Revenue',
   },
 
   ar: {
@@ -808,6 +812,10 @@ const translations = {
     reportsSubtitle: 'رؤى لمركز رعايتك',
     print: 'طباعة',
     printReport: 'طباعة التقرير',
+
+    // Calendar
+    calendarNav: 'التقويم',
+    revenueNav: 'الإيرادات',
   },
 };
 

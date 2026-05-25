@@ -834,9 +834,16 @@ export function LanguageProvider({ children, initialLang }: { children: React.Re
     initialLang === 'ar' ? 'ar' : 'en'
   );
 
-  // Before first paint: sync from localStorage in case cookie drifted (PWA/offline scenario)
+  // Before first paint: check URL ?lang param first, then localStorage
   useIsomorphicLayoutEffect(() => {
     try {
+      const urlParam = new URLSearchParams(window.location.search).get('lang');
+      if (urlParam === 'ar' || urlParam === 'en') {
+        setLangState(urlParam);
+        localStorage.setItem('lang', urlParam);
+        document.cookie = `lang=${urlParam};path=/;max-age=31536000;SameSite=Lax`;
+        return;
+      }
       const stored = localStorage.getItem('lang');
       if ((stored === 'ar' || stored === 'en') && stored !== lang) {
         setLangState(stored as Language);

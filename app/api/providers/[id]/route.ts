@@ -3,7 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
 
-const include = { branch: { select: { id: true, name: true, nameAr: true } } };
+const include = {
+  branch: { select: { id: true, name: true, nameAr: true } },
+  linkedUser: { select: { id: true, username: true } },
+};
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const payload = getTokenFromRequest(req);

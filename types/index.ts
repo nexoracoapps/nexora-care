@@ -55,6 +55,7 @@ export interface ServiceProvider {
   photoUrl?: string | null;
   branchId?: string | null;
   branch?: Branch | null;
+  linkedUser?: { id: string; username: string } | null;
   createdAt: string;
 }
 

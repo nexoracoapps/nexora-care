@@ -315,6 +315,7 @@ export default function UsersPage() {
               background: 'var(--bg-surface)', borderRadius: 24, width: '100%', maxWidth: 460,
               boxShadow: '0 28px 80px rgba(0,0,0,0.22)', overflow: 'hidden',
               animation: 'svc-pop 0.24s cubic-bezier(.34,1.56,.64,1)',
+              maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column',
             }}>
               <div style={{ height: 5, background: 'linear-gradient(90deg,var(--rose),#a855f7,#3b82f6)' }} />
 
@@ -357,7 +358,7 @@ export default function UsersPage() {
                 }}>✕</button>
               </div>
 
-              <div style={{ padding: '4px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ padding: '4px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', flex: 1 }}>
 
                 {/* Photo upload */}
                 <div>

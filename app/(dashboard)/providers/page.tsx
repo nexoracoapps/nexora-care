@@ -39,6 +39,8 @@ function nameToGradient(name: string): string {
   return GRADIENTS[Math.abs(h) % GRADIENTS.length];
 }
 
+interface UserOption { id: string; username: string; }
+
 export default function ProvidersPage() {
   const { user } = useAuth();
   const { activeBranchId, branches } = useBranch();
@@ -47,6 +49,7 @@ export default function ProvidersPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
@@ -55,6 +58,9 @@ export default function ProvidersPage() {
   const [deleting, setDeleting] = useState(false);
   const [selected, setSelected] = useState<ServiceProvider | null>(null);
   const [form, setForm] = useState({ name: '', type: 'THERAPIST' as ProviderType, bio: '', photoUrl: '', branchId: '' });
+  const [linkTarget, setLinkTarget] = useState<ServiceProvider | null>(null);
+  const [linkUserId, setLinkUserId] = useState('');
+  const [linking, setLinking] = useState(false);
 
   const headers = { Authorization: `Bearer ${user?.token}`, 'Content-Type': 'application/json' };
 
@@ -62,8 +68,15 @@ export default function ProvidersPage() {
     if (!user?.token) return;
     setLoading(true);
     const q = activeBranchId ? `?branchId=${activeBranchId}` : '';
-    const res = await fetch(`/api/providers${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setProviders(await res.json());
+    const [provRes, usrRes] = await Promise.all([
+      fetch(`/api/providers${q}`, { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch('/api/users', { headers: { Authorization: `Bearer ${user.token}` } }),
+    ]);
+    if (provRes.ok) setProviders(await provRes.json());
+    if (usrRes.ok) {
+      const allUsers = await usrRes.json();
+      setUserOptions(allUsers.map((u: { id: string; username: string }) => ({ id: u.id, username: u.username })));
+    }
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -110,6 +123,32 @@ export default function ProvidersPage() {
     setDeleting(false);
     if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); new BroadcastChannel('nexora-providers').postMessage('changed'); }
     else toast.error(t('failedToDelete'));
+  };
+
+  const openLink = (p: ServiceProvider) => {
+    setLinkTarget(p);
+    setLinkUserId(p.linkedUser?.id || '');
+  };
+
+  const saveLink = async () => {
+    if (!linkTarget) return;
+    setLinking(true);
+    try {
+      const res = await fetch(`/api/providers/${linkTarget.id}/link-user`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ userId: linkUserId || null }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast.success(linkUserId
+        ? (isRTL ? 'تم ربط الحساب بنجاح' : 'Account linked successfully')
+        : (isRTL ? 'تم إلغاء الربط' : 'Account unlinked'));
+      setLinkTarget(null);
+      load();
+    } catch {
+      toast.error(isRTL ? 'فشل في الحفظ' : 'Failed to save');
+    } finally {
+      setLinking(false);
+    }
   };
 
   const filtered = providers.filter(p => {
@@ -205,6 +244,16 @@ export default function ProvidersPage() {
                         <span style={{ opacity: 0.7 }}>🏢</span>{isRTL && p.branch.nameAr ? p.branch.nameAr : p.branch.name}
                       </div>
                     )}
+                    {p.linkedUser ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
+                        <span style={{ fontSize: '0.75rem' }}>🔗</span>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669' }}>@{p.linkedUser.username}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, background: 'rgba(0,0,0,0.04)', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>{isRTL ? 'لا يوجد حساب مرتبط' : 'No linked account'}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
@@ -212,6 +261,13 @@ export default function ProvidersPage() {
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                         ✏️ {t('edit')}
+                      </button>
+                      <div style={{ width: 1, background: 'var(--border)' }} />
+                      <button className="prov-action-btn" onClick={() => openLink(p)}
+                        style={{ flex: 1, padding: 10, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#059669', fontFamily: 'var(--font)', transition: 'background 0.15s' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.06)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        🔗 {isRTL ? 'ربط حساب' : 'Link Account'}
                       </button>
                       <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
@@ -387,6 +443,71 @@ export default function ProvidersPage() {
                     fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                   }}>
                     {selected ? t('saveChanges') : t('addSpecialist')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Link Account Modal */}
+        {linkTarget && (
+          <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)' }}>
+            <div style={{
+              background: 'var(--bg-surface)', borderRadius: 24, width: '100%', maxWidth: 400,
+              boxShadow: '0 28px 80px rgba(0,0,0,0.22)', overflow: 'hidden',
+              animation: 'svc-pop 0.24s cubic-bezier(.34,1.56,.64,1)',
+            }}>
+              <div style={{ height: 5, background: 'linear-gradient(90deg,#10b981,#059669,#3b82f6)' }} />
+              <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>
+                      🔗 {isRTL ? 'ربط حساب مستخدم' : 'Link User Account'}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-sub)', marginTop: 3 }}>
+                      {linkTarget.name} — {isRTL ? TYPE_LABEL_AR[linkTarget.type] : TYPE_LABEL_EN[linkTarget.type]}
+                    </div>
+                  </div>
+                  <button onClick={() => setLinkTarget(null)} style={{
+                    background: 'var(--bg-elevated)', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-sub)', fontSize: 14, width: 30, height: 30,
+                    borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>✕</button>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: 11.5, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {isRTL ? 'اختر مستخدم' : 'Select User'}
+                  </label>
+                  <select className="form-select" value={linkUserId} onChange={e => setLinkUserId(e.target.value)}>
+                    <option value="">{isRTL ? '— لا يوجد ربط —' : '— No link (unlink) —'}</option>
+                    {userOptions.map(u => (
+                      <option key={u.id} value={u.id}>👤 {u.username}</option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', marginTop: 6, lineHeight: 1.5 }}>
+                    {isRTL
+                      ? 'عند تسجيل دخول هذا المستخدم، سيرى تقويمه الخاص مباشرةً.'
+                      : 'When this user logs in, the calendar will automatically filter to show their appointments only.'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setLinkTarget(null)} disabled={linking} style={{
+                    flex: 1, padding: '11px', border: '1.5px solid var(--border)', borderRadius: 12,
+                    background: 'transparent', color: 'var(--text-muted)',
+                    fontFamily: 'var(--font)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  }}>
+                    {t('cancel')}
+                  </button>
+                  <button onClick={saveLink} disabled={linking} style={{
+                    flex: 1, padding: '11px', border: 'none', borderRadius: 12,
+                    background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff',
+                    fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700,
+                    cursor: linking ? 'not-allowed' : 'pointer', opacity: linking ? 0.7 : 1,
+                  }}>
+                    {linking ? '…' : (isRTL ? 'حفظ' : 'Save Link')}
                   </button>
                 </div>
               </div>

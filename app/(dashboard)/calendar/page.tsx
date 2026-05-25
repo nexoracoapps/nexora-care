@@ -19,29 +19,26 @@ type CalAppt = {
 };
 
 type CalProvider = { id: string; name: string; type: string };
-
 type View = 'day' | 'week' | 'month';
 
 const STATUS_COLOR: Record<string, string> = {
   SCHEDULED: '#059669',
   COMPLETED: '#2563eb',
   CANCELLED: '#dc2626',
-  NO_SHOW: '#d97706',
+  NO_SHOW:   '#d97706',
 };
 
-const DAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DAYS_AR = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+const DAYS_EN  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS_AR  = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
 const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
 function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
-
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-
 function startOfWeek(d: Date) {
   const r = new Date(d);
   r.setDate(r.getDate() - r.getDay());
@@ -52,7 +49,7 @@ function startOfWeek(d: Date) {
 export default function CalendarPage() {
   const { user } = useAuth();
   const { activeBranchId } = useBranch();
-  const { lang } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
 
   const [view, setView] = useState<View>('week');
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
@@ -60,20 +57,19 @@ export default function CalendarPage() {
   const [providers, setProviders] = useState<CalProvider[]>([]);
   const [filterProvider, setFilterProvider] = useState('');
   const [loading, setLoading] = useState(false);
-  const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
-  const [expandedDay, setExpandedDay] = useState<string | null>(null); // for month view click
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const notifiedRef = useRef<Set<string>>(new Set());
 
-  const days  = lang === 'ar' ? DAYS_AR : DAYS_EN;
+  const days   = lang === 'ar' ? DAYS_AR   : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
+  const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
 
-  // Auto-select linked provider on first load
+  // Auto-select linked provider on load
   useEffect(() => {
     if (user?.providerId) setFilterProvider(user.providerId);
   }, [user?.providerId]);
 
-  // Detect notification support
   useEffect(() => {
     if (!('Notification' in window)) { setNotifStatus('unsupported'); return; }
     setNotifStatus(Notification.permission);
@@ -85,7 +81,6 @@ export default function CalendarPage() {
     setNotifStatus(perm);
   };
 
-  // Compute range for current view
   const getRange = useCallback((): { from: Date; to: Date } => {
     if (view === 'day') {
       const from = new Date(cursor); from.setHours(0,0,0,0);
@@ -97,7 +92,6 @@ export default function CalendarPage() {
       const to   = new Date(from); to.setDate(from.getDate() + 6); to.setHours(23,59,59,999);
       return { from, to };
     }
-    // month
     const from = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
     const to   = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59, 999);
     return { from, to };
@@ -117,7 +111,6 @@ export default function CalendarPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Load providers for filter
   useEffect(() => {
     if (!user?.token) return;
     const q = activeBranchId ? `?branchId=${activeBranchId}` : '';
@@ -143,8 +136,8 @@ export default function CalendarPage() {
       });
     };
     check();
-    const t = setInterval(check, 60_000);
-    return () => clearInterval(t);
+    const timer = setInterval(check, 60_000);
+    return () => clearInterval(timer);
   }, [appts]);
 
   const goTo = (n: number) => {
@@ -169,59 +162,103 @@ export default function CalendarPage() {
     return `${cursor.getDate()} ${months[cursor.getMonth()]} ${cursor.getFullYear()}`;
   };
 
-  const apptsByDay = (d: Date) => appts.filter(a => sameDay(new Date(a.dateTime), d)).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  const apptsByDay = (d: Date) =>
+    appts.filter(a => sameDay(new Date(a.dateTime), d))
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+
+  const statusLabel = (s: string) => ({
+    SCHEDULED: t('scheduled'), COMPLETED: t('completed'),
+    CANCELLED: t('cancelled'), NO_SHOW: t('noShow'),
+  }[s] ?? s);
 
   // --- APPOINTMENT CARD ---
-  const ApptCard = ({ a, compact }: { a: CalAppt; compact?: boolean }) => (
-    <div style={{
-      background: `${STATUS_COLOR[a.status] ?? '#6366f1'}18`,
-      border: `1.5px solid ${STATUS_COLOR[a.status] ?? '#6366f1'}55`,
-      borderLeft: `3.5px solid ${STATUS_COLOR[a.status] ?? '#6366f1'}`,
-      borderRadius: 8,
-      padding: compact ? '5px 8px' : '8px 11px',
-      marginBottom: 5,
-      cursor: 'default',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: compact ? '0.7rem' : '0.75rem', fontWeight: 700, color: STATUS_COLOR[a.status] ?? '#6366f1' }}>
-          {fmtTime(a.dateTime)}
-        </span>
-        <span style={{ fontSize: compact ? '0.72rem' : '0.82rem', fontWeight: 600, color: 'var(--text)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {a.customer?.name ?? '—'}
-        </span>
-      </div>
-      {!compact && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-          {a.service && <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>✦ {a.service.name}</span>}
-          {a.serviceProvider && <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>🩺 {a.serviceProvider.name}</span>}
-          {a.amount != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>${a.amount}</span>}
+  const ApptCard = ({ a, compact }: { a: CalAppt; compact?: boolean }) => {
+    const color = STATUS_COLOR[a.status] ?? '#6366f1';
+    return (
+      <div style={{
+        background: `${color}12`,
+        borderRadius: compact ? 7 : 10,
+        padding: compact ? '5px 7px 5px 10px' : '9px 12px 9px 13px',
+        marginBottom: compact ? 4 : 6,
+        borderLeft: isRTL ? 'none' : `3px solid ${color}`,
+        borderRight: isRTL ? `3px solid ${color}` : 'none',
+        position: 'relative',
+        cursor: 'default',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{
+            fontSize: compact ? '0.68rem' : '0.73rem', fontWeight: 800, color,
+            background: `${color}20`, borderRadius: 4, padding: '1px 5px', flexShrink: 0,
+          }}>
+            {fmtTime(a.dateTime)}
+          </span>
+          <span style={{
+            fontSize: compact ? '0.72rem' : '0.84rem', fontWeight: 700, color: 'var(--text)',
+            flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {a.customer?.name ?? '—'}
+          </span>
         </div>
-      )}
-    </div>
-  );
+        {!compact && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            {a.service && (
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span style={{ opacity: 0.6 }}>✦</span> {a.service.name}
+              </span>
+            )}
+            {a.serviceProvider && (
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span>🩺</span> {a.serviceProvider.name}
+              </span>
+            )}
+            {a.amount != null && (
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', marginLeft: 'auto' }}>
+                ${a.amount}
+              </span>
+            )}
+          </div>
+        )}
+        {/* Status dot */}
+        <div style={{
+          position: 'absolute', top: compact ? 6 : 9, right: isRTL ? 'unset' : 7, left: isRTL ? 7 : 'unset',
+          width: 6, height: 6, borderRadius: '50%', background: color,
+        }} />
+      </div>
+    );
+  };
 
   // --- DAY VIEW ---
   const DayView = () => {
     const todayAppts = apptsByDay(cursor);
-    const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6am–9pm
+    const hours = Array.from({ length: 16 }, (_, i) => i + 6);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-        <div style={{ textAlign: 'center', padding: '12px 0 16px', fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>
+      <div>
+        <div style={{
+          textAlign: 'center', padding: '14px 0 20px',
+          fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)',
+          letterSpacing: '-0.3px',
+        }}>
           {days[cursor.getDay()]}, {cursor.getDate()} {months[cursor.getMonth()]} {cursor.getFullYear()}
         </div>
         {todayAppts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-sub)', fontSize: '0.9rem' }}>
-            No appointments for this day.
+          <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-sub)' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 10, opacity: 0.4 }}>📅</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('calNoApptsDay')}</div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <div>
             {hours.map(h => {
               const slotAppts = todayAppts.filter(a => new Date(a.dateTime).getHours() === h);
               if (slotAppts.length === 0) return null;
+              const label = `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}`;
               return (
-                <div key={h} style={{ display: 'flex', gap: 12, padding: '6px 0', borderTop: '1px solid var(--border)' }}>
-                  <div style={{ width: 52, flexShrink: 0, paddingTop: 4, fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600 }}>
-                    {h % 12 === 0 ? 12 : h % 12}{h < 12 ? ' AM' : ' PM'}
+                <div key={h} style={{ display: 'flex', gap: 14, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
+                  <div style={{
+                    width: 58, flexShrink: 0, paddingTop: 6,
+                    fontSize: '0.7rem', color: 'var(--text-sub)', fontWeight: 700,
+                    textAlign: isRTL ? 'left' : 'right',
+                  }}>
+                    {label}
                   </div>
                   <div style={{ flex: 1 }}>
                     {slotAppts.map(a => <ApptCard key={a.id} a={a} />)}
@@ -242,35 +279,56 @@ export default function CalendarPage() {
     const today = new Date(); today.setHours(0,0,0,0);
     return (
       <div style={{ overflowX: 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(120px, 1fr))', gap: 8, minWidth: 700 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(130px, 1fr))', gap: 6, minWidth: 700 }}>
           {weekDays.map((d, i) => {
             const dayAppts = apptsByDay(d);
             const isToday = sameDay(d, today);
+            const hasSelf = isOwnCalendar;
             return (
               <div key={i} style={{
-                background: 'var(--bg-card)',
+                background: isToday ? 'var(--bg-card)' : 'var(--bg-elevated)',
                 borderRadius: 12,
-                padding: '10px 10px 12px',
-                border: isToday ? '2px solid var(--rose)' : '1.5px solid var(--border)',
-                minHeight: 120,
+                padding: '10px 8px 12px',
+                border: isToday
+                  ? '2px solid var(--rose)'
+                  : hasSelf && dayAppts.length > 0
+                    ? '1.5px solid rgba(124,58,237,0.3)'
+                    : '1.5px solid var(--border)',
+                minHeight: 110,
+                transition: 'box-shadow 0.15s',
               }}>
+                {/* Day header */}
                 <div style={{ textAlign: 'center', marginBottom: 8 }}>
-                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-sub)', fontWeight: 600 }}>
+                  <div style={{
+                    fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.07em',
+                    color: isToday ? 'var(--rose)' : 'var(--text-sub)', fontWeight: 700,
+                  }}>
                     {days[d.getDay()]}
                   </div>
                   <div style={{
-                    width: 32, height: 32, borderRadius: '50%',
+                    width: 30, height: 30, borderRadius: '50%',
                     background: isToday ? 'var(--rose)' : 'transparent',
                     color: isToday ? '#fff' : 'var(--text)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     margin: '3px auto 0',
-                    fontWeight: 700, fontSize: '0.9rem',
+                    fontWeight: 800, fontSize: '0.92rem',
+                    boxShadow: isToday ? '0 4px 12px rgba(var(--rose-rgb),0.4)' : 'none',
                   }}>
                     {d.getDate()}
                   </div>
                 </div>
+                {/* Appt count badge */}
+                {dayAppts.length > 0 && (
+                  <div style={{
+                    textAlign: 'center', marginBottom: 6,
+                    fontSize: '0.62rem', fontWeight: 700,
+                    color: 'var(--text-sub)',
+                  }}>
+                    {dayAppts.length} {dayAppts.length === 1 ? (lang === 'ar' ? 'موعد' : 'appt') : (lang === 'ar' ? 'مواعيد' : 'appts')}
+                  </div>
+                )}
                 {dayAppts.length === 0 ? (
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-sub)', textAlign: 'center', marginTop: 8 }}>—</div>
+                  <div style={{ fontSize: '0.62rem', color: 'var(--border)', textAlign: 'center', marginTop: 12 }}>·</div>
                 ) : (
                   dayAppts.map(a => <ApptCard key={a.id} a={a} compact />)
                 )}
@@ -293,24 +351,27 @@ export default function CalendarPage() {
       ...Array(firstDay).fill(null),
       ...Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1)),
     ];
-    // Pad to full weeks
     while (cells.length % 7 !== 0) cells.push(null);
 
     return (
       <div>
-        {/* Day headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 4 }}>
+        {/* Day name headers */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 6 }}>
           {days.map(d => (
-            <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 0' }}>
+            <div key={d} style={{
+              textAlign: 'center', fontSize: '0.68rem', fontWeight: 700,
+              color: 'var(--text-sub)', textTransform: 'uppercase',
+              letterSpacing: lang === 'ar' ? 0 : '0.06em', padding: '5px 0',
+            }}>
               {d}
             </div>
           ))}
         </div>
 
-        {/* Calendar grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
           {cells.map((d, i) => {
-            if (!d) return <div key={i} style={{ minHeight: 80 }} />;
+            if (!d) return <div key={i} style={{ minHeight: 72 }} />;
             const dayAppts = apptsByDay(d);
             const isToday = sameDay(d, today);
             const key = d.toISOString().split('T')[0];
@@ -320,43 +381,46 @@ export default function CalendarPage() {
                 key={i}
                 onClick={() => setExpandedDay(isExpanded ? null : key)}
                 style={{
-                  background: 'var(--bg-card)',
+                  background: isToday ? 'rgba(var(--rose-rgb),0.06)' : 'var(--bg-elevated)',
                   borderRadius: 10,
-                  padding: '6px 6px 8px',
+                  padding: '6px 5px 8px',
                   border: isToday ? '2px solid var(--rose)' : '1.5px solid var(--border)',
-                  minHeight: 80,
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.15s',
+                  minHeight: 72,
+                  cursor: dayAppts.length > 0 ? 'pointer' : 'default',
+                  transition: 'background 0.12s',
                 }}
               >
                 <div style={{
-                  width: 26, height: 26, borderRadius: '50%',
+                  width: 24, height: 24, borderRadius: '50%',
                   background: isToday ? 'var(--rose)' : 'transparent',
                   color: isToday ? '#fff' : 'var(--text)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, fontSize: '0.82rem', marginBottom: 4,
+                  fontWeight: 800, fontSize: '0.78rem', marginBottom: 4,
+                  boxShadow: isToday ? '0 2px 8px rgba(var(--rose-rgb),0.35)' : 'none',
                 }}>
                   {d.getDate()}
                 </div>
-                {dayAppts.length > 0 ? (
+                {dayAppts.length > 0 && (
                   isExpanded ? (
-                    dayAppts.map(a => <ApptCard key={a.id} a={a} compact />)
+                    <div>
+                      {dayAppts.map(a => <ApptCard key={a.id} a={a} compact />)}
+                    </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {dayAppts.slice(0, 3).map(a => (
                         <div key={a.id} style={{
-                          height: 5, borderRadius: 3,
+                          height: 4, borderRadius: 2,
                           background: STATUS_COLOR[a.status] ?? '#6366f1',
                         }} />
                       ))}
                       {dayAppts.length > 3 && (
-                        <div style={{ fontSize: '0.6rem', color: 'var(--text-sub)', marginTop: 2 }}>
-                          +{dayAppts.length - 3} more
+                        <div style={{ fontSize: '0.58rem', color: 'var(--text-sub)', marginTop: 1, fontWeight: 700 }}>
+                          +{dayAppts.length - 3} {t('calMore')}
                         </div>
                       )}
                     </div>
                   )
-                ) : null}
+                )}
               </div>
             );
           })}
@@ -365,100 +429,162 @@ export default function CalendarPage() {
     );
   };
 
+  const viewLabels: Record<View, string> = { day: t('calDay'), week: t('calWeek'), month: t('calMonth') };
+
   return (
     <ProtectedRoute permKey="manageAppointments">
       <style dangerouslySetInnerHTML={{ __html: `
-        .cal-view-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 0.82rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.15s; font-family: var(--font); }
-        .cal-view-btn.active { background: var(--rose); border-color: var(--rose); color: #fff; }
-        .cal-view-btn:hover:not(.active) { border-color: var(--rose); color: var(--rose); }
-        .cal-nav-btn { background: var(--bg-elevated); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; color: var(--text); font-size: 0.95rem; transition: background 0.15s; }
-        .cal-nav-btn:hover { background: var(--bg-card); }
+        .cal-view-btn {
+          background: var(--bg-elevated);
+          border: 1.5px solid var(--border);
+          border-radius: 9px;
+          padding: 8px 16px;
+          font-size: 0.82rem; font-weight: 700;
+          color: var(--text-sub);
+          cursor: pointer;
+          transition: all 0.15s;
+          font-family: var(--font);
+          white-space: nowrap;
+        }
+        .cal-view-btn.active {
+          background: var(--rose);
+          border-color: var(--rose);
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(var(--rose-rgb),0.35);
+        }
+        .cal-view-btn:hover:not(.active) {
+          border-color: var(--rose);
+          color: var(--text);
+          background: var(--bg-card);
+        }
+        .cal-nav-btn {
+          background: var(--bg-elevated);
+          border: 1.5px solid var(--border);
+          border-radius: 9px;
+          width: 36px; height: 36px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: var(--text);
+          font-size: 1.1rem; font-weight: 700;
+          transition: all 0.15s;
+        }
+        .cal-nav-btn:hover { background: var(--bg-card); border-color: var(--rose); color: var(--rose); }
+        .cal-select {
+          background: var(--bg-surface);
+          border: 1.5px solid var(--border-strong);
+          border-radius: 9px;
+          padding: 8px 12px;
+          color: var(--text);
+          font-size: 0.82rem;
+          font-family: var(--font);
+          outline: none;
+          transition: border-color 0.15s;
+          min-width: 0;
+        }
+        .cal-select:focus { border-color: var(--rose); }
       `}} />
 
-      <div className="page-header">
+      {/* Page header */}
+      <div className="page-header" dir={isRTL ? 'rtl' : 'ltr'}>
         <div>
           <h1 className="page-title">
-            <span style={{ marginRight: 10 }}>📅</span>Calendar
+            <span style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}>📅</span>
+            {t('calTitle')}
           </h1>
-          <p className="page-sub">View appointments by provider and date</p>
+          <p className="page-sub">{t('calSub')}</p>
         </div>
         {notifStatus !== 'unsupported' && notifStatus !== 'granted' && (
           <button onClick={requestNotif} className="btn btn-secondary btn-sm">
-            🔔 Enable Reminders
+            🔔 {t('calEnableReminders')}
           </button>
         )}
         {notifStatus === 'granted' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(5,150,105,0.12)', border: '1.5px solid rgba(5,150,105,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: '0.8rem', fontWeight: 600, color: '#059669' }}>
-            🔔 Reminders On
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(5,150,105,0.12)',
+            border: '1.5px solid rgba(5,150,105,0.3)',
+            borderRadius: 9, padding: '7px 13px',
+            fontSize: '0.8rem', fontWeight: 700, color: '#059669',
+          }}>
+            🔔 {t('calRemindersOn')}
           </div>
         )}
       </div>
 
-      <div className="glass-card" style={{ marginBottom: 16 }}>
-        {/* Controls bar */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Controls */}
+      <div className="glass-card" style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+
           {/* View toggle */}
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4 }}>
             {(['day', 'week', 'month'] as View[]).map(v => (
-              <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}>
-                {v === 'day' ? 'Day' : v === 'week' ? 'Week' : 'Month'}
+              <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}
+                style={{ padding: '6px 13px', borderRadius: 7, border: 'none' }}>
+                {viewLabels[v]}
               </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <button onClick={() => goTo(-1)} className="cal-nav-btn">‹</button>
-            <button onClick={goToday} className="btn btn-secondary btn-sm">Today</button>
-            <button onClick={() => goTo(1)} className="cal-nav-btn">›</button>
+          {/* Nav */}
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <button onClick={() => goTo(-1)} className="cal-nav-btn">{isRTL ? '›' : '‹'}</button>
+            <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 12px' }}>
+              {t('today')}
+            </button>
+            <button onClick={() => goTo(1)} className="cal-nav-btn">{isRTL ? '‹' : '›'}</button>
           </div>
 
-          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)', flex: 1, textAlign: 'center' }}>
+          {/* Date heading */}
+          <div style={{ flex: 1, fontWeight: 800, fontSize: '0.92rem', color: 'var(--text)', textAlign: 'center', minWidth: 0 }}>
             {headingLabel()}
           </div>
 
-          {/* "My Calendar" shortcut if user is linked to a provider */}
+          {/* My Calendar toggle */}
           {user?.providerId && (
             <button
               onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
               className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
               style={{ display: 'flex', alignItems: 'center', gap: 5 }}
             >
-              🩺 {isOwnCalendar ? 'My Calendar' : 'My Calendar'}
+              🩺 {t('calMyCalendar')}
             </button>
           )}
 
           {/* Provider filter */}
-          <select
-            value={filterProvider}
-            onChange={e => setFilterProvider(e.target.value)}
-            style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-strong)', borderRadius: 9, padding: '7px 12px', color: 'var(--text)', fontSize: '0.82rem', fontFamily: 'var(--font)', outline: 'none' }}
-          >
-            <option value="">All Providers</option>
+          <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
+            <option value="">{t('calAllProviders')}</option>
             {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
       </div>
 
-      <div className="glass-card">
+      {/* Calendar body */}
+      <div className="glass-card" style={{ minHeight: 300 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 48, color: 'var(--text-sub)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-sub)' }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: 12, opacity: 0.4 }}>⏳</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('loading')}</div>
+          </div>
         ) : (
           <>
-            {view === 'day' && <DayView />}
-            {view === 'week' && <WeekView />}
+            {view === 'day'   && <DayView />}
+            {view === 'week'  && <WeekView />}
             {view === 'month' && <MonthView />}
           </>
         )}
       </div>
 
-      {/* Legend */}
-      <div className="glass-card" style={{ marginTop: 12 }}>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Status:</span>
+      {/* Status legend */}
+      <div className="glass-card" style={{ marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', direction: isRTL ? 'rtl' : 'ltr' }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+            {t('calStatusLabel')}:
+          </span>
           {Object.entries(STATUS_COLOR).map(([s, c]) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-sub)' }}>{s.replace('_', ' ')}</span>
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: c, flexShrink: 0 }} />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-sub)', fontWeight: 600 }}>
+                {statusLabel(s)}
+              </span>
             </div>
           ))}
         </div>

@@ -138,16 +138,24 @@ export default function UsersPage() {
     finally { setDeleting(false); }
   };
 
+  const isAdmin = me?.role === 'ADMIN';
+
   const filtered = users.filter(u => {
+    if (!isAdmin) {
+      const rm = roles.find(r => r.name === u.role);
+      if (rm?.isAdmin) return false;
+    }
     const q = search.toLowerCase();
     return (!q || u.username.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.includes(q))
       && (roleFilter === 'ALL' || u.role === roleFilter);
   });
 
+  const visibleRoles = isAdmin ? roles : roles.filter(r => !r.isAdmin);
+
   const str = pwStrength(form.password);
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="viewUsers">
+    <ProtectedRoute roles={['ADMIN']} permKey="viewUsers">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes svc-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
@@ -176,7 +184,7 @@ export default function UsersPage() {
           </div>
           <select className="form-select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ width: 'auto' }}>
             <option value="ALL">{t('allRoles')}</option>
-            {roles.map(r => (
+            {visibleRoles.map(r => (
               <option key={r.name} value={r.name}>
                 {r.icon} {isRTL && r.labelAr ? r.labelAr : r.label}
               </option>
@@ -377,7 +385,7 @@ export default function UsersPage() {
                     {t('role')}
                   </label>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {roles.map(r => (
+                    {visibleRoles.map(r => (
                       <button key={r.name} type="button" onClick={() => setForm(f => ({ ...f, role: r.name }))} style={{
                         padding: '9px 12px', border: '2px solid',
                         borderColor: form.role === r.name ? r.color : 'var(--border)',

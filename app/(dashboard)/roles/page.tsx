@@ -236,8 +236,8 @@ export default function RolesPage() {
         .role-action-edit:hover { background: var(--bg-elevated); color: var(--text); }
         .role-action-del { color: #e53e5a; }
         .role-action-del:hover { background: rgba(229,62,90,0.06); }
-        .role-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .role-modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .role-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .role-modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: calc(100vh - 40px); overflow-y: auto; margin: auto; }
         .role-form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
         .role-form-label { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .role-form-input { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; color: var(--text); font-family: var(--font); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }

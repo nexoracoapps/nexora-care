@@ -12,6 +12,7 @@ export interface AuthUser {
   role: Role;
   branchId: string | null;
   branchName?: string;
+  providerId?: string | null;
   token: string;
   email?: string | null;
   phone?: string | null;

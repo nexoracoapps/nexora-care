@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       username: user.username,
       role: user.role,
       branchId: user.branchId,
+      providerId: user.providerId ?? null,
     });
 
     return apiOk({
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       branchId: user.branchId,
       branchName: user.branch?.name ?? null,
+      providerId: user.providerId ?? null,
       email: user.email,
       phone: user.phone,
     });

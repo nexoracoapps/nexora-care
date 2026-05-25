@@ -8,6 +8,7 @@ export interface TokenPayload {
   username: string;
   role: string;
   branchId: string | null;
+  providerId: string | null;
 }
 
 export function signToken(payload: TokenPayload): string {

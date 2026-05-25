@@ -60,12 +60,18 @@ export default function CalendarPage() {
   const [providers, setProviders] = useState<CalProvider[]>([]);
   const [filterProvider, setFilterProvider] = useState('');
   const [loading, setLoading] = useState(false);
+  const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
   const [expandedDay, setExpandedDay] = useState<string | null>(null); // for month view click
   const notifiedRef = useRef<Set<string>>(new Set());
 
   const days  = lang === 'ar' ? DAYS_AR : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
+
+  // Auto-select linked provider on first load
+  useEffect(() => {
+    if (user?.providerId) setFilterProvider(user.providerId);
+  }, [user?.providerId]);
 
   // Detect notification support
   useEffect(() => {
@@ -409,6 +415,17 @@ export default function CalendarPage() {
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)', flex: 1, textAlign: 'center' }}>
             {headingLabel()}
           </div>
+
+          {/* "My Calendar" shortcut if user is linked to a provider */}
+          {user?.providerId && (
+            <button
+              onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
+              className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+            >
+              🩺 {isOwnCalendar ? 'My Calendar' : 'My Calendar'}
+            </button>
+          )}
 
           {/* Provider filter */}
           <select

@@ -32,6 +32,8 @@ model User {
   photoUrl     String?
   branchId     String?
   branch       Branch?            @relation(fields: [branchId], references: [id])
+  providerId   String?            @unique
+  provider     ServiceProvider?   @relation(fields: [providerId], references: [id])
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   auditLogs    AuditLog[]
@@ -78,6 +80,7 @@ model ServiceProvider {
   appointments      Appointment[]
   absences          StaffAbsence[]
   ratings           SpecialistRating[]
+  linkedUser        User?
 }
 
 model Appointment {

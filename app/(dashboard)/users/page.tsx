@@ -11,8 +11,12 @@ import { usePermissions } from '@/context/PermissionsContext';
 interface UserRecord {
   id: string; username: string; email?: string | null; phone?: string | null;
   role: string; photoUrl?: string | null; branchId?: string | null;
-  branch?: { id: string; name: string; nameAr?: string | null } | null; createdAt: string;
+  branch?: { id: string; name: string; nameAr?: string | null } | null;
+  providerId?: string | null;
+  provider?: { id: string; name: string; type: string } | null;
+  createdAt: string;
 }
+interface ProviderOption { id: string; name: string; type: string; }
 
 interface RoleDefinition {
   id: string; name: string; label: string; labelAr: string;
@@ -56,6 +60,7 @@ export default function UsersPage() {
 
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [roles, setRoles] = useState<RoleDefinition[]>([]);
+  const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -64,19 +69,21 @@ export default function UsersPage() {
   const [deleting, setDeleting] = useState(false);
   const [selected, setSelected] = useState<UserRecord | null>(null);
   const [showPw, setShowPw] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '', email: '', phone: '', role: 'STAFF', branchId: '', photoUrl: '' });
+  const [form, setForm] = useState({ username: '', password: '', email: '', phone: '', role: 'STAFF', branchId: '', photoUrl: '', providerId: '' });
 
   const headers = { Authorization: `Bearer ${me?.token}`, 'Content-Type': 'application/json' };
 
   const load = useCallback(async () => {
     if (!me?.token) return;
     setLoading(true);
-    const [usersRes, rolesRes] = await Promise.all([
-      fetch('/api/users', { headers: { Authorization: `Bearer ${me.token}` } }),
-      fetch('/api/roles', { headers: { Authorization: `Bearer ${me.token}` } }),
+    const [usersRes, rolesRes, providersRes] = await Promise.all([
+      fetch('/api/users',     { headers: { Authorization: `Bearer ${me.token}` } }),
+      fetch('/api/roles',     { headers: { Authorization: `Bearer ${me.token}` } }),
+      fetch('/api/providers', { headers: { Authorization: `Bearer ${me.token}` } }),
     ]);
-    if (usersRes.ok) setUsers(await usersRes.json());
-    if (rolesRes.ok) setRoles(await rolesRes.json());
+    if (usersRes.ok)     setUsers(await usersRes.json());
+    if (rolesRes.ok)     setRoles(await rolesRes.json());
+    if (providersRes.ok) setProviderOptions(await providersRes.json());
     setLoading(false);
   }, [me]);
 
@@ -96,14 +103,14 @@ export default function UsersPage() {
 
   const openCreate = () => {
     setSelected(null);
-    setForm({ username: '', password: '', email: '', phone: '', role: 'STAFF', branchId: '', photoUrl: '' });
+    setForm({ username: '', password: '', email: '', phone: '', role: 'STAFF', branchId: '', photoUrl: '', providerId: '' });
     setShowPw(false);
     setModalOpen(true);
   };
 
   const openEdit = (u: UserRecord) => {
     setSelected(u);
-    setForm({ username: u.username, password: '', email: u.email || '', phone: u.phone || '', role: u.role, branchId: u.branchId || '', photoUrl: u.photoUrl || '' });
+    setForm({ username: u.username, password: '', email: u.email || '', phone: u.phone || '', role: u.role, branchId: u.branchId || '', photoUrl: u.photoUrl || '', providerId: u.providerId || '' });
     setShowPw(false);
     setModalOpen(true);
   };
@@ -113,7 +120,7 @@ export default function UsersPage() {
     if (!selected && !form.password) return toast.error(t('passwordRequired'));
     if (form.password && form.password.length < 6) return toast.error(t('passwordMinLength'));
     try {
-      const body: Record<string, unknown> = { username: form.username.trim(), email: form.email || null, phone: form.phone || null, role: form.role, branchId: form.branchId || null, photoUrl: form.photoUrl || null };
+      const body: Record<string, unknown> = { username: form.username.trim(), email: form.email || null, phone: form.phone || null, role: form.role, branchId: form.branchId || null, photoUrl: form.photoUrl || null, providerId: form.providerId || null };
       if (form.password) body.password = form.password;
       const url = selected ? `/api/users/${selected.id}` : '/api/users';
       const method = selected ? 'PUT' : 'POST';
@@ -266,6 +273,12 @@ export default function UsersPage() {
                     {u.branch && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-sub)' }}>
                         <span style={{ opacity: 0.7 }}>🏢</span>{isRTL && u.branch.nameAr ? u.branch.nameAr : u.branch.name}
+                      </div>
+                    )}
+                    {u.provider && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, background: 'rgba(124,58,237,0.10)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
+                        <span style={{ fontSize: '0.75rem' }}>🩺</span>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7c3aed' }}>{u.provider.name}</span>
                       </div>
                     )}
                   </div>
@@ -450,6 +463,24 @@ export default function UsersPage() {
                     <option value="">{t('noBranchAssigned')}</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{isRTL && b.nameAr ? b.nameAr : b.name}</option>)}
                   </select>
+                </div>
+
+                {/* Linked Provider */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: 11.5, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    🩺 {isRTL ? 'ربط بمزود خدمة' : 'Linked Provider'}
+                  </label>
+                  <select className="form-select" value={form.providerId} onChange={e => setForm(f => ({ ...f, providerId: e.target.value }))}>
+                    <option value="">{isRTL ? '— لا يوجد ربط —' : '— None —'}</option>
+                    {providerOptions.map(p => (
+                      <option key={p.id} value={p.id}>🩺 {p.name} ({p.type})</option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', marginTop: 5 }}>
+                    {isRTL
+                      ? 'عند تسجيل الدخول، سيرى هذا المستخدم تقويمه الخاص مباشرة.'
+                      : 'When logged in, this user will automatically see their own calendar.'}
+                  </div>
                 </div>
 
                 {/* Footer */}

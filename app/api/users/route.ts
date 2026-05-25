@@ -14,6 +14,8 @@ export async function GET(req: NextRequest) {
       id: true, username: true, email: true, phone: true,
       role: true, photoUrl: true, branchId: true,
       branch: { select: { id: true, name: true, nameAr: true } },
+      providerId: true,
+      provider: { select: { id: true, name: true, type: true } },
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
-  const { username, password, email, phone, role, branchId, photoUrl } = await req.json();
+  const { username, password, email, phone, role, branchId, photoUrl, providerId } = await req.json();
   if (!username || !password) return apiError('Username and password required');
 
   const existing = await prisma.user.findUnique({ where: { username } });
@@ -44,11 +46,14 @@ export async function POST(req: NextRequest) {
       role: role || 'STAFF',
       photoUrl: photoUrl || null,
       branchId: branchId || null,
+      providerId: providerId || null,
     },
     select: {
       id: true, username: true, email: true, phone: true,
       role: true, photoUrl: true, branchId: true,
       branch: { select: { id: true, name: true, nameAr: true } },
+      providerId: true,
+      provider: { select: { id: true, name: true, type: true } },
       createdAt: true,
     },
   });

@@ -8,6 +8,8 @@ const SELECT = {
   id: true, username: true, email: true, phone: true,
   role: true, photoUrl: true, branchId: true,
   branch: { select: { id: true, name: true } },
+  providerId: true,
+  provider: { select: { id: true, name: true, type: true } },
   createdAt: true,
 };
 
@@ -26,7 +28,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
-  const { username, password, email, phone, role, branchId, photoUrl } = await req.json();
+  const { username, password, email, phone, role, branchId, photoUrl, providerId } = await req.json();
   if (!username) return apiError('Username is required');
 
   const conflict = await prisma.user.findFirst({
@@ -41,6 +43,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     role: role || 'STAFF',
     branchId: branchId || null,
     photoUrl: photoUrl || null,
+    providerId: providerId || null,
   };
   if (password) {
     data.password = await bcrypt.hash(password, 10);

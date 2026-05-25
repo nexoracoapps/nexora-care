@@ -36,7 +36,7 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Appointments', groupAr: 'المواعيد', icon: '📅', color: '#0891b2',
     items: [
-      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments Page',                       labelAr: 'عرض صفحة المواعيد' },
+      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments & Calendar',                  labelAr: 'عرض المواعيد والتقويم' },
       { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                      labelAr: 'إنشاء مواعيد جديدة',           parentKey: 'manageAppointments' },
       { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',               labelAr: 'تعديل وإعادة جدولة المواعيد',  parentKey: 'manageAppointments' },
       { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)',  labelAr: 'تحديث الحالة',                  parentKey: 'manageAppointments' },
@@ -47,8 +47,8 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Reports', groupAr: 'التقارير', icon: '📊', color: '#10b981',
     items: [
-      { key: 'viewReports',   icon: '📊', label: 'View Reports Page',      labelAr: 'عرض صفحة التقارير' },
-      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',  labelAr: 'تصدير وطباعة التقارير', parentKey: 'viewReports' },
+      { key: 'viewReports',   icon: '📊', label: 'View Reports & Revenue Distribution', labelAr: 'عرض التقارير وتوزيع الإيرادات' },
+      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',               labelAr: 'تصدير وطباعة التقارير',             parentKey: 'viewReports' },
     ],
   },
   {

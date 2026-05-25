@@ -30,16 +30,23 @@ interface User {
   branch?: { id: string; name: string; nameAr?: string | null } | null;
 }
 
-function nameToGradient(name: string) {
-  const grads = [
-    'linear-gradient(135deg,#f093fb,#f5576c)',
-    'linear-gradient(135deg,#4facfe,#00f2fe)',
-    'linear-gradient(135deg,#43e97b,#38f9d7)',
-    'linear-gradient(135deg,#fa709a,#fee140)',
-    'linear-gradient(135deg,#a18cd1,#fbc2eb)',
-    'linear-gradient(135deg,#fccb90,#d57eeb)',
-  ];
-  return grads[name.charCodeAt(0) % grads.length];
+const GRADIENTS = [
+  'linear-gradient(135deg,#f9a8d4,#ec4899)',
+  'linear-gradient(135deg,#c4b5fd,#8b5cf6)',
+  'linear-gradient(135deg,#6ee7f7,#818cf8)',
+  'linear-gradient(135deg,#fde68a,#f59e0b)',
+  'linear-gradient(135deg,#a7f3d0,#10b981)',
+  'linear-gradient(135deg,#fca5a5,#ef4444)',
+  'linear-gradient(135deg,#bfdbfe,#3b82f6)',
+  'linear-gradient(135deg,#d9f99d,#65a30d)',
+  'linear-gradient(135deg,#fbcfe8,#db2777)',
+  'linear-gradient(135deg,#e9d5ff,#9333ea)',
+];
+
+function nameToGradient(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) { h = ((h << 5) - h) + name.charCodeAt(i); h |= 0; }
+  return GRADIENTS[Math.abs(h) % GRADIENTS.length];
 }
 
 const ROLE_COLORS = ['#C4788C','#0891b2','#6366f1','#10b981','#f59e0b','#8b5cf6','#ef4444','#ec4899','#14b8a6','#f97316'];
@@ -217,14 +224,13 @@ export default function RolesPage() {
   return (
     <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="createUsers">
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes role-card-pop { from { opacity:0; transform:scale(0.94) translateY(14px); } to { opacity:1; transform:scale(1) translateY(0); } }
-        .role-card { transition: transform 0.18s, box-shadow 0.18s; animation: role-card-pop 0.22s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes role-card-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .role-card { transition: transform 0.18s, box-shadow 0.18s; animation: role-card-pop 0.24s cubic-bezier(.34,1.56,.64,1); }
         .role-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.13); }
-        .role-user-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--bg-elevated); border: 1px solid var(--border); transition: border-color 0.15s; }
-        .role-user-row:hover { border-color: rgba(196,120,140,0.25); }
-        .role-select { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; color: var(--text); font-size: 0.76rem; font-weight: 600; cursor: pointer; font-family: var(--font); outline: none; transition: border-color 0.15s; max-width: 120px; }
+        .role-user-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+        .role-user-row:last-child { border-bottom: none; }
+        .role-select { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 7px; padding: 3px 7px; color: var(--text); font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: var(--font); outline: none; transition: border-color 0.15s; max-width: 110px; }
         .role-select:hover, .role-select:focus { border-color: var(--rose); }
-        .roles-dyn-grid { display: grid; gap: 18px; }
         .role-action-btn { flex:1; padding:10px; border:none; background:transparent; cursor:pointer; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:5px; transition:background 0.15s, color 0.15s; font-family:var(--font); }
         .role-action-edit { color: var(--text-sub); }
         .role-action-edit:hover { background: var(--bg-elevated); color: var(--text); }
@@ -263,105 +269,90 @@ export default function RolesPage() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(255px, 1fr))', gap: 18 }}>
             {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 300 }} />)}
           </div>
         ) : (
-          <div
-            className="roles-dyn-grid"
-            style={{ gridTemplateColumns: `repeat(${Math.min(colCount, 3)}, 1fr)` }}
-          >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(255px, 1fr))', gap: 18 }}>
             {roles.map(role => {
               const roleUsers = grouped[role.name] ?? [];
+              const grad = nameToGradient(role.label);
               return (
                 <div key={role.id} className="glass-card role-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  {/* Banner */}
-                  <div style={{ position: 'relative', height: 100, background: `linear-gradient(135deg, ${role.color}dd, ${role.color}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <div style={{ width: 62, height: 62, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', border: '2.5px solid rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.7rem', boxShadow: '0 4px 16px rgba(0,0,0,0.14)' }}>
-                      {role.icon}
-                    </div>
-                    {/* User count badge */}
-                    <div style={{ position: 'absolute', top: 10, insetInlineEnd: 10, background: 'rgba(0,0,0,0.22)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 10px', fontSize: 11.5, fontWeight: 700, color: '#fff' }}>
+                  {/* Banner — same as services */}
+                  <div style={{ position: 'relative', height: 110, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '2.8rem', lineHeight: 1, filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.18))' }}>{role.icon}</span>
+                    {/* User count badge — like price badge in services */}
+                    <div style={{ position: 'absolute', top: 10, insetInlineEnd: 10, background: 'rgba(0,0,0,0.22)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 11px', fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '0.01em' }}>
                       {roleUsers.length} {isRTL ? t('usersInRole') : roleUsers.length === 1 ? 'user' : 'users'}
                     </div>
-                    {/* System badge */}
                     {role.isSystem && (
-                      <div style={{ position: 'absolute', top: 10, insetInlineStart: 10, background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                      <div style={{ position: 'absolute', top: 10, insetInlineStart: 10, background: 'rgba(0,0,0,0.22)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#fff' }}>
                         🔒 {isRTL ? 'نظام' : 'System'}
                       </div>
                     )}
                   </div>
 
-                  {/* Role info */}
-                  <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid var(--border)' }}>
-                    <h3 style={{ fontWeight: 800, fontSize: '1rem', color: role.color, margin: '0 0 2px', lineHeight: 1.3 }}>
+                  {/* Body — same structure as services */}
+                  <div style={{ padding: '15px 17px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <h3 style={{ fontWeight: 700, fontSize: '0.96rem', color: 'var(--text)', marginBottom: 4, lineHeight: 1.3 }}>
                       {isRTL && role.labelAr ? role.labelAr : role.label}
                     </h3>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600 }}>{role.name}</div>
-                  </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600, marginBottom: 10 }}>{role.name}</div>
 
-                  {/* Users list */}
-                  <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1, minHeight: 50 }}>
+                    {/* Users list */}
                     {roleUsers.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '16px 12px', color: 'var(--text-sub)', fontSize: '0.82rem' }}>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-sub)', lineHeight: 1.55, flex: 1, margin: 0 }}>
                         {isRTL ? t('noUsersInRole') : 'No users assigned'}
-                      </div>
-                    ) : roleUsers.map(u => {
-                      const isMe = u.id === user?.id;
-                      return (
-                        <div key={u.id} className="role-user-row" style={{ opacity: changing === u.id ? 0.6 : 1 }}>
-                          {u.photoUrl ? (
-                            <img src={u.photoUrl} alt={u.username} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border)' }} />
-                          ) : (
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: nameToGradient(u.username), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#fff' }}>
-                              {u.username.slice(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.83rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.username}</span>
-                              {isMe && (
-                                <span style={{ fontSize: '0.6rem', fontWeight: 800, background: `${role.color}20`, color: role.color, border: `1px solid ${role.color}40`, borderRadius: 20, padding: '1px 6px', flexShrink: 0 }}>
-                                  {isRTL ? 'أنت' : 'You'}
-                                </span>
+                      </p>
+                    ) : (
+                      <div style={{ flex: 1 }}>
+                        {roleUsers.map(u => {
+                          const isMe = u.id === user?.id;
+                          return (
+                            <div key={u.id} className="role-user-row" style={{ opacity: changing === u.id ? 0.6 : 1 }}>
+                              {u.photoUrl ? (
+                                <img src={u.photoUrl} alt={u.username} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border)' }} />
+                              ) : (
+                                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#fff' }}>
+                                  {u.username.slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.username}</span>
+                                  {isMe && <span style={{ fontSize: '0.58rem', fontWeight: 800, background: 'rgba(255,255,255,0.12)', color: 'var(--text-sub)', borderRadius: 20, padding: '1px 5px', flexShrink: 0 }}>{isRTL ? 'أنت' : 'You'}</span>}
+                                </div>
+                                {u.branch && <div style={{ fontSize: '0.65rem', color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🏢 {lang === 'ar' && u.branch.nameAr ? u.branch.nameAr : u.branch.name}</div>}
+                              </div>
+                              {canDo('editUsers') && (
+                                <select className="role-select" value={u.role} disabled={changing === u.id} onChange={e => changeRole(u.id, e.target.value)} style={{ color: roleMeta(u.role)?.color ?? 'var(--text)' }}>
+                                  {roles.map(r => <option key={r.name} value={r.name} style={{ color: r.color }}>{r.icon} {isRTL && r.labelAr ? r.labelAr : r.label}</option>)}
+                                </select>
                               )}
                             </div>
-                            {u.branch && (
-                              <div style={{ fontSize: '0.68rem', color: 'var(--text-sub)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                🏢 {lang === 'ar' && u.branch.nameAr ? u.branch.nameAr : u.branch.name}
-                              </div>
-                            )}
-                          </div>
-                          {canDo('editUsers') && (
-                            <select className="role-select" value={u.role} disabled={changing === u.id} onChange={e => changeRole(u.id, e.target.value)} style={{ color: roleMeta(u.role)?.color ?? 'var(--text)' }}>
-                              {roles.map(r => (
-                                <option key={r.name} value={r.name} style={{ color: r.color }}>
-                                  {r.icon} {isRTL && r.labelAr ? r.labelAr : r.label}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Action buttons */}
-                  {user?.role === 'ADMIN' && (
-                    <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
+                  {/* Actions — identical to services */}
+                  <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                    {user?.role === 'ADMIN' && (
                       <button className="role-action-btn role-action-edit" onClick={() => openEdit(role)}>
                         ✏️ {isRTL ? 'تعديل' : 'Edit'}
                       </button>
-                      {!role.isAdmin && (
-                        <>
-                          <div style={{ width: 1, background: 'var(--border)' }} />
-                          <button className="role-action-btn role-action-del" onClick={() => setDeleteTarget(role)}>
-                            🗑 {isRTL ? 'حذف' : 'Delete'}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    {user?.role === 'ADMIN' && !role.isAdmin && (
+                      <>
+                        <div style={{ width: 1, background: 'var(--border)' }} />
+                        <button className="role-action-btn role-action-del" onClick={() => setDeleteTarget(role)}>
+                          🗑 {isRTL ? 'حذف' : 'Delete'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -369,36 +360,34 @@ export default function RolesPage() {
             {/* Unknown roles bucket */}
             {unknown.length > 0 && (
               <div className="glass-card role-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ position: 'relative', height: 100, background: 'linear-gradient(135deg, #f59e0bdd, #f59e0b66)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <div style={{ width: 62, height: 62, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', border: '2.5px solid rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.7rem', boxShadow: '0 4px 16px rgba(0,0,0,0.14)' }}>⚠️</div>
-                  <div style={{ position: 'absolute', top: 10, insetInlineEnd: 10, background: 'rgba(0,0,0,0.22)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 10px', fontSize: 11.5, fontWeight: 700, color: '#fff' }}>
+                <div style={{ position: 'relative', height: 110, background: 'linear-gradient(135deg,#fde68a,#f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '2.8rem', lineHeight: 1, filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.18))' }}>⚠️</span>
+                  <div style={{ position: 'absolute', top: 10, insetInlineEnd: 10, background: 'rgba(0,0,0,0.22)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '4px 11px', fontSize: 13, fontWeight: 800, color: '#fff' }}>
                     {unknown.length} {isRTL ? 'مستخدم' : unknown.length === 1 ? 'user' : 'users'}
                   </div>
                 </div>
-                <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid var(--border)' }}>
-                  <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#f59e0b', margin: '0 0 2px' }}>{isRTL ? 'أدوار غير معروفة' : 'Unknown Roles'}</h3>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600 }}>{isRTL ? 'الأدوار غير موجودة في النظام' : 'roles not found in system'}</div>
-                </div>
-                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
-                  {unknown.map(u => (
-                    <div key={u.id} className="role-user-row">
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: nameToGradient(u.username), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#fff' }}>
-                        {u.username.slice(0, 2).toUpperCase()}
+                <div style={{ padding: '15px 17px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ fontWeight: 700, fontSize: '0.96rem', color: 'var(--text)', marginBottom: 4 }}>{isRTL ? 'أدوار غير معروفة' : 'Unknown Roles'}</h3>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600, marginBottom: 10 }}>{isRTL ? 'غير موجودة في النظام' : 'Not found in system'}</div>
+                  <div style={{ flex: 1 }}>
+                    {unknown.map(u => (
+                      <div key={u.id} className="role-user-row">
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,#fde68a,#f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#fff' }}>
+                          {u.username.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.username}</div>
+                          <div style={{ fontSize: '0.65rem', color: '#f59e0b', fontWeight: 600 }}>{u.role}</div>
+                        </div>
+                        {canDo('editUsers') && (
+                          <select className="role-select" value={u.role} onChange={e => changeRole(u.id, e.target.value)}>
+                            <option value={u.role}>{u.role}</option>
+                            {roles.map(r => <option key={r.name} value={r.name}>{r.icon} {isRTL && r.labelAr ? r.labelAr : r.label}</option>)}
+                          </select>
+                        )}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.83rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.username}</div>
-                        <div style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: 600 }}>{u.role}</div>
-                      </div>
-                      {canDo('editUsers') && (
-                        <select className="role-select" value={u.role} onChange={e => changeRole(u.id, e.target.value)}>
-                          <option value={u.role}>{u.role}</option>
-                          {roles.map(r => (
-                            <option key={r.name} value={r.name}>{r.icon} {isRTL && r.labelAr ? r.labelAr : r.label}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

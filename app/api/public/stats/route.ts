@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { apiOk } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const [specialistCount, customerCount, allRatings] = await Promise.all([
     prisma.serviceProvider.count(),

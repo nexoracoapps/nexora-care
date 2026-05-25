@@ -266,7 +266,7 @@ export default function PermissionsPage() {
           </div>
         ) : (
           <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:20 }}>
-            {roles.map(role => {
+            {roles.filter(role => isAdmin || !role.isAdmin).map(role => {
               const isSelected = selectedRole === role.name;
               return (
                 <button

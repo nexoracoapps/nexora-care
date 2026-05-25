@@ -265,7 +265,7 @@ export default function PermissionsPage() {
             {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:44, width:120, borderRadius:12 }} />)}
           </div>
         ) : (
-          <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:6, marginBottom:20, scrollbarWidth:'none' }}>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:20 }}>
             {roles.map(role => {
               const isSelected = selectedRole === role.name;
               return (

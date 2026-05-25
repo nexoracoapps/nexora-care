@@ -236,9 +236,6 @@ export default function RolesPage() {
         .role-action-edit:hover { background: var(--bg-elevated); color: var(--text); }
         .role-action-del { color: #e53e5a; }
         .role-action-del:hover { background: rgba(229,62,90,0.06); }
-        .role-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; overflow-y: auto; }
-        .role-modal-stage { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
-        .role-modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .role-form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
         .role-form-label { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .role-form-input { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; color: var(--text); font-family: var(--font); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
@@ -408,9 +405,8 @@ export default function RolesPage() {
 
       {/* ── Add Role Modal ── */}
       {showAddModal && (
-        <div className="role-modal-overlay">
-          <div className="role-modal-stage">
-          <div className="role-modal">
+        <div className="modal-overlay">
+          <div className="modal" style={{ padding: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
               <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{isRTL ? 'إضافة دور جديد' : 'Add New Role'}</h2>
               <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-sub)', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>×</button>
@@ -470,15 +466,13 @@ export default function RolesPage() {
               </div>
             </form>
           </div>
-          </div>
         </div>
       )}
 
       {/* ── Edit Role Modal ── */}
       {editTarget && (
-        <div className="role-modal-overlay">
-          <div className="role-modal-stage">
-          <div className="role-modal">
+        <div className="modal-overlay">
+          <div className="modal" style={{ padding: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: `${editColor}18`, border: `1.5px solid ${editColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>{editIcon}</div>
@@ -486,13 +480,11 @@ export default function RolesPage() {
               </div>
               <button onClick={() => setEditTarget(null)} style={{ background: 'none', border: 'none', color: 'var(--text-sub)', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>×</button>
             </div>
-
             {editTarget.isSystem && (
               <div style={{ marginBottom: 14, padding: '8px 12px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, fontSize: '0.78rem', color: 'var(--text-sub)' }}>
                 🔒 {isRTL ? 'دور النظام — يمكن تعديل العرض فقط' : 'System role — only display properties can be changed'}
               </div>
             )}
-
             <form onSubmit={handleEditRole}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="role-form-row">
@@ -504,7 +496,6 @@ export default function RolesPage() {
                   <input className="role-form-input" value={editLabelAr} onChange={e => setEditLabelAr(e.target.value)} dir="rtl" />
                 </div>
               </div>
-
               <div className="role-form-row">
                 <label className="role-form-label">{isRTL ? 'اللون' : 'Color'}</label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -513,20 +504,15 @@ export default function RolesPage() {
                   ))}
                 </div>
               </div>
-
               <div className="role-form-row">
                 <label className="role-form-label">{isRTL ? 'الأيقونة' : 'Icon'}</label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                   {ROLE_ICONS.map(ic => (
-                    <button key={ic} type="button" onClick={() => setEditIcon(ic)} style={{ width: 34, height: 34, borderRadius: 8, border: editIcon === ic ? `2px solid ${editColor}` : '2px solid var(--border)', background: editIcon === ic ? `${editColor}15` : 'var(--bg-elevated)', cursor: 'pointer', fontSize: '1rem' }}>
-                      {ic}
-                    </button>
+                    <button key={ic} type="button" onClick={() => setEditIcon(ic)} style={{ width: 34, height: 34, borderRadius: 8, border: editIcon === ic ? `2px solid ${editColor}` : '2px solid var(--border)', background: editIcon === ic ? `${editColor}15` : 'var(--bg-elevated)', cursor: 'pointer', fontSize: '1rem' }}>{ic}</button>
                   ))}
                   <input value={editIcon} onChange={e => setEditIcon(e.target.value)} maxLength={2} style={{ width: 40, textAlign: 'center', fontSize: '1rem', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: 4, color: 'var(--text)' }} />
                 </div>
               </div>
-
-              {/* Preview */}
               <div style={{ marginBottom: 16, padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: `${editColor}18`, border: `1.5px solid ${editColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>{editIcon}</div>
                 <div>
@@ -535,46 +521,30 @@ export default function RolesPage() {
                 </div>
                 <span style={{ marginInlineStart: 'auto', fontSize: '0.7rem', color: 'var(--text-sub)', fontWeight: 600 }}>{isRTL ? 'معاينة' : 'Preview'}</span>
               </div>
-
               <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" onClick={() => setEditTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-sub)', fontWeight: 600, cursor: 'pointer' }}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </button>
-                <button type="submit" disabled={editSaving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: editColor, color: '#fff', fontWeight: 700, cursor: editSaving ? 'not-allowed' : 'pointer', opacity: editSaving ? 0.7 : 1 }}>
-                  {editSaving ? '…' : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
-                </button>
+                <button type="button" onClick={() => setEditTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-sub)', fontWeight: 600, cursor: 'pointer' }}>{isRTL ? 'إلغاء' : 'Cancel'}</button>
+                <button type="submit" disabled={editSaving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: editColor, color: '#fff', fontWeight: 700, cursor: editSaving ? 'not-allowed' : 'pointer', opacity: editSaving ? 0.7 : 1 }}>{editSaving ? '…' : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}</button>
               </div>
             </form>
-          </div>
           </div>
         </div>
       )}
 
       {/* ── Delete Confirmation ── */}
       {deleteTarget && (
-        <div className="role-modal-overlay">
-          <div className="role-modal-stage">
-          <div className="role-modal" style={{ maxWidth: 400 }}>
-            <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{deleteTarget.icon}</div>
-              <h2 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 800 }}>
-                {isRTL ? `حذف دور "${deleteTarget.labelAr || deleteTarget.label}"؟` : `Delete "${deleteTarget.label}" role?`}
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.83rem', color: 'var(--text-sub)', lineHeight: 1.6 }}>
-                {isRTL
-                  ? 'سيتم حذف هذا الدور نهائياً. يجب إعادة تعيين المستخدمين الذين لديهم هذا الدور أولاً.'
-                  : 'This role will be permanently deleted. Users assigned to it must be reassigned first.'}
-              </p>
-            </div>
+        <div className="modal-overlay">
+          <div className="modal" style={{ padding: 28, maxWidth: 400, textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{deleteTarget.icon}</div>
+            <h2 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 800 }}>
+              {isRTL ? `حذف دور "${deleteTarget.labelAr || deleteTarget.label}"؟` : `Delete "${deleteTarget.label}" role?`}
+            </h2>
+            <p style={{ margin: '0 0 22px', fontSize: '0.83rem', color: 'var(--text-sub)', lineHeight: 1.6 }}>
+              {isRTL ? 'سيتم حذف هذا الدور نهائياً. يجب إعادة تعيين المستخدمين أولاً.' : 'This role will be permanently deleted. Users assigned to it must be reassigned first.'}
+            </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-sub)', fontWeight: 600, cursor: 'pointer' }}>
-                {isRTL ? 'إلغاء' : 'Cancel'}
-              </button>
-              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1 }}>
-                {deleting ? '…' : (isRTL ? 'حذف' : 'Delete')}
-              </button>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-sub)', fontWeight: 600, cursor: 'pointer' }}>{isRTL ? 'إلغاء' : 'Cancel'}</button>
+              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1 }}>{deleting ? '…' : (isRTL ? 'حذف' : 'Delete')}</button>
             </div>
-          </div>
           </div>
         </div>
       )}

@@ -236,8 +236,9 @@ export default function RolesPage() {
         .role-action-edit:hover { background: var(--bg-elevated); color: var(--text); }
         .role-action-del { color: #e53e5a; }
         .role-action-del:hover { background: rgba(229,62,90,0.06); }
-        .role-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px; overflow-y: auto; }
-        .role-modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: auto; flex-shrink: 0; }
+        .role-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; overflow-y: auto; }
+        .role-modal-stage { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
+        .role-modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .role-form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
         .role-form-label { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .role-form-input { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; color: var(--text); font-family: var(--font); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
@@ -408,6 +409,7 @@ export default function RolesPage() {
       {/* ── Add Role Modal ── */}
       {showAddModal && (
         <div className="role-modal-overlay">
+          <div className="role-modal-stage">
           <div className="role-modal">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
               <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{isRTL ? 'إضافة دور جديد' : 'Add New Role'}</h2>
@@ -468,12 +470,14 @@ export default function RolesPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       )}
 
       {/* ── Edit Role Modal ── */}
       {editTarget && (
         <div className="role-modal-overlay">
+          <div className="role-modal-stage">
           <div className="role-modal">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -542,12 +546,14 @@ export default function RolesPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       )}
 
       {/* ── Delete Confirmation ── */}
       {deleteTarget && (
         <div className="role-modal-overlay">
+          <div className="role-modal-stage">
           <div className="role-modal" style={{ maxWidth: 400 }}>
             <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{deleteTarget.icon}</div>
@@ -568,6 +574,7 @@ export default function RolesPage() {
                 {deleting ? '…' : (isRTL ? 'حذف' : 'Delete')}
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}

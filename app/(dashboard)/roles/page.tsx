@@ -238,8 +238,8 @@ export default function RolesPage() {
         .role-action-del:hover { background: rgba(229,62,90,0.06); }
         .role-form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
         .role-form-label { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
-        .role-form-input { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; color: var(--text); font-family: var(--font); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
-        .role-form-input:focus { border-color: var(--rose); }
+        .role-form-input { background: var(--bg-surface); border: 1.5px solid var(--border-strong); border-radius: 10px; padding: 9px 13px; color: var(--text); font-family: var(--font); font-size: 0.9rem; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; }
+        .role-form-input:focus { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,120,140,0.12); }
       `}} />
 
       <div>
@@ -412,17 +412,17 @@ export default function RolesPage() {
               <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-sub)', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>×</button>
             </div>
             <form onSubmit={handleAddRole}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="role-form-row" style={{ gridColumn: '1/-1' }}>
-                  <label className="role-form-label">{isRTL ? 'الاسم الداخلي (بالأحرف الكبيرة)' : 'Internal Name (UPPERCASE)'}</label>
-                  <input className="role-form-input" value={newName} onChange={e => setNewName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '_'))} placeholder="e.g. RECEPTIONIST" required />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>Letters and underscores only</span>
-                </div>
-                <div className="role-form-row">
+              <div className="role-form-row">
+                <label className="role-form-label">{isRTL ? 'الاسم الداخلي (بالأحرف الكبيرة)' : 'Internal Name (UPPERCASE)'}</label>
+                <input className="role-form-input" value={newName} onChange={e => setNewName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '_'))} placeholder="e.g. RECEPTIONIST" required />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>Letters and underscores only</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+                <div className="role-form-row" style={{ margin: 0 }}>
                   <label className="role-form-label">{isRTL ? 'الاسم المعروض' : 'Display Label'}</label>
                   <input className="role-form-input" value={newLabel} onChange={e => setNewLabel(e.target.value)} placeholder="Receptionist" required />
                 </div>
-                <div className="role-form-row">
+                <div className="role-form-row" style={{ margin: 0 }}>
                   <label className="role-form-label">{isRTL ? 'الاسم بالعربية' : 'Arabic Label'}</label>
                   <input className="role-form-input" value={newLabelAr} onChange={e => setNewLabelAr(e.target.value)} placeholder="موظف استقبال" dir="rtl" />
                 </div>
@@ -486,12 +486,12 @@ export default function RolesPage() {
               </div>
             )}
             <form onSubmit={handleEditRole}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="role-form-row">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
+                <div className="role-form-row" style={{ margin: 0 }}>
                   <label className="role-form-label">{isRTL ? 'الاسم المعروض' : 'Display Label'}</label>
                   <input className="role-form-input" value={editLabel} onChange={e => setEditLabel(e.target.value)} required />
                 </div>
-                <div className="role-form-row">
+                <div className="role-form-row" style={{ margin: 0 }}>
                   <label className="role-form-label">{isRTL ? 'الاسم بالعربية' : 'Arabic Label'}</label>
                   <input className="role-form-input" value={editLabelAr} onChange={e => setEditLabelAr(e.target.value)} dir="rtl" />
                 </div>

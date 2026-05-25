@@ -315,7 +315,7 @@ export default function UsersPage() {
               background: 'var(--bg-surface)', borderRadius: 24, width: '100%', maxWidth: 460,
               boxShadow: '0 28px 80px rgba(0,0,0,0.22)', overflow: 'hidden',
               animation: 'svc-pop 0.24s cubic-bezier(.34,1.56,.64,1)',
-              maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column',
+              display: 'flex', flexDirection: 'column',
             }}>
               <div style={{ height: 5, background: 'linear-gradient(90deg,var(--rose),#a855f7,#3b82f6)' }} />
 
@@ -358,31 +358,7 @@ export default function UsersPage() {
                 }}>✕</button>
               </div>
 
-              <div style={{ padding: '4px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', flex: 1 }}>
-
-                {/* Photo upload */}
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 11.5, color: 'var(--text-sub)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('photo')}
-                  </label>
-                  {form.photoUrl ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src={form.photoUrl} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)', flexShrink: 0 }} />
-                      <button onClick={() => fileInputRef.current?.click()} style={{ padding: '7px 14px', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg-elevated)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                        📷 {t('changePhoto')}
-                      </button>
-                      <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} style={{ padding: '7px 14px', border: '1.5px solid rgba(229,62,90,0.3)', borderRadius: 10, background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 600, color: '#e53e5a' }}>
-                        {t('removePhoto')}
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', padding: '18px', border: '2px dashed var(--border)', borderRadius: 12, background: 'var(--bg-elevated)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 600, color: 'var(--text-sub)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--rose)'; (e.currentTarget as HTMLElement).style.color = 'var(--text)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-sub)'; }}>
-                      <span style={{ fontSize: '1.3rem' }}>📷</span> {t('choosePhoto')}
-                    </button>
-                  )}
-                </div>
+              <div style={{ padding: '4px 22px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
                 {/* Username */}
                 <div>
@@ -464,24 +440,6 @@ export default function UsersPage() {
                     <option value="">{t('noBranchAssigned')}</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{isRTL && b.nameAr ? b.nameAr : b.name}</option>)}
                   </select>
-                </div>
-
-                {/* Linked Provider */}
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 11.5, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    🩺 {isRTL ? 'ربط بمزود خدمة' : 'Linked Provider'}
-                  </label>
-                  <select className="form-select" value={form.providerId} onChange={e => setForm(f => ({ ...f, providerId: e.target.value }))}>
-                    <option value="">{isRTL ? '— لا يوجد ربط —' : '— None —'}</option>
-                    {providerOptions.map(p => (
-                      <option key={p.id} value={p.id}>🩺 {p.name} ({p.type})</option>
-                    ))}
-                  </select>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', marginTop: 5 }}>
-                    {isRTL
-                      ? 'عند تسجيل الدخول، سيرى هذا المستخدم تقويمه الخاص مباشرة.'
-                      : 'When logged in, this user will automatically see their own calendar.'}
-                  </div>
                 </div>
 
                 {/* Footer */}

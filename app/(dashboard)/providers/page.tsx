@@ -244,14 +244,56 @@ export default function ProvidersPage() {
                         <span style={{ opacity: 0.7 }}>🏢</span>{isRTL && p.branch.nameAr ? p.branch.nameAr : p.branch.name}
                       </div>
                     )}
-                    {p.linkedUser ? (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
+                    {/* Link account row — clickable */}
+                    {canDo('manageServices') && (
+                      <div
+                        onClick={() => openLink(p)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8, marginTop: 4,
+                          padding: '7px 10px', borderRadius: 10, cursor: 'pointer',
+                          border: p.linkedUser
+                            ? '1.5px solid rgba(16,185,129,0.35)'
+                            : '1.5px dashed var(--border)',
+                          background: p.linkedUser
+                            ? 'rgba(16,185,129,0.07)'
+                            : 'var(--bg-elevated)',
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#10b981'; (e.currentTarget as HTMLElement).style.background = 'rgba(16,185,129,0.12)'; }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLElement).style.borderColor = p.linkedUser ? 'rgba(16,185,129,0.35)' : 'var(--border)';
+                          (e.currentTarget as HTMLElement).style.background = p.linkedUser ? 'rgba(16,185,129,0.07)' : 'var(--bg-elevated)';
+                        }}
+                      >
+                        <div style={{
+                          width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                          background: p.linkedUser ? 'rgba(16,185,129,0.18)' : 'rgba(0,0,0,0.06)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.85rem',
+                        }}>
+                          {p.linkedUser ? '🔗' : '👤'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {p.linkedUser ? (
+                            <>
+                              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', lineHeight: 1.2 }}>@{p.linkedUser.username}</div>
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-sub)', marginTop: 1 }}>{isRTL ? 'حساب مرتبط • انقر للتغيير' : 'Linked account · click to change'}</div>
+                            </>
+                          ) : (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', fontWeight: 600 }}>
+                              {isRTL ? '+ ربط حساب مستخدم' : '+ Link user account'}
+                            </div>
+                          )}
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--text-sub)', flexShrink: 0 }}>
+                          <path d={isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}/>
+                        </svg>
+                      </div>
+                    )}
+                    {!canDo('manageServices') && p.linkedUser && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 4, background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
                         <span style={{ fontSize: '0.75rem' }}>🔗</span>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669' }}>@{p.linkedUser.username}</span>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, background: 'rgba(0,0,0,0.04)', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)' }}>{isRTL ? 'لا يوجد حساب مرتبط' : 'No linked account'}</span>
                       </div>
                     )}
                   </div>
@@ -261,13 +303,6 @@ export default function ProvidersPage() {
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                         ✏️ {t('edit')}
-                      </button>
-                      <div style={{ width: 1, background: 'var(--border)' }} />
-                      <button className="prov-action-btn" onClick={() => openLink(p)}
-                        style={{ flex: 1, padding: 10, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#059669', fontFamily: 'var(--font)', transition: 'background 0.15s' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.06)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                        🔗 {isRTL ? 'ربط حساب' : 'Link Account'}
                       </button>
                       <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>

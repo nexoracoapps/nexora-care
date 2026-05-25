@@ -63,6 +63,8 @@ export default function CalendarPage() {
 
   const days   = lang === 'ar' ? DAYS_AR   : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
+  const isPrivileged = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
+  const isLockedToProvider = !isPrivileged && !!user?.providerId;
   const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
 
   // Auto-select linked provider on load
@@ -538,22 +540,37 @@ export default function CalendarPage() {
             {headingLabel()}
           </div>
 
-          {/* My Calendar toggle */}
-          {user?.providerId && (
-            <button
-              onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
-              className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-            >
+          {/* My Calendar badge (locked) or toggle (privileged) */}
+          {isLockedToProvider ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(124,58,237,0.30)',
+              borderRadius: 9, padding: '6px 13px',
+              fontSize: '0.82rem', fontWeight: 700, color: '#7c3aed',
+            }}>
               🩺 {t('calMyCalendar')}
-            </button>
+              <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: 2 }}>🔒</span>
+            </div>
+          ) : (
+            <>
+              {user?.providerId && (
+                <button
+                  onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
+                  className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                >
+                  🩺 {t('calMyCalendar')}
+                </button>
+              )}
+              {/* Provider filter — only for privileged users */}
+              {isPrivileged && (
+                <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
+                  <option value="">{t('calAllProviders')}</option>
+                  {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              )}
+            </>
           )}
-
-          {/* Provider filter */}
-          <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
-            <option value="">{t('calAllProviders')}</option>
-            {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
         </div>
       </div>
 

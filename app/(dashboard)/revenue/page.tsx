@@ -157,12 +157,22 @@ export default function RevenuePage() {
       {/* Header */}
       <div className="page-header" dir={isRTL ? 'rtl' : 'ltr'}>
         <div>
-          <h1 className="page-title">
-            <span style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}>💰</span>
-            {t('revenueDistribution')}
-          </h1>
+          <h1 className="page-title">💰 {t('revenueDistribution')}</h1>
           <p className="page-sub">{t('revenueDistributionSub')}</p>
         </div>
+        {data && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(5,150,105,0.10)', border: '1.5px solid rgba(5,150,105,0.25)',
+            borderRadius: 12, padding: '8px 16px',
+            fontSize: '0.82rem', fontWeight: 700, color: '#059669',
+          }}>
+            ✅ {isRTL ? 'نسبة التحصيل' : 'Collection rate'}:&nbsp;
+            <span style={{ fontSize: '1rem' }}>
+              {data.totalRevenue > 0 ? ((data.paidRevenue / data.totalRevenue) * 100).toFixed(0) : 0}%
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -190,7 +200,8 @@ export default function RevenuePage() {
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         {summaryCards.map(c => (
-          <div key={c.label} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, direction: isRTL ? 'rtl' : 'ltr' }}>
+          <div key={c.label} className="glass-card" style={{ padding: '18px 20px', direction: isRTL ? 'rtl' : 'ltr' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 46, height: 46, borderRadius: 13,
               background: `${c.color}1a`,
@@ -204,6 +215,33 @@ export default function RevenuePage() {
               <div style={{ fontSize: '1.35rem', fontWeight: 800, color: c.color, lineHeight: 1.1 }}>{c.value}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 600, marginTop: 3 }}>{c.label}</div>
             </div>
+            </div>
+            {/* Collection progress bar for paid revenue card */}
+            {c.icon === '✅' && data && data.totalRevenue > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 4,
+                    background: `linear-gradient(90deg, ${c.color}, ${c.color}aa)`,
+                    width: `${Math.min(100, (data.paidRevenue / data.totalRevenue) * 100)}%`,
+                    transition: 'width 0.6s ease',
+                  }} />
+                </div>
+              </div>
+            )}
+            {/* Payout progress for distributed card */}
+            {c.icon === '📊' && data && data.totalRevenue > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 4,
+                    background: `linear-gradient(90deg, ${c.color}, ${c.color}aa)`,
+                    width: `${Math.min(100, (data.totalDistributed / data.totalRevenue) * 100)}%`,
+                    transition: 'width 0.6s ease',
+                  }} />
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

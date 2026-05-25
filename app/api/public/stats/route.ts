@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { apiOk } from '@/lib/utils';
+import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +14,15 @@ export async function GET() {
     ? Math.round((allRatings.reduce((s, r) => s + r.rating, 0) / allRatings.length) * 20)
     : 98;
 
-  return apiOk({
-    specialists: specialistCount,
-    clients: customerCount,
-    satisfaction: avgSatisfaction,
-  });
+  return NextResponse.json(
+    { specialists: specialistCount, clients: customerCount, satisfaction: avgSatisfaction },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'CDN-Cache-Control': 'no-store',
+        'Vercel-CDN-Cache-Control': 'no-store',
+      },
+    },
+  );
 }

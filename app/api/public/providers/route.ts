@@ -26,6 +26,11 @@ export async function GET(_req: NextRequest) {
   });
 
   return NextResponse.json(result, {
-    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'CDN-Cache-Control': 'no-store',
+      'Vercel-CDN-Cache-Control': 'no-store',
+    },
   });
 }

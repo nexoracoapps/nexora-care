@@ -296,7 +296,7 @@ function LoginPageInner() {
           position: relative; z-index: 5;
           width: 100%; max-width: 440px; height: 100vh; height: 100dvh;
           display: flex; align-items: center; justify-content: center;
-          padding: 24px 28px; overflow-y: auto;
+          padding: 24px 28px; overflow: hidden;
           background: rgba(255,255,255,0.97);
           border-left: 1px solid rgba(0,0,0,0.08);
           backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
@@ -307,7 +307,7 @@ function LoginPageInner() {
           .lr-overlay { background: linear-gradient(to bottom, rgba(6,14,40,0.55) 0%, rgba(6,14,40,0.65) 50%, rgba(6,14,40,0.80) 100%); }
           .lr-panel {
             position: relative; z-index: 5; width: 100%; max-width: 390px; min-height: 0;
-            max-height: calc(100vh - 32px); overflow-y: auto;
+            max-height: calc(100vh - 32px); overflow: hidden;
             padding: 22px 20px 24px; border-left: none; border-radius: 24px;
             border: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.97);
             backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
@@ -495,7 +495,7 @@ function LoginPageInner() {
         .lr-theme-swatch.active { border-color: #1a1a2e; box-shadow: 0 0 0 2px rgba(0,0,0,0.12); transform: scale(1.08); }
         @media (max-width: 480px) {
           .lr-ctrl-theme span:last-child { display: none; }
-          .lr-panel { border-radius: 24px 24px 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-width: 100%; max-height: 92vh; overflow-y: auto; }
+          .lr-panel { border-radius: 24px 24px 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-width: 100%; max-height: 92vh; overflow: hidden; }
           .lr-root { align-items: flex-end; padding: 0; }
           .lr-h1 { font-size: 26px; }
           .lr-social-btn { width: 44px; height: 44px; }

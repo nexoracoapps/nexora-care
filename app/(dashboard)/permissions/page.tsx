@@ -226,10 +226,10 @@ export default function PermissionsPage() {
   return (
     <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="managePermissions">
       <style dangerouslySetInnerHTML={{ __html: `
-        .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
-        .pm-modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); max-height:calc(100vh - 40px); overflow-y:auto; margin:auto; }
-        .pm-input { background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:9px 13px; color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.15s; }
-        .pm-input:focus { border-color:var(--rose); }
+        .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; animation:fadeIn 0.18s ease; }
+        .pm-modal { background:var(--bg-surface); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); max-height:calc(100vh - 40px); overflow-y:auto; }
+        .pm-input { background:var(--bg-surface); border:1.5px solid var(--border-strong); border-radius:10px; padding:9px 13px; color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.15s; }
+        .pm-input:focus { border-color:var(--rose); box-shadow:0 0 0 3px rgba(196,120,140,0.12); }
         .pm-lbl { font-size:0.72rem; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; display:block; }
         .pm-role-tab { display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:12px; cursor:pointer; border:1.5px solid var(--border); background:var(--bg-elevated); font-family:var(--font); font-size:0.84rem; font-weight:700; white-space:nowrap; transition:all 0.15s; flex-shrink:0; }
         .pm-role-tab:hover { border-color:rgba(196,120,140,0.4); }

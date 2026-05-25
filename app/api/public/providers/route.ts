@@ -1,6 +1,5 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { apiOk } from '@/lib/utils';
 
 export async function GET(_req: NextRequest) {
   const providers = await prisma.serviceProvider.findMany({
@@ -24,5 +23,7 @@ export async function GET(_req: NextRequest) {
     };
   });
 
-  return apiOk(result);
+  return NextResponse.json(result, {
+    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+  });
 }

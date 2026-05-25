@@ -236,7 +236,7 @@ function WelcomePageInner() {
   useEffect(() => { const fn = () => setScrolled(window.scrollY > 60); window.addEventListener('scroll', fn, { passive: true }); return () => window.removeEventListener('scroll', fn); }, []);
 
   useEffect(() => {
-    fetch('/api/public/providers').then(r => r.json()).then(d => { if (Array.isArray(d)) setProviders(d); }).catch(() => {});
+    fetch('/api/public/providers', { cache: 'no-store' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setProviders(d); }).catch(() => {});
     fetch('/api/public/stats').then(r => r.json()).then(d => { if (d.specialists !== undefined) setStats(d); }).catch(() => {});
   }, []);
 

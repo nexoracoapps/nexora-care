@@ -100,6 +100,7 @@ export default function ProvidersPage() {
     toast.success(selected ? t('providerUpdated') : t('providerCreated'));
     setModalOpen(false);
     load();
+    new BroadcastChannel('nexora-providers').postMessage('changed');
   };
 
   const confirmDelete = async () => {
@@ -107,7 +108,7 @@ export default function ProvidersPage() {
     setDeleting(true);
     const res = await fetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); new BroadcastChannel('nexora-providers').postMessage('changed'); }
     else toast.error(t('failedToDelete'));
   };
 

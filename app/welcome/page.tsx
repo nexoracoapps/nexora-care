@@ -235,10 +235,24 @@ function WelcomePageInner() {
   useEffect(() => { const id = setInterval(() => goTo((cur + 1) % SLIDES.length), 6000); return () => clearInterval(id); }, [cur, goTo]);
   useEffect(() => { const fn = () => setScrolled(window.scrollY > 60); window.addEventListener('scroll', fn, { passive: true }); return () => window.removeEventListener('scroll', fn); }, []);
 
-  useEffect(() => {
+  const fetchProviders = useCallback(() => {
     fetch('/api/public/providers', { cache: 'no-store' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setProviders(d); }).catch(() => {});
     fetch('/api/public/stats').then(r => r.json()).then(d => { if (d.specialists !== undefined) setStats(d); }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchProviders();
+    // Re-fetch when the tab becomes visible again (user switches back from admin)
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchProviders(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    // Re-fetch instantly when the providers admin page broadcasts a change
+    const bc = new BroadcastChannel('nexora-providers');
+    bc.onmessage = () => fetchProviders();
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      bc.close();
+    };
+  }, [fetchProviders]);
 
   // Auto-open modal when ?rate=ID is in URL
   useEffect(() => {

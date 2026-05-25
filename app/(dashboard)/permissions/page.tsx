@@ -155,11 +155,11 @@ export default function PermissionsPage() {
 
   useEffect(() => { loadRoles(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-select first non-admin role, or first role
+  // Auto-select the logged-in user's own role, falling back to first role
   useEffect(() => {
     if (roles.length > 0 && !selectedRole) {
-      const first = roles.find(r => !r.isAdmin) ?? roles[0];
-      setSelectedRole(first.name);
+      const own = roles.find(r => r.name === user?.role);
+      setSelectedRole((own ?? roles[0]).name);
     }
   }, [roles]); // eslint-disable-line react-hooks/exhaustive-deps
 

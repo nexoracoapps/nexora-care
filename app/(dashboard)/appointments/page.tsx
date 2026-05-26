@@ -213,6 +213,14 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
           to   { opacity: 1; transform: translateY(0); }
         }
         button[style*="9px 16px"]:hover { background: rgba(229,62,90,0.07) !important; }
+        .appt-row { transition: background 0.12s; cursor: default; }
+        .appt-row:hover { background: var(--bg-elevated) !important; }
+        .appt-row:hover .appt-quick-actions { opacity: 1 !important; }
+        .appt-quick-actions { opacity: 0; transition: opacity 0.15s; display: flex; align-items: center; gap: 4px; }
+        .appt-qbtn {
+          border: none; border-radius: 7px; cursor: pointer; font-size: 11px; font-weight: 700;
+          padding: 4px 8px; transition: all 0.12s; font-family: var(--font); white-space: nowrap;
+        }
       `}} />
       <div>
         {/* Header */}
@@ -283,7 +291,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                 {filtered.length === 0 ? (
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-sub)' }}>{t('noAppointments')}</td></tr>
                 ) : filtered.map(appt => (
-                  <tr key={appt.id}>
+                  <tr key={appt.id} className="appt-row">
                     {/* Customer — left accent stripe colored by booking status */}
                     <td data-label="Customer" style={{ textAlign: 'left', paddingLeft: 20, boxShadow: `inset 4px 0 0 ${STATUS_COLOR[appt.status] ?? 'var(--rose)'}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -325,24 +333,70 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                       </div>
                     </td>
 
-                    {/* Single status badge */}
+                    {/* Status badges stacked */}
                     <td data-label="Status">
-                      <span className={`badge ${STATUS_BADGE[appt.status]}`} style={{ fontSize: '0.68rem' }}>
-                        {STATUS_LABEL[appt.status] ?? appt.status}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                        <span className={`badge ${STATUS_BADGE[appt.status]}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLOR[appt.status] ?? '#6366f1', display: 'inline-block', marginRight: 5, flexShrink: 0 }} />
+                          {STATUS_LABEL[appt.status] ?? appt.status}
+                        </span>
+                        {appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
+                          <span className={`badge ${SERVICE_BADGE[appt.serviceStatus]}`} style={{ fontSize: '0.65rem' }}>
+                            {SERVICE_LABEL[appt.serviceStatus] ?? appt.serviceStatus}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Amount */}
+                    {/* Amount + payment pill */}
                     <td data-label="Amount">
-                      {appt.amount
-                        ? <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--rose)' }}>${appt.amount.toFixed(2)}</div>
-                        : <div style={{ color: 'var(--text-sub)', fontSize: '0.82rem' }}>—</div>
-                      }
+                      {appt.amount ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                          <div style={{
+                            fontWeight: 800, fontSize: '0.95rem',
+                            color: appt.paymentStatus === 'PAID' ? '#059669' : 'var(--text)',
+                          }}>
+                            ${appt.amount.toFixed(2)}
+                          </div>
+                          <span style={{
+                            fontSize: '0.62rem', fontWeight: 700, borderRadius: 6,
+                            padding: '2px 7px',
+                            background: appt.paymentStatus === 'PAID' ? 'rgba(5,150,105,0.12)' : 'rgba(245,158,11,0.12)',
+                            color: appt.paymentStatus === 'PAID' ? '#059669' : '#d97706',
+                            border: `1px solid ${appt.paymentStatus === 'PAID' ? 'rgba(5,150,105,0.25)' : 'rgba(245,158,11,0.25)'}`,
+                          }}>
+                            {appt.paymentStatus === 'PAID' ? '✓ Paid' : '⏳ Unpaid'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div style={{ color: 'var(--text-sub)', fontSize: '0.82rem', textAlign: 'right' }}>—</div>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td data-label="Actions">
-                      <div className="dd-wrap" style={{ display: 'inline-block' }}>
+                      <div className="dd-wrap" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                        {/* Inline quick actions shown on hover */}
+                        <div className="appt-quick-actions">
+                          {canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' && (
+                            <button className="appt-qbtn"
+                              onClick={() => doAction(appt, 'complete')}
+                              style={{ background: 'rgba(5,150,105,0.12)', color: '#059669' }}
+                              title="Mark Complete">✓</button>
+                          )}
+                          {canDo('recordPayments') && appt.paymentStatus === 'UNPAID' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' && (
+                            <button className="appt-qbtn"
+                              onClick={() => { setSelected(appt); setPayForm({ method: 'CASH', amount: appt.amount?.toString() || '' }); setModal('pay'); }}
+                              style={{ background: 'rgba(37,99,235,0.12)', color: '#2563eb' }}
+                              title="Record Payment">💳</button>
+                          )}
+                          {canDo('editAppointments') && (
+                            <button className="appt-qbtn"
+                              onClick={() => openEdit(appt)}
+                              style={{ background: 'var(--bg-elevated)', color: 'var(--text-sub)' }}
+                              title="Edit">✏️</button>
+                          )}
+                        </div>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={e => {
@@ -357,7 +411,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             setMenuPos({ top, left });
                             setOpenMenuId(openMenuId === appt.id ? null : appt.id);
                           }}
-                          style={{ padding: '4px 10px', fontWeight: 700, fontSize: '1rem', letterSpacing: 2, lineHeight: 1 }}
+                          style={{ padding: '4px 10px', fontWeight: 700, fontSize: '1rem', letterSpacing: 2, lineHeight: 1, flexShrink: 0 }}
                         >
                           •••
                         </button>

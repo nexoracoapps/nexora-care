@@ -215,12 +215,17 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         button[style*="9px 16px"]:hover { background: rgba(229,62,90,0.07) !important; }
         .appt-row { transition: background 0.12s; cursor: default; }
         .appt-row:hover { background: var(--bg-elevated) !important; }
-        .appt-row:hover .appt-quick-actions { opacity: 1 !important; }
-        .appt-quick-actions { opacity: 0; transition: opacity 0.15s; display: flex; align-items: center; gap: 4px; }
-        .appt-qbtn {
-          border: none; border-radius: 7px; cursor: pointer; font-size: 11px; font-weight: 700;
-          padding: 4px 8px; transition: all 0.12s; font-family: var(--font); white-space: nowrap;
+        .appt-quick-actions {
+          max-width: 0; overflow: hidden; opacity: 0;
+          transition: max-width 0.2s ease, opacity 0.15s;
+          display: flex; align-items: center; gap: 4px; flex-shrink: 0;
         }
+        .appt-row:hover .appt-quick-actions { max-width: 140px; opacity: 1; }
+        .appt-qbtn {
+          border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;
+          padding: 5px 9px; transition: all 0.12s; font-family: var(--font); white-space: nowrap; flex-shrink: 0;
+        }
+        .appt-qbtn:hover { filter: brightness(1.1); transform: scale(1.05); }
       `}} />
       <div>
         {/* Header */}
@@ -279,12 +284,12 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
             <table className="glass-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', paddingLeft: 20, width: '22%' }}>{t('customer')}</th>
+                  <th style={{ textAlign: 'left', paddingLeft: 20, width: '21%' }}>{t('customer')}</th>
                   <th style={{ textAlign: 'left', width: '22%' }}>{t('service')} / {t('specialist')}</th>
-                  <th style={{ width: '14%' }}>{t('dateTime')}</th>
-                  <th style={{ width: '24%' }}>{t('status')}</th>
-                  <th style={{ width: '10%' }}>{t('amount')}</th>
-                  <th style={{ width: '8%' }}>{t('actions')}</th>
+                  <th style={{ width: '13%' }}>{t('dateTime')}</th>
+                  <th style={{ width: '18%' }}>{t('status')}</th>
+                  <th style={{ width: '11%' }}>{t('amount')}</th>
+                  <th style={{ width: '15%' }}>{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -335,9 +340,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
 
                     {/* Status badges stacked */}
                     <td data-label="Status">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-                        <span className={`badge ${STATUS_BADGE[appt.status]}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLOR[appt.status] ?? '#6366f1', display: 'inline-block', marginRight: 5, flexShrink: 0 }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
+                        <span className={`badge ${STATUS_BADGE[appt.status]}`}>
                           {STATUS_LABEL[appt.status] ?? appt.status}
                         </span>
                         {appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
@@ -351,25 +355,19 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                     {/* Amount + payment pill */}
                     <td data-label="Amount">
                       {appt.amount ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
                           <div style={{
-                            fontWeight: 800, fontSize: '0.95rem',
+                            fontWeight: 700, fontSize: '0.9rem',
                             color: appt.paymentStatus === 'PAID' ? '#059669' : 'var(--text)',
                           }}>
                             ${appt.amount.toFixed(2)}
                           </div>
-                          <span style={{
-                            fontSize: '0.62rem', fontWeight: 700, borderRadius: 6,
-                            padding: '2px 7px',
-                            background: appt.paymentStatus === 'PAID' ? 'rgba(5,150,105,0.12)' : 'rgba(245,158,11,0.12)',
-                            color: appt.paymentStatus === 'PAID' ? '#059669' : '#d97706',
-                            border: `1px solid ${appt.paymentStatus === 'PAID' ? 'rgba(5,150,105,0.25)' : 'rgba(245,158,11,0.25)'}`,
-                          }}>
-                            {appt.paymentStatus === 'PAID' ? '✓ Paid' : '⏳ Unpaid'}
+                          <span className={`badge ${appt.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-unpaid'}`} style={{ fontSize: '0.62rem' }}>
+                            {appt.paymentStatus === 'PAID' ? t('paid') : t('unpaid')}
                           </span>
                         </div>
                       ) : (
-                        <div style={{ color: 'var(--text-sub)', fontSize: '0.82rem', textAlign: 'right' }}>—</div>
+                        <div style={{ color: 'var(--text-sub)', fontSize: '0.82rem', textAlign: 'center' }}>—</div>
                       )}
                     </td>
 

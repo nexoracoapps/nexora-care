@@ -11,7 +11,8 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/login',
+        // Apply to all page routes but NOT Next.js static assets (they have content hashes)
+        source: '/((?!_next/static|_next/image|icons|favicon|sw\\.js).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
           { key: 'Pragma', value: 'no-cache' },

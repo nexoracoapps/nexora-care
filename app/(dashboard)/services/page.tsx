@@ -144,7 +144,7 @@ export default function ServicesPage() {
             <h1 className="page-title">{t('services')}</h1>
             <p className="page-sub">{filtered.length} {t('services').toLowerCase()}</p>
           </div>
-          {canDo('manageServices') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addService')}</button>}
+          {canDo('createServices') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addService')}</button>}
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -191,11 +191,11 @@ export default function ServicesPage() {
                   </div>
                   {/* Actions */}
                   <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    {canDo('manageServices') && <button className="svc-action-btn svc-action-edit" onClick={() => openEdit(s)}
+                    {canDo('editServices') && <button className="svc-action-btn svc-action-edit" onClick={() => openEdit(s)}
                       style={{ fontFamily: 'var(--font)' }}>
                       ✏️ {t('edit')}
                     </button>}
-                    {canDo('manageServices') && <>
+                    {canDo('deleteServices') && <>
                       <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="svc-action-btn svc-action-del" onClick={() => setDeleteTarget(s)}
                         style={{ fontFamily: 'var(--font)' }}>

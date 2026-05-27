@@ -84,6 +84,29 @@ export default function CalendarPage() {
     if (!('Notification' in window)) return;
     const perm = await Notification.requestPermission();
     setNotifStatus(perm);
+    if (perm !== 'granted' || !user?.token) return;
+    // Also register push subscription so server can send reminders
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+        const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4);
+        const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const key = Uint8Array.from([...atob(base64)].map(c => c.charCodeAt(0)));
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      }
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(sub.toJSON()),
+      });
+      toast.success('Reminders enabled — you\'ll receive push notifications');
+    } catch (e) {
+      console.warn('[Push] subscribe failed', e);
+    }
   };
 
   const getRange = useCallback((): { from: Date; to: Date } => {

@@ -99,7 +99,7 @@ export default function BranchesPage() {
             <h1 className="page-title">{t('branches')}</h1>
             <p className="page-sub">{branches.length} {t('branches').toLowerCase()}</p>
           </div>
-          {canDo('manageBranches') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addBranch')}</button>}
+          {canDo('createBranches') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addBranch')}</button>}
         </div>
 
         {loading ? (
@@ -161,11 +161,11 @@ export default function BranchesPage() {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    {canDo('manageBranches') && <button className="br-action-btn br-action-edit" onClick={() => openEdit(b)}>
+                    {canDo('editBranches') && <button className="br-action-btn br-action-edit" onClick={() => openEdit(b)}>
                       ✏️ {t('edit')}
                     </button>}
-                    {canDo('manageBranches') && <>
-                      <div style={{ width: 1, background: 'var(--border)' }} />
+                    {canDo('deleteBranches') && <>
+                      {canDo('editBranches') && <div style={{ width: 1, background: 'var(--border)' }} />}
                       <button className="br-action-btn br-action-del" onClick={() => setDeleteTarget(b)}>
                         🗑 {t('delete')}
                       </button>

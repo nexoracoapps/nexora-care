@@ -132,7 +132,7 @@ export default function SpecialistsPage() {
             <h1 className="page-title">{t('specialists')}</h1>
             <p className="page-sub">{filtered.length} {t('specialists').toLowerCase()}</p>
           </div>
-          {canDo('manageProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
+          {canDo('createProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -196,14 +196,14 @@ export default function SpecialistsPage() {
                   </div>
 
                   {/* Actions */}
-                  {canDo('manageProviders') && <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
+                  {(canDo('editProviders') || canDo('deleteProviders')) && <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                    {canDo('editProviders') && <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                       ✏️ {t('edit')}
-                    </button>
-                    <div style={{ width: 1, background: 'var(--border)' }} />
-                    <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
+                    </button>}
+                    {canDo('editProviders') && canDo('deleteProviders') && <div style={{ width: 1, background: 'var(--border)' }} />}
+                    {canDo('deleteProviders') && <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
                       🗑 {t('delete')}
-                    </button>
+                    </button>}
                   </div>}
                 </div>
               );

@@ -127,7 +127,7 @@ export default function StaffAbsencePage() {
             <h1 className="page-title">{t('staffAbsence')}</h1>
             <p className="page-sub">{absences.length} {t('vacationManagement')}</p>
           </div>
-          {canDo('manageStaffAbsence') && <button className="btn btn-primary" onClick={openCreate}>
+          {canDo('createStaffAbsence') && <button className="btn btn-primary" onClick={openCreate}>
             + {t('recordVacation')}
           </button>}
         </div>
@@ -191,11 +191,11 @@ export default function StaffAbsencePage() {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    {canDo('manageStaffAbsence') && <button className="abs-action-btn abs-action-edit" onClick={() => openEdit(a)}>
+                    {canDo('editStaffAbsence') && <button className="abs-action-btn abs-action-edit" onClick={() => openEdit(a)}>
                       ✏️ {t('edit')}
                     </button>}
-                    {canDo('manageStaffAbsence') && <>
-                      <div style={{ width: 1, background: 'var(--border)' }} />
+                    {canDo('deleteStaffAbsence') && <>
+                      {canDo('editStaffAbsence') && <div style={{ width: 1, background: 'var(--border)' }} />}
                       <button className="abs-action-btn abs-action-del" onClick={() => setDeleteTarget(a.id)}>
                         🗑 {t('delete')}
                       </button>

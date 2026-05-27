@@ -177,7 +177,7 @@ export default function ProvidersPage() {
             <h1 className="page-title">{t('specialists')}</h1>
             <p className="page-sub">{filtered.length} {t('specialists').toLowerCase()}</p>
           </div>
-          {canDo('manageProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
+          {canDo('createProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -245,7 +245,7 @@ export default function ProvidersPage() {
                       </div>
                     )}
                     {/* Link account row — clickable */}
-                    {canDo('manageProviders') && (
+                    {canDo('editProviders') && (
                       <div
                         onClick={() => openLink(p)}
                         style={{
@@ -290,7 +290,7 @@ export default function ProvidersPage() {
                         </svg>
                       </div>
                     )}
-                    {!canDo('manageProviders') && p.linkedUser && (
+                    {!canDo('editProviders') && p.linkedUser && (
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 4, background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
                         <span style={{ fontSize: '0.75rem' }}>🔗</span>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669' }}>@{p.linkedUser.username}</span>
@@ -299,15 +299,15 @@ export default function ProvidersPage() {
                   </div>
 
                   {/* Actions */}
-                  {canDo('manageProviders') && (
+                  {(canDo('editProviders') || canDo('deleteProviders')) && (
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                      <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
+                      {canDo('editProviders') && <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                         ✏️ {t('edit')}
-                      </button>
-                      <div style={{ width: 1, background: 'var(--border)' }} />
-                      <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
+                      </button>}
+                      {canDo('editProviders') && canDo('deleteProviders') && <div style={{ width: 1, background: 'var(--border)' }} />}
+                      {canDo('deleteProviders') && <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
                         🗑 {t('delete')}
-                      </button>
+                      </button>}
                     </div>
                   )}
                 </div>

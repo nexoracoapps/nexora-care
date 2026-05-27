@@ -10,11 +10,16 @@ export type PermissionKey =
   | 'updateAppointmentStatus'
   | 'makePhoneCalls' | 'viewCallLogs' | 'clearCallLogs'
   | 'sendBroadcasts' | 'sendWhatsApp' | 'sendSMS' | 'sendEmail'
-  // Separated page permissions (v2)
-  | 'viewCalendar'     // /calendar  (was bundled under manageAppointments)
-  | 'viewRevenue'      // /revenue   (was bundled under viewReports)
-  | 'manageProviders'  // /providers (was bundled under manageServices)
-  | 'viewRoles';       // /roles     (was bundled under createUsers / managePermissions)
+  // v2 separated page permissions
+  | 'viewCalendar'     // /calendar
+  | 'viewRevenue'      // /revenue
+  | 'manageProviders'  // /providers + /specialists
+  | 'viewRoles'        // /roles
+  // v3 granular action buttons
+  | 'createServices'   | 'editServices'   | 'deleteServices'
+  | 'createProviders'  | 'editProviders'  | 'deleteProviders'
+  | 'createBranches'   | 'editBranches'   | 'deleteBranches'
+  | 'createStaffAbsence' | 'editStaffAbsence' | 'deleteStaffAbsence';
 
 export type RolePermissions = Record<PermissionKey, boolean>;
 export type AllPermissions = Record<string, RolePermissions>;
@@ -31,8 +36,12 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   'updateAppointmentStatus',
   'makePhoneCalls', 'viewCallLogs', 'clearCallLogs',
   'sendBroadcasts', 'sendWhatsApp', 'sendSMS', 'sendEmail',
-  // v2 separated page permissions
   'viewCalendar', 'viewRevenue', 'manageProviders', 'viewRoles',
+  // v3
+  'createServices', 'editServices', 'deleteServices',
+  'createProviders', 'editProviders', 'deleteProviders',
+  'createBranches', 'editBranches', 'deleteBranches',
+  'createStaffAbsence', 'editStaffAbsence', 'deleteStaffAbsence',
 ];
 
 export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
@@ -49,6 +58,10 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
     viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
+    createServices: true, editServices: true, deleteServices: true,
+    createProviders: true, editProviders: true, deleteProviders: true,
+    createBranches: true, editBranches: true, deleteBranches: true,
+    createStaffAbsence: true, editStaffAbsence: true, deleteStaffAbsence: true,
   },
   MANAGER: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -63,6 +76,10 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
     viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
+    createServices: true, editServices: true, deleteServices: false,
+    createProviders: true, editProviders: true, deleteProviders: false,
+    createBranches: true, editBranches: true, deleteBranches: false,
+    createStaffAbsence: true, editStaffAbsence: true, deleteStaffAbsence: false,
   },
   STAFF: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -77,6 +94,10 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: false, viewCallLogs: false, clearCallLogs: false,
     sendBroadcasts: false, sendWhatsApp: false, sendSMS: false, sendEmail: false,
     viewCalendar: true, viewRevenue: false, manageProviders: false, viewRoles: false,
+    createServices: false, editServices: false, deleteServices: false,
+    createProviders: false, editProviders: false, deleteProviders: false,
+    createBranches: false, editBranches: false, deleteBranches: false,
+    createStaffAbsence: false, editStaffAbsence: false, deleteStaffAbsence: false,
   },
 };
 

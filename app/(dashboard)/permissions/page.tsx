@@ -87,21 +87,33 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Services', groupAr: 'الخدمات', icon: '🛠', color: '#0891b2',
     items: [
-      { key: 'manageServices', icon: '🛠', label: 'Manage Services & Catalogue', labelAr: 'إدارة الخدمات' },
+      { key: 'manageServices',  icon: '🛠', label: 'View Services Page',   labelAr: 'عرض صفحة الخدمات' },
+      { key: 'createServices',  icon: '➕', label: 'Add New Services',      labelAr: 'إضافة خدمات جديدة',   parentKey: 'manageServices' },
+      { key: 'editServices',    icon: '✏️', label: 'Edit Services',         labelAr: 'تعديل الخدمات',        parentKey: 'manageServices' },
+      { key: 'deleteServices',  icon: '🗑', label: 'Delete Services',       labelAr: 'حذف الخدمات',          parentKey: 'manageServices' },
     ],
   },
   {
     group: 'Providers & Specialists', groupAr: 'المزودون والمتخصصون', icon: '🩺', color: '#2563eb',
     items: [
-      { key: 'manageProviders', icon: '🩺', label: 'Manage Providers & Specialists', labelAr: 'إدارة مقدمي الخدمة والمتخصصين' },
+      { key: 'manageProviders',  icon: '🩺', label: 'View Providers Page',     labelAr: 'عرض صفحة المزودين' },
+      { key: 'createProviders',  icon: '➕', label: 'Add New Providers',        labelAr: 'إضافة مزودين جدد',        parentKey: 'manageProviders' },
+      { key: 'editProviders',    icon: '✏️', label: 'Edit & Link Providers',    labelAr: 'تعديل وربط المزودين',     parentKey: 'manageProviders' },
+      { key: 'deleteProviders',  icon: '🗑', label: 'Delete Providers',         labelAr: 'حذف المزودين',             parentKey: 'manageProviders' },
     ],
   },
   {
     group: 'Administration', groupAr: 'الإدارة', icon: '⚙️', color: '#6366f1',
     items: [
-      { key: 'dashboard',          icon: '🏠', label: 'Dashboard & Analytics', labelAr: 'لوحة التحكم' },
-      { key: 'manageBranches',     icon: '🏢', label: 'Manage Branches',       labelAr: 'إدارة الفروع' },
-      { key: 'manageStaffAbsence', icon: '📆', label: 'Staff Absence',         labelAr: 'غيابات الموظفين' },
+      { key: 'dashboard',             icon: '🏠', label: 'Dashboard & Analytics', labelAr: 'لوحة التحكم' },
+      { key: 'manageBranches',        icon: '🏢', label: 'View Branches Page',    labelAr: 'عرض صفحة الفروع' },
+      { key: 'createBranches',        icon: '➕', label: 'Add New Branches',      labelAr: 'إضافة فروع جديدة',  parentKey: 'manageBranches' },
+      { key: 'editBranches',          icon: '✏️', label: 'Edit Branches',         labelAr: 'تعديل الفروع',       parentKey: 'manageBranches' },
+      { key: 'deleteBranches',        icon: '🗑', label: 'Delete Branches',       labelAr: 'حذف الفروع',         parentKey: 'manageBranches' },
+      { key: 'manageStaffAbsence',    icon: '📆', label: 'View Staff Absence',    labelAr: 'عرض غيابات الموظفين' },
+      { key: 'createStaffAbsence',    icon: '➕', label: 'Add Absence Records',   labelAr: 'إضافة سجلات غياب',   parentKey: 'manageStaffAbsence' },
+      { key: 'editStaffAbsence',      icon: '✏️', label: 'Edit Absence Records',  labelAr: 'تعديل سجلات الغياب', parentKey: 'manageStaffAbsence' },
+      { key: 'deleteStaffAbsence',    icon: '🗑', label: 'Delete Absence Records',labelAr: 'حذف سجلات الغياب',   parentKey: 'manageStaffAbsence' },
     ],
   },
   {

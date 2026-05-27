@@ -15,6 +15,7 @@ export type PermissionKey =
   | 'viewRevenue'      // /revenue
   | 'manageProviders'  // /providers + /specialists
   | 'viewRoles'        // /roles
+  | 'createRoles' | 'editRoles' | 'deleteRoles'
   // v3 granular action buttons
   | 'createServices'   | 'editServices'   | 'deleteServices'
   | 'createProviders'  | 'editProviders'  | 'deleteProviders'
@@ -37,6 +38,7 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   'makePhoneCalls', 'viewCallLogs', 'clearCallLogs',
   'sendBroadcasts', 'sendWhatsApp', 'sendSMS', 'sendEmail',
   'viewCalendar', 'viewRevenue', 'manageProviders', 'viewRoles',
+  'createRoles', 'editRoles', 'deleteRoles',
   // v3
   'createServices', 'editServices', 'deleteServices',
   'createProviders', 'editProviders', 'deleteProviders',
@@ -58,6 +60,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
     viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
+    createRoles: true, editRoles: true, deleteRoles: true,
     createServices: true, editServices: true, deleteServices: true,
     createProviders: true, editProviders: true, deleteProviders: true,
     createBranches: true, editBranches: true, deleteBranches: true,
@@ -76,6 +79,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
     viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
+    createRoles: false, editRoles: true, deleteRoles: false,
     createServices: true, editServices: true, deleteServices: false,
     createProviders: true, editProviders: true, deleteProviders: false,
     createBranches: true, editBranches: true, deleteBranches: false,
@@ -94,6 +98,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     makePhoneCalls: false, viewCallLogs: false, clearCallLogs: false,
     sendBroadcasts: false, sendWhatsApp: false, sendSMS: false, sendEmail: false,
     viewCalendar: true, viewRevenue: false, manageProviders: false, viewRoles: false,
+    createRoles: false, editRoles: false, deleteRoles: false,
     createServices: false, editServices: false, deleteServices: false,
     createProviders: false, editProviders: false, deleteProviders: false,
     createBranches: false, editBranches: false, deleteBranches: false,

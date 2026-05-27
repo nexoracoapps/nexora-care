@@ -75,7 +75,10 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
   {
     group: 'Roles', groupAr: 'الأدوار', icon: '🎭', color: '#8b5cf6',
     items: [
-      { key: 'viewRoles', icon: '🎭', label: 'View Roles Page', labelAr: 'عرض صفحة الأدوار' },
+      { key: 'viewRoles',   icon: '🎭', label: 'View Roles Page',    labelAr: 'عرض صفحة الأدوار' },
+      { key: 'createRoles', icon: '➕', label: 'Add New Roles',       labelAr: 'إضافة أدوار جديدة',  parentKey: 'viewRoles' },
+      { key: 'editRoles',   icon: '✏️', label: 'Edit Roles',          labelAr: 'تعديل الأدوار',       parentKey: 'viewRoles' },
+      { key: 'deleteRoles', icon: '🗑', label: 'Delete Roles',        labelAr: 'حذف الأدوار',         parentKey: 'viewRoles' },
     ],
   },
   {

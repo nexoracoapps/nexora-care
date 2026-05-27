@@ -250,18 +250,18 @@ export default function RolesPage() {
             <p className="page-sub">{isRTL ? t('rolesSub') : 'Assign roles to users to control their access level'}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {user?.role === 'ADMIN' && (
-              <>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--rose)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                  + {isRTL ? 'دور جديد' : 'Add Role'}
-                </button>
-                <Link href="/permissions" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text)', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', transition: 'border-color 0.15s' }}>
-                  🔐 {isRTL ? 'إدارة الصلاحيات' : 'Manage Permissions'}
-                </Link>
-              </>
+            {canDo('createRoles') && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--rose)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                + {isRTL ? 'دور جديد' : 'Add Role'}
+              </button>
+            )}
+            {canDo('managePermissions') && (
+              <Link href="/permissions" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text)', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', transition: 'border-color 0.15s' }}>
+                🔐 {isRTL ? 'إدارة الصلاحيات' : 'Manage Permissions'}
+              </Link>
             )}
           </div>
         </div>
@@ -335,22 +335,24 @@ export default function RolesPage() {
                     )}
                   </div>
 
-                  {/* Actions — identical to services */}
-                  <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    {user?.role === 'ADMIN' && (
-                      <button className="role-action-btn role-action-edit" onClick={() => openEdit(role)}>
-                        ✏️ {isRTL ? 'تعديل' : 'Edit'}
-                      </button>
-                    )}
-                    {user?.role === 'ADMIN' && !role.isAdmin && (
-                      <>
-                        <div style={{ width: 1, background: 'var(--border)' }} />
-                        <button className="role-action-btn role-action-del" onClick={() => setDeleteTarget(role)}>
-                          🗑 {isRTL ? 'حذف' : 'Delete'}
+                  {/* Actions */}
+                  {(canDo('editRoles') || (canDo('deleteRoles') && !role.isAdmin)) && (
+                    <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                      {canDo('editRoles') && (
+                        <button className="role-action-btn role-action-edit" onClick={() => openEdit(role)}>
+                          ✏️ {isRTL ? 'تعديل' : 'Edit'}
                         </button>
-                      </>
-                    )}
-                  </div>
+                      )}
+                      {canDo('deleteRoles') && !role.isAdmin && (
+                        <>
+                          {canDo('editRoles') && <div style={{ width: 1, background: 'var(--border)' }} />}
+                          <button className="role-action-btn role-action-del" onClick={() => setDeleteTarget(role)}>
+                            🗑 {isRTL ? 'حذف' : 'Delete'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

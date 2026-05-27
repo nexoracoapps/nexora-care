@@ -184,9 +184,14 @@ export default function CalendarPage() {
       const res = await fetch('/api/cron/reminders?test=true', {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(`Test notification sent to ${data.sent} device(s)`);
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error ?? `Server error ${res.status}`);
+      if (data.sent === 0) {
+        toast.error(data.message ?? 'No push subscriptions found — enable reminders first');
+      } else {
+        toast.success(`Test notification sent to ${data.sent} device(s)`);
+      }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Failed to send test notification');
     } finally {
@@ -667,8 +672,8 @@ export default function CalendarPage() {
       </div>
 
       {/* Controls */}
-      <div className="glass-card" style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="glass-card" style={{ marginBottom: 14, padding: '14px 18px' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
 
           {/* Left: View toggle */}
           <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4, flexShrink: 0 }}>

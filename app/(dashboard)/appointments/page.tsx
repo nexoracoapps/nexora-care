@@ -297,8 +297,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-sub)' }}>{t('noAppointments')}</td></tr>
                 ) : filtered.map(appt => (
                   <tr key={appt.id} className="appt-row">
-                    {/* Customer — left accent stripe colored by booking status */}
-                    <td data-label="Customer" style={{ textAlign: 'left', paddingLeft: 20, boxShadow: `inset 4px 0 0 ${STATUS_COLOR[appt.status] ?? 'var(--rose)'}` }}>
+                    {/* Customer */}
+                    <td data-label="Customer" style={{ textAlign: 'left', paddingLeft: 20, boxShadow: `inset 3px 0 0 ${STATUS_COLOR[appt.status] ?? 'var(--border)'}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{
                           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -338,14 +338,14 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                       </div>
                     </td>
 
-                    {/* Status badges stacked */}
+                    {/* Status */}
                     <td data-label="Status">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
-                        <span className={`badge ${STATUS_BADGE[appt.status]}`}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+                        <span className={`badge ${STATUS_BADGE[appt.status] ?? 'badge-pending'}`}>
                           {STATUS_LABEL[appt.status] ?? appt.status}
                         </span>
                         {appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
-                          <span className={`badge ${SERVICE_BADGE[appt.serviceStatus]}`} style={{ fontSize: '0.65rem' }}>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)', fontWeight: 500 }}>
                             {SERVICE_LABEL[appt.serviceStatus] ?? appt.serviceStatus}
                           </span>
                         )}

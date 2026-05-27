@@ -535,24 +535,21 @@ export default function CalendarPage() {
           background: var(--bg-card);
         }
         .cal-nav-btn {
-          background: var(--bg-elevated);
-          border: 1.5px solid var(--border);
-          border-radius: 12px;
-          width: 40px; height: 40px;
+          background: linear-gradient(135deg, var(--rose), rgba(var(--rose-rgb),0.75));
+          border: none;
+          border-radius: 50%;
+          width: 38px; height: 38px;
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--text-sub);
+          cursor: pointer; color: #fff;
           transition: all 0.18s cubic-bezier(.4,0,.2,1);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          box-shadow: 0 4px 14px rgba(var(--rose-rgb),0.38);
           flex-shrink: 0;
         }
         .cal-nav-btn:hover {
-          background: rgba(var(--rose-rgb),0.08);
-          border-color: rgba(var(--rose-rgb),0.45);
-          color: var(--rose);
-          box-shadow: 0 4px 14px rgba(var(--rose-rgb),0.18);
-          transform: scale(1.08);
+          transform: scale(1.12);
+          box-shadow: 0 6px 22px rgba(var(--rose-rgb),0.55);
         }
-        .cal-nav-btn:active { transform: scale(0.95); }
+        .cal-nav-btn:active { transform: scale(0.93); }
         .cal-select {
           background: var(--bg-surface);
           border: 1.5px solid var(--border-strong);

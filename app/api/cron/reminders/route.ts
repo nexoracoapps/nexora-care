@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
+export const dynamic = 'force-dynamic';
 
 /* GET /api/cron/reminders — called by Vercel Cron every hour
    Sends push notifications for appointments in the next 24 h  */
@@ -20,26 +15,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Lazy-import web-push so missing env vars don't crash the build
+  const webpush = (await import('web-push')).default;
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT ?? 'mailto:noreply@nexoracare.com',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+    process.env.VAPID_PRIVATE_KEY ?? '',
+  );
+
   const now   = new Date();
   const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  // Appointments coming up in the next 24 hours
   const upcoming = await prisma.appointment.findMany({
-    where: {
-      status: 'SCHEDULED',
-      dateTime: { gte: now, lte: in24h },
-    },
-    include: {
-      customer: true,
-      service:  true,
-    },
+    where: { status: 'SCHEDULED', dateTime: { gte: now, lte: in24h } },
+    include: { customer: true, service: true },
   });
 
   if (upcoming.length === 0) {
     return NextResponse.json({ sent: 0, message: 'No upcoming appointments' });
   }
 
-  // Get all push subscriptions
   const subs = await prisma.pushSubscription.findMany();
   if (subs.length === 0) {
     return NextResponse.json({ sent: 0, message: 'No push subscribers' });
@@ -67,13 +62,11 @@ export async function GET(req: NextRequest) {
         );
         sent++;
       } catch (err: unknown) {
-        // 410 Gone = subscription expired; collect for cleanup
         if ((err as { statusCode?: number }).statusCode === 410) stale.push(sub.endpoint);
       }
     }
   }
 
-  // Clean up expired subscriptions
   if (stale.length > 0) {
     await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: stale } } });
   }

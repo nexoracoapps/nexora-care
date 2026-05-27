@@ -514,14 +514,22 @@ export default function CalendarPage() {
         .cal-nav-btn {
           background: var(--bg-elevated);
           border: 1.5px solid var(--border);
-          border-radius: 9px;
-          width: 36px; height: 36px;
+          border-radius: 12px;
+          width: 40px; height: 40px;
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--text);
-          font-size: 1.1rem; font-weight: 700;
-          transition: all 0.15s;
+          cursor: pointer; color: var(--text-sub);
+          transition: all 0.18s cubic-bezier(.4,0,.2,1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          flex-shrink: 0;
         }
-        .cal-nav-btn:hover { background: var(--bg-card); border-color: var(--rose); color: var(--rose); }
+        .cal-nav-btn:hover {
+          background: rgba(var(--rose-rgb),0.08);
+          border-color: rgba(var(--rose-rgb),0.45);
+          color: var(--rose);
+          box-shadow: 0 4px 14px rgba(var(--rose-rgb),0.18);
+          transform: scale(1.08);
+        }
+        .cal-nav-btn:active { transform: scale(0.95); }
         .cal-select {
           background: var(--bg-surface);
           border: 1.5px solid var(--border-strong);
@@ -558,7 +566,7 @@ export default function CalendarPage() {
           .cal-select { width: 100%; }
 
           /* Bigger touch targets on mobile */
-          .cal-nav-btn { width: 44px !important; height: 44px !important; font-size: 1.2rem !important; }
+          .cal-nav-btn { width: 44px !important; height: 44px !important; }
           .cal-view-btn { padding: 10px 14px !important; font-size: 0.84rem !important; }
 
           /* Day view improvements on mobile */
@@ -647,11 +655,19 @@ export default function CalendarPage() {
 
             {/* Nav */}
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-              <button onClick={() => goTo(-1)} className="cal-nav-btn">{isRTL ? '›' : '‹'}</button>
-              <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 12px' }}>
+              <button onClick={() => goTo(-1)} className="cal-nav-btn" title="Previous">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={isRTL ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />
+                </svg>
+              </button>
+              <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 14px', fontWeight: 700 }}>
                 {t('today')}
               </button>
-              <button onClick={() => goTo(1)} className="cal-nav-btn">{isRTL ? '‹' : '›'}</button>
+              <button onClick={() => goTo(1)} className="cal-nav-btn" title="Next">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+                </svg>
+              </button>
             </div>
 
             {/* Date heading */}

@@ -1622,3 +1622,13 @@ body.modal-open { overflow: hidden; touch-action: none; }
   }
 }
 
+/* ─── Hide Vercel Speed Insights / Web Analytics floating badge ─── */
+vercel-speed-insights,
+vercel-web-analytics,
+#vercel-speed-insights,
+#vercel-web-analytics,
+[data-vercel-speed-insights],
+[data-vercel-web-analytics] {
+  display: none !important;
+}
+

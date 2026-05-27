@@ -139,18 +139,6 @@ export default function RevenuePage() {
   return (
     <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="viewReports">
       <style dangerouslySetInnerHTML={{ __html: `
-        .rev-input {
-          background: var(--bg-surface);
-          border: 1.5px solid var(--border-strong);
-          border-radius: 10px;
-          padding: 8px 12px;
-          color: var(--text);
-          font-family: var(--font);
-          font-size: 0.85rem;
-          outline: none;
-          transition: border-color 0.15s;
-        }
-        .rev-input:focus { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,120,140,0.12); }
         .pct-input {
           width: 70px;
           background: var(--bg-surface);
@@ -167,14 +155,41 @@ export default function RevenuePage() {
         .rev-row:hover { background: var(--bg-elevated) !important; }
         .rev-badge { border-radius: 6px; padding: 3px 9px; font-weight: 700; font-size: 0.72rem; display: inline-block; }
         .preset-btn {
-          padding: 6px 13px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+          padding: 7px 15px; border-radius: 22px; font-size: 0.78rem; font-weight: 600;
           border: 1.5px solid var(--border); background: var(--bg-surface);
           color: var(--text-sub); cursor: pointer; font-family: var(--font);
-          transition: all 0.15s; white-space: nowrap;
+          transition: all 0.18s; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
         }
-        .preset-btn:hover { border-color: var(--rose); color: var(--rose); background: var(--bg-elevated); }
+        .preset-btn:hover { border-color: var(--rose); color: var(--rose); background: rgba(196,120,140,0.06); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(196,120,140,0.15); }
+        .preset-btn.active { border-color: var(--rose); color: var(--rose); background: rgba(196,120,140,0.10); box-shadow: 0 2px 8px rgba(196,120,140,0.18); }
+        .date-input-wrap { position: relative; }
+        .date-input-wrap label { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+        .date-input-wrap input[type="date"] {
+          background: var(--bg-elevated);
+          border: 1.5px solid var(--border);
+          border-radius: 10px;
+          padding: 8px 12px;
+          color: var(--text);
+          font-family: var(--font);
+          font-size: 0.84rem;
+          font-weight: 500;
+          outline: none;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          min-width: 148px;
+        }
+        .date-input-wrap input[type="date"]:focus { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,120,140,0.13); }
+        .apply-btn {
+          padding: 9px 22px; border-radius: 12px; font-size: 0.84rem; font-weight: 700;
+          background: var(--grad); color: #fff; border: none; cursor: pointer;
+          font-family: var(--font); transition: opacity 0.15s, transform 0.12s;
+          display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow-rose);
+          white-space: nowrap;
+        }
+        .apply-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .apply-btn:disabled { opacity: 0.55; cursor: not-allowed; }
         @keyframes bar-grow { from { width: 0 } }
         .rev-bar-fill { animation: bar-grow 0.7s ease; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}} />
 
       {/* ── Header ── */}
@@ -253,32 +268,65 @@ export default function RevenuePage() {
       )}
 
       {/* ── Filters ── */}
-      <div className="glass-card" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
-          {/* Presets */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignSelf: 'center' }}>
-            <button className="preset-btn" onClick={() => applyPreset('this-month')}>{isRTL ? 'هذا الشهر' : 'This Month'}</button>
-            <button className="preset-btn" onClick={() => applyPreset('last-month')}>{isRTL ? 'الشهر الماضي' : 'Last Month'}</button>
-            <button className="preset-btn" onClick={() => applyPreset('last-7')}>{isRTL ? 'آخر 7 أيام' : 'Last 7 Days'}</button>
+      <div className="glass-card" style={{ marginBottom: 18, padding: '16px 20px', background: 'var(--bg-surface)' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+
+          {/* Quick presets with icons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isRTL ? 'فترة سريعة' : 'Quick Range'}</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                className={`preset-btn${fromDate === new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] ? ' active' : ''}`}
+                onClick={() => applyPreset('this-month')}>
+                📅 {isRTL ? 'هذا الشهر' : 'This Month'}
+              </button>
+              <button className="preset-btn" onClick={() => applyPreset('last-month')}>
+                ◀ {isRTL ? 'الشهر الماضي' : 'Last Month'}
+              </button>
+              <button className="preset-btn" onClick={() => applyPreset('last-7')}>
+                🗓 {isRTL ? 'آخر 7 أيام' : 'Last 7 Days'}
+              </button>
+            </div>
           </div>
-          <div style={{ width: 1, height: 32, background: 'var(--border)', flexShrink: 0, alignSelf: 'center' }} />
-          <div>
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-sub)', marginBottom: 5 }}>{t('revFrom')}</div>
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="rev-input" />
+
+          {/* Divider */}
+          <div style={{ width: 1, height: 46, background: 'var(--border)', flexShrink: 0, alignSelf: 'flex-end', marginBottom: 2 }} />
+
+          {/* Date inputs row */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="date-input-wrap">
+              <label>{isRTL ? 'من' : 'From'}</label>
+              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+            </div>
+            <div style={{ paddingBottom: 9, color: 'var(--text-sub)', fontSize: '1rem', fontWeight: 300 }}>→</div>
+            <div className="date-input-wrap">
+              <label>{isRTL ? 'إلى' : 'To'}</label>
+              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-sub)', marginBottom: 5 }}>{t('revTo')}</div>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="rev-input" />
-          </div>
-          <button onClick={load} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }} disabled={loading}>
-            {loading ? t('revLoading') : `🔍 ${t('revApply')}`}
+
+          {/* Apply */}
+          <button className="apply-btn" onClick={load} disabled={loading} style={{ alignSelf: 'flex-end' }}>
+            {loading
+              ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />{isRTL ? 'جارٍ التحميل…' : 'Loading…'}</>
+              : <>{isRTL ? 'تطبيق' : 'Apply'} ↗</>
+            }
           </button>
+
+          {/* Active period chip */}
           {data && (
-            <div style={{ fontSize: '0.76rem', color: 'var(--text-sub)', paddingBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ opacity: 0.5 }}>📆</span>
+            <div style={{
+              alignSelf: 'flex-end', marginBottom: 2,
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(37,99,235,0.07)', border: '1px solid rgba(37,99,235,0.18)',
+              borderRadius: 20, padding: '6px 14px',
+              fontSize: '0.76rem', fontWeight: 600, color: '#2563eb', whiteSpace: 'nowrap',
+            }}>
+              <span>📆</span>
               {fmtDate(data.period.from)} – {fmtDate(data.period.to)}
             </div>
           )}
+
         </div>
       </div>
 

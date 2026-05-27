@@ -421,46 +421,53 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
                             minWidth: 190, padding: '4px 0', overflow: 'hidden',
                           }}>
-                            {([
-                              ...(canDo('editAppointments') ? [{ label: `✏️  ${t('editDetails')}`, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
-                              ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' ? [
-                                { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
-                                { label: `✗  ${t('noShow')}`, color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
-                                { label: `⊘  ${t('cancelAction')}`, color: '#ef4444', action: () => { doAction(appt, 'cancel'); setOpenMenuId(null); } },
-                              ] : []),
-                              ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED' ? [
-                                { label: `▶  ${t('startService')}`, color: '#f59e0b', action: () => { doAction(appt, 'start-service'); setOpenMenuId(null); } },
-                              ] : []),
-                              ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? [
-                                { label: `📦  ${t('deliverService')}`, color: '#10b981', action: () => { setSelected(appt); setDeliverForm({ status: 'DELIVERED', notes: '', nextVisit: '' }); setModal('deliver'); setOpenMenuId(null); } },
-                              ] : []),
-                              ...(canDo('recordPayments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? (appt.paymentStatus === 'UNPAID' ? [
-                                { label: `💳  ${t('recordPayment')}`, color: '#10b981', action: () => { setSelected(appt); setPayForm({ method: 'CASH', amount: appt.amount?.toString() || '' }); setModal('pay'); setOpenMenuId(null); } },
-                              ] : [
-                                { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
-                              ]) : []),
-                              ...(canDo('editAppointments') && appt.status === 'SCHEDULED' ? [
-                                { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(new Date(appt.dateTime).toISOString().slice(0, 16)); setModal('reschedule'); setOpenMenuId(null); } },
-                              ] : []),
-                            ].map((item, i) => (
-                              <button key={i} onClick={item.action}
-                                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: item.color, transition: 'background 0.1s' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                {item.label}
-                              </button>
-                            )))}
-                            {canDo('deleteAppointments') && (
-                              <>
-                                <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
-                                <button onClick={() => { setDeleteTarget(appt); setOpenMenuId(null); }}
-                                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,62,90,0.07)')}
-                                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  🗑  {t('delete')}
-                                </button>
-                              </>
-                            )}
+                            {(() => {
+                              const menuItems = [
+                                ...(canDo('editAppointments') ? [{ label: `✏️  ${t('editDetails')}`, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
+                                ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' ? [
+                                  { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
+                                  { label: `✗  ${t('noShow')}`, color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
+                                  { label: `⊘  ${t('cancelAction')}`, color: '#ef4444', action: () => { doAction(appt, 'cancel'); setOpenMenuId(null); } },
+                                ] : []),
+                                ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED' ? [
+                                  { label: `▶  ${t('startService')}`, color: '#f59e0b', action: () => { doAction(appt, 'start-service'); setOpenMenuId(null); } },
+                                ] : []),
+                                ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? [
+                                  { label: `📦  ${t('deliverService')}`, color: '#10b981', action: () => { setSelected(appt); setDeliverForm({ status: 'DELIVERED', notes: '', nextVisit: '' }); setModal('deliver'); setOpenMenuId(null); } },
+                                ] : []),
+                                ...(canDo('recordPayments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? (appt.paymentStatus === 'UNPAID' ? [
+                                  { label: `💳  ${t('recordPayment')}`, color: '#10b981', action: () => { setSelected(appt); setPayForm({ method: 'CASH', amount: appt.amount?.toString() || '' }); setModal('pay'); setOpenMenuId(null); } },
+                                ] : [
+                                  { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
+                                ]) : []),
+                                ...(canDo('editAppointments') && appt.status === 'SCHEDULED' ? [
+                                  { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(new Date(appt.dateTime).toISOString().slice(0, 16)); setModal('reschedule'); setOpenMenuId(null); } },
+                                ] : []),
+                              ];
+                              return (
+                                <>
+                                  {menuItems.map((item, i) => (
+                                    <button key={i} onClick={item.action}
+                                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: item.color, transition: 'background 0.1s' }}
+                                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                      {item.label}
+                                    </button>
+                                  ))}
+                                  {canDo('deleteAppointments') && menuItems.length > 0 && (
+                                    <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
+                                  )}
+                                  {canDo('deleteAppointments') && (
+                                    <button onClick={() => { setDeleteTarget(appt); setOpenMenuId(null); }}
+                                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
+                                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,62,90,0.07)')}
+                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                      🗑  {t('delete')}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>

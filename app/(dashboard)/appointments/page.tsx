@@ -233,17 +233,6 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         button[style*="9px 16px"]:hover { background: rgba(229,62,90,0.07) !important; }
         .appt-row { transition: background 0.12s; cursor: default; }
         .appt-row:hover { background: var(--bg-elevated) !important; }
-        .appt-quick-actions {
-          max-width: 0; overflow: hidden; opacity: 0;
-          transition: max-width 0.2s ease, opacity 0.15s;
-          display: flex; align-items: center; gap: 4px; flex-shrink: 0;
-        }
-        .appt-row:hover .appt-quick-actions { max-width: 140px; opacity: 1; }
-        .appt-qbtn {
-          border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;
-          padding: 5px 9px; transition: all 0.12s; font-family: var(--font); white-space: nowrap; flex-shrink: 0;
-        }
-        .appt-qbtn:hover { filter: brightness(1.1); transform: scale(1.05); }
       `}} />
       <div>
         {/* Header */}
@@ -392,27 +381,6 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                     {/* Actions */}
                     <td data-label="Actions">
                       <div className="dd-wrap" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
-                        {/* Inline quick actions shown on hover */}
-                        <div className="appt-quick-actions">
-                          {canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' && (
-                            <button className="appt-qbtn"
-                              onClick={() => doAction(appt, 'complete')}
-                              style={{ background: 'rgba(5,150,105,0.12)', color: '#059669' }}
-                              title="Mark Complete">✓</button>
-                          )}
-                          {canDo('recordPayments') && appt.paymentStatus === 'UNPAID' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' && (
-                            <button className="appt-qbtn"
-                              onClick={() => { setSelected(appt); setPayForm({ method: 'CASH', amount: appt.amount?.toString() || '' }); setModal('pay'); }}
-                              style={{ background: 'rgba(37,99,235,0.12)', color: '#2563eb' }}
-                              title="Record Payment">💳</button>
-                          )}
-                          {canDo('editAppointments') && (
-                            <button className="appt-qbtn"
-                              onClick={() => openEdit(appt)}
-                              style={{ background: 'var(--bg-elevated)', color: 'var(--text-sub)' }}
-                              title="Edit">✏️</button>
-                          )}
-                        </div>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={e => {

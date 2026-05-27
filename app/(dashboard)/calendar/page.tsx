@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, TouchEvent } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -59,7 +60,9 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false);
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [testingNotif, setTestingNotif] = useState(false);
   const notifiedRef = useRef<Set<string>>(new Set());
+  const touchStartX = useRef<number | null>(null);
 
   const days   = lang === 'ar' ? DAYS_AR   : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
@@ -141,6 +144,32 @@ export default function CalendarPage() {
     const timer = setInterval(check, 60_000);
     return () => clearInterval(timer);
   }, [appts]);
+
+  const sendTestNotification = async () => {
+    if (!user?.token) return;
+    setTestingNotif(true);
+    try {
+      const res = await fetch('/api/cron/reminders?test=true', {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(`Test notification sent to ${data.sent} device(s)`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to send test notification');
+    } finally {
+      setTestingNotif(false);
+    }
+  };
+
+  const onTouchStart = (e: TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 50) return;
+    goTo(dx < 0 ? 1 : -1);
+  };
 
   const goTo = (n: number) => {
     const d = new Date(cursor);
@@ -233,14 +262,37 @@ export default function CalendarPage() {
   const DayView = () => {
     const todayAppts = apptsByDay(cursor);
     const hours = Array.from({ length: 16 }, (_, i) => i + 6);
+    const isToday = sameDay(cursor, new Date());
     return (
       <div>
         <div style={{
-          textAlign: 'center', padding: '14px 0 20px',
-          fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)',
-          letterSpacing: '-0.3px',
+          textAlign: 'center', padding: '14px 0 16px',
+          borderBottom: '1px solid var(--border)',
+          marginBottom: 4,
         }}>
-          {days[cursor.getDay()]}, {cursor.getDate()} {months[cursor.getMonth()]} {cursor.getFullYear()}
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: isToday ? 'var(--rose)' : 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+            {days[cursor.getDay()]}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: '50%',
+              background: isToday ? 'var(--rose)' : 'transparent',
+              color: isToday ? '#fff' : 'var(--text)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 900, fontSize: '1.2rem',
+              boxShadow: isToday ? '0 4px 16px rgba(var(--rose-rgb),0.40)' : 'none',
+            }}>
+              {cursor.getDate()}
+            </div>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: 6, fontWeight: 600 }}>
+            {months[cursor.getMonth()]} {cursor.getFullYear()}
+            {todayAppts.length > 0 && (
+              <span style={{ marginLeft: 8, background: 'var(--rose)', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: '0.68rem', fontWeight: 700 }}>
+                {todayAppts.length}
+              </span>
+            )}
+          </div>
         </div>
         {todayAppts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-sub)' }}>
@@ -254,8 +306,8 @@ export default function CalendarPage() {
               if (slotAppts.length === 0) return null;
               const label = `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}`;
               return (
-                <div key={h} style={{ display: 'flex', gap: 14, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
-                  <div style={{
+                <div key={h} className="cal-day-slot" style={{ display: 'flex', gap: 14, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
+                  <div className="cal-day-time" style={{
                     width: 58, flexShrink: 0, paddingTop: 6,
                     fontSize: '0.7rem', color: 'var(--text-sub)', fontWeight: 700,
                     textAlign: isRTL ? 'left' : 'right',
@@ -504,10 +556,37 @@ export default function CalendarPage() {
             order: -1;
           }
           .cal-select { width: 100%; }
+
+          /* Bigger touch targets on mobile */
+          .cal-nav-btn { width: 44px !important; height: 44px !important; font-size: 1.2rem !important; }
+          .cal-view-btn { padding: 10px 14px !important; font-size: 0.84rem !important; }
+
+          /* Day view improvements on mobile */
+          .cal-day-slot { padding: 10px 0 !important; }
+          .cal-day-time { width: 46px !important; font-size: 0.68rem !important; }
+
+          /* Month view — tighter cells on small screens */
+          .cal-month-cell { min-height: 58px !important; padding: 5px 4px 6px !important; }
+          .cal-month-day-num { width: 22px !important; height: 22px !important; font-size: 0.74rem !important; }
+
+          /* Week view compact cards */
+          .cal-week-card { padding: 4px 6px 4px 8px !important; }
         }
         @media (min-width: 641px) {
           .cal-controls-top, .cal-controls-bottom { display: contents; }
         }
+
+        /* Swipe hint bar */
+        .cal-swipe-hint {
+          display: none;
+          text-align: center;
+          font-size: 0.65rem;
+          color: var(--text-sub);
+          padding: 6px 0 0;
+          letter-spacing: 0.04em;
+          opacity: 0.6;
+        }
+        @media (max-width: 640px) { .cal-swipe-hint { display: block; } }
       `}} />
 
       {/* Page header */}
@@ -519,22 +598,35 @@ export default function CalendarPage() {
           </h1>
           <p className="page-sub">{t('calSub')}</p>
         </div>
-        {notifStatus !== 'unsupported' && notifStatus !== 'granted' && (
-          <button onClick={requestNotif} className="btn btn-secondary btn-sm">
-            🔔 {t('calEnableReminders')}
-          </button>
-        )}
-        {notifStatus === 'granted' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: 'rgba(5,150,105,0.12)',
-            border: '1.5px solid rgba(5,150,105,0.3)',
-            borderRadius: 9, padding: '7px 13px',
-            fontSize: '0.8rem', fontWeight: 700, color: '#059669',
-          }}>
-            🔔 {t('calRemindersOn')}
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          {notifStatus !== 'unsupported' && notifStatus !== 'granted' && (
+            <button onClick={requestNotif} className="btn btn-secondary btn-sm">
+              🔔 {t('calEnableReminders')}
+            </button>
+          )}
+          {notifStatus === 'granted' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(5,150,105,0.12)',
+              border: '1.5px solid rgba(5,150,105,0.3)',
+              borderRadius: 9, padding: '7px 13px',
+              fontSize: '0.8rem', fontWeight: 700, color: '#059669',
+            }}>
+              🔔 {t('calRemindersOn')}
+            </div>
+          )}
+          {user?.role === 'ADMIN' && notifStatus === 'granted' && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={sendTestNotification}
+              disabled={testingNotif}
+              title="Send a test push notification to your device"
+              style={{ fontSize: '0.78rem' }}
+            >
+              {testingNotif ? '⏳' : '🧪'} Test Notif
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Controls */}
@@ -606,7 +698,12 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar body */}
-      <div className="glass-card" style={{ minHeight: 300 }}>
+      <div
+        className="glass-card"
+        style={{ minHeight: 300 }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-sub)' }}>
             <div style={{ fontSize: '1.8rem', marginBottom: 12, opacity: 0.4 }}>⏳</div>
@@ -617,6 +714,7 @@ export default function CalendarPage() {
             {view === 'day'   && <DayView />}
             {view === 'week'  && <WeekView />}
             {view === 'month' && <MonthView />}
+            <div className="cal-swipe-hint">← swipe to navigate →</div>
           </>
         )}
       </div>

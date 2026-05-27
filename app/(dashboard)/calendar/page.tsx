@@ -82,6 +82,15 @@ export default function CalendarPage() {
 
   const requestNotif = async () => {
     if (!('Notification' in window)) return;
+    if (Notification.permission === 'denied') {
+      toast.error(
+        lang === 'ar'
+          ? 'الإشعارات محظورة — افتح إعدادات المتصفح ← إعدادات الموقع ← الإشعارات ← اسمح لهذا الموقع'
+          : 'Notifications are blocked — open Chrome Settings → Site Settings → Notifications → Allow for this site',
+        { duration: 6000 }
+      );
+      return;
+    }
     const perm = await Notification.requestPermission();
     setNotifStatus(perm);
     if (perm !== 'granted' || !user?.token) return;
@@ -659,10 +668,10 @@ export default function CalendarPage() {
 
       {/* Controls */}
       <div className="glass-card" style={{ marginBottom: 14 }}>
-        <div className="cal-controls" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+        <div className="cal-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
 
           {/* Top row on mobile: view toggle + nav */}
-          <div className="cal-controls-top" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="cal-controls-top" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             {/* View toggle */}
             <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4 }}>
               {(['day', 'week', 'month'] as View[]).map(v => (
@@ -674,7 +683,7 @@ export default function CalendarPage() {
             </div>
 
             {/* Nav */}
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button onClick={() => goTo(-1)} className="cal-nav-btn" title="Previous">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d={isRTL ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />

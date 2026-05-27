@@ -158,7 +158,7 @@ export default function ProvidersPage() {
   });
 
   return (
-    <ProtectedRoute permKey="manageServices">
+    <ProtectedRoute permKeys={['manageProviders', 'manageServices']}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes svc-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }

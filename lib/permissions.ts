@@ -9,7 +9,12 @@ export type PermissionKey =
   | 'createAppointments' | 'editAppointments'
   | 'updateAppointmentStatus'
   | 'makePhoneCalls' | 'viewCallLogs' | 'clearCallLogs'
-  | 'sendBroadcasts' | 'sendWhatsApp' | 'sendSMS' | 'sendEmail';
+  | 'sendBroadcasts' | 'sendWhatsApp' | 'sendSMS' | 'sendEmail'
+  // Separated page permissions (v2)
+  | 'viewCalendar'     // /calendar  (was bundled under manageAppointments)
+  | 'viewRevenue'      // /revenue   (was bundled under viewReports)
+  | 'manageProviders'  // /providers (was bundled under manageServices)
+  | 'viewRoles';       // /roles     (was bundled under createUsers / managePermissions)
 
 export type RolePermissions = Record<PermissionKey, boolean>;
 export type AllPermissions = Record<string, RolePermissions>;
@@ -26,6 +31,8 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   'updateAppointmentStatus',
   'makePhoneCalls', 'viewCallLogs', 'clearCallLogs',
   'sendBroadcasts', 'sendWhatsApp', 'sendSMS', 'sendEmail',
+  // v2 separated page permissions
+  'viewCalendar', 'viewRevenue', 'manageProviders', 'viewRoles',
 ];
 
 export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
@@ -41,6 +48,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     updateAppointmentStatus: true,
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
+    viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
   },
   MANAGER: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -54,6 +62,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     updateAppointmentStatus: true,
     makePhoneCalls: true, viewCallLogs: true, clearCallLogs: true,
     sendBroadcasts: true, sendWhatsApp: true, sendSMS: true, sendEmail: true,
+    viewCalendar: true, viewRevenue: true, manageProviders: true, viewRoles: true,
   },
   STAFF: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -67,6 +76,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     updateAppointmentStatus: true,
     makePhoneCalls: false, viewCallLogs: false, clearCallLogs: false,
     sendBroadcasts: false, sendWhatsApp: false, sendSMS: false, sendEmail: false,
+    viewCalendar: true, viewRevenue: false, manageProviders: false, viewRoles: false,
   },
 };
 

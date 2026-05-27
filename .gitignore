@@ -9,3 +9,5 @@ prisma/*.db-journal
 backups/
 dev.log
 *.tsbuildinfo
+
+.vercel

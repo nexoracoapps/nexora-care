@@ -15,22 +15,22 @@ const ALL     = ['ADMIN', 'MANAGER', 'STAFF'];
 const PRIV    = ['ADMIN', 'MANAGER'];
 const ADMIN_  = ['ADMIN'];
 
-const navItems: { href: string; labelKey: string; icon: string; roles: string[]; permKey?: PermissionKey }[] = [
-  { href: '/dashboard',    labelKey: 'dashboard',       icon: '⊞', roles: PRIV,   permKey: 'dashboard' },
-  { href: '/customers',    labelKey: 'customers',        icon: '👥', roles: ALL,   permKey: 'manageCustomers' },
-  { href: '/appointments', labelKey: 'appointments',     icon: '📅', roles: ALL,   permKey: 'manageAppointments' },
-  { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,  permKey: 'manageServices' },
-  { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,   permKey: 'manageServices' },
-  { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_, permKey: 'viewUsers' },
-  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: ADMIN_, permKey: 'managePermissions' },
-  { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,   permKey: 'manageBranches' },
-  { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,   permKey: 'manageAppointments' },
-  { href: '/revenue',      labelKey: 'revenueNav',       icon: '💰', roles: PRIV,   permKey: 'viewReports' },
-  { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,   permKey: 'recordPayments' },
-  { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,   permKey: 'viewReports' },
-  { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: PRIV,   permKey: 'manageStaffAbsence' },
-  { href: '/permissions',  labelKey: 'permissions',      icon: '🛡️', roles: ADMIN_, permKey: 'managePermissions' },
-  { href: '/backup',       labelKey: 'backup',           icon: '🔒', roles: ADMIN_, permKey: 'systemBackup' },
+const navItems: { href: string; labelKey: string; icon: string; roles: string[]; permKey?: PermissionKey; permKeys?: PermissionKey[] }[] = [
+  { href: '/dashboard',    labelKey: 'dashboard',       icon: '⊞',  roles: PRIV,    permKey: 'dashboard' },
+  { href: '/customers',    labelKey: 'customers',        icon: '👥', roles: ALL,     permKey: 'manageCustomers' },
+  { href: '/appointments', labelKey: 'appointments',     icon: '📅', roles: ALL,     permKey: 'manageAppointments' },
+  { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,    permKeys: ['viewCalendar', 'manageAppointments'] },
+  { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,   permKey: 'manageServices' },
+  { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,    permKeys: ['manageProviders', 'manageServices'] },
+  { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_,  permKey: 'viewUsers' },
+  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: ADMIN_, permKeys: ['viewRoles', 'managePermissions'] },
+  { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,    permKey: 'manageBranches' },
+  { href: '/revenue',      labelKey: 'revenueNav',       icon: '💰', roles: PRIV,   permKeys: ['viewRevenue', 'viewReports'] },
+  { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,    permKey: 'recordPayments' },
+  { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,    permKey: 'viewReports' },
+  { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: PRIV,    permKey: 'manageStaffAbsence' },
+  { href: '/permissions',  labelKey: 'permissions',      icon: '🛡️', roles: ADMIN_,  permKey: 'managePermissions' },
+  { href: '/backup',       labelKey: 'backup',           icon: '🔒', roles: ADMIN_,  permKey: 'systemBackup' },
 ];
 
 export default function Navbar() {
@@ -101,10 +101,12 @@ export default function Navbar() {
 
   if (!user) return null;
   // If a nav item has a permKey, the permission is the sole visibility gate.
-  // Roles fallback is only used for items without a permKey.
-  const visibleItems = navItems.filter(item =>
-    item.permKey ? canDo(item.permKey) : item.roles.includes(user.role)
-  );
+  // permKeys = OR logic; permKey = single key; fallback = roles check
+  const visibleItems = navItems.filter(item => {
+    if (item.permKeys && item.permKeys.length > 0) return item.permKeys.some(k => canDo(k));
+    if (item.permKey) return canDo(item.permKey);
+    return item.roles.includes(user.role);
+  });
 
   const sidebarContent = (
     <>

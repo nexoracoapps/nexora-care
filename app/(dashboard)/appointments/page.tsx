@@ -59,7 +59,7 @@ export default function AppointmentsPage() {
   const [deliverForm, setDeliverForm] = useState({ status: 'DELIVERED', notes: '', nextVisit: '' });
   const [newDateTime, setNewDateTime] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ buttonTop: number; buttonBottom: number; left: number } | null>(null);
 const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -401,13 +401,10 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                           onClick={e => {
                             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                             const dropWidth = 190;
-                            const dropMaxH = 300;
                             let left = rect.left;
                             if (left + dropWidth > window.innerWidth - 8) left = window.innerWidth - dropWidth - 8;
                             if (left < 8) left = 8;
-                            const spaceBelow = window.innerHeight - rect.bottom - 8;
-                            const top = spaceBelow < dropMaxH ? Math.max(8, rect.top - dropMaxH) : rect.bottom + 4;
-                            setMenuPos({ top, left });
+                            setMenuPos({ buttonTop: rect.top, buttonBottom: rect.bottom, left });
                             setOpenMenuId(openMenuId === appt.id ? null : appt.id);
                           }}
                           style={{ padding: '4px 10px', fontWeight: 700, fontSize: '1rem', letterSpacing: 2, lineHeight: 1, flexShrink: 0 }}
@@ -415,12 +412,23 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                           •••
                         </button>
                         {openMenuId === appt.id && menuPos && (
-                          <div style={{
-                            position: 'fixed', top: menuPos.top, left: menuPos.left, direction: 'ltr', zIndex: 9999,
-                            background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                            borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
-                            minWidth: 190, padding: '4px 0', overflow: 'hidden',
-                          }}>
+                          <div
+                            ref={(el) => {
+                              if (!el || !menuPos) return;
+                              const h = el.offsetHeight;
+                              const spaceBelow = window.innerHeight - menuPos.buttonBottom - 8;
+                              el.style.top = spaceBelow >= h
+                                ? `${menuPos.buttonBottom + 4}px`
+                                : `${Math.max(8, menuPos.buttonTop - h - 4)}px`;
+                              el.style.opacity = '1';
+                            }}
+                            style={{
+                              position: 'fixed', top: menuPos.buttonBottom + 4, left: menuPos.left,
+                              direction: 'ltr', zIndex: 9999, opacity: 0,
+                              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+                              minWidth: 190, padding: '4px 0', overflow: 'hidden',
+                            }}>
                             {(() => {
                               const menuItems = [
                                 ...(canDo('editAppointments') ? [{ label: `✏️  ${t('editDetails')}`, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),

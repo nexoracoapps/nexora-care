@@ -434,7 +434,7 @@ export default function CalendarPage() {
   const viewLabels: Record<View, string> = { day: t('calDay'), week: t('calWeek'), month: t('calMonth') };
 
   return (
-    <ProtectedRoute permKey="manageAppointments">
+    <ProtectedRoute permKeys={['viewCalendar', 'manageAppointments']}>
       <style dangerouslySetInnerHTML={{ __html: `
         .cal-view-btn {
           background: var(--bg-elevated);

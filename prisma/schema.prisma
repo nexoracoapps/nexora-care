@@ -184,3 +184,13 @@ model SpecialistRating {
   user          User?            @relation(fields: [userId], references: [id])
   createdAt     DateTime         @default(now())
 }
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

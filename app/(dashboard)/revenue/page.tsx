@@ -137,7 +137,7 @@ export default function RevenuePage() {
   const subHeaders = [t('revDate'), t('revClient'), t('revService'), t('revAmount'), t('revPayment'), t('revStatus')];
 
   return (
-    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="viewReports">
+    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKeys={['viewRevenue', 'viewReports']}>
       <style dangerouslySetInnerHTML={{ __html: `
         .pct-input {
           width: 70px;
@@ -190,6 +190,20 @@ export default function RevenuePage() {
         @keyframes bar-grow { from { width: 0 } }
         .rev-bar-fill { animation: bar-grow 0.7s ease; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .print-btn {
+          padding: 8px 18px; border-radius: 12px; font-size: 0.82rem; font-weight: 700;
+          background: var(--bg-elevated); border: 1.5px solid var(--border);
+          color: var(--text-sub); cursor: pointer; font-family: var(--font);
+          transition: all 0.15s; display: inline-flex; align-items: center; gap: 7px;
+          white-space: nowrap;
+        }
+        .print-btn:hover { border-color: var(--text-sub); color: var(--text); background: var(--bg-hover); }
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; color: black !important; }
+          .glass-card { box-shadow: none !important; border: 1px solid #e5e7eb !important; background: white !important; }
+          .page-header, .rev-bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
       `}} />
 
       {/* ── Header ── */}
@@ -198,8 +212,8 @@ export default function RevenuePage() {
           <h1 className="page-title">💰 {t('revenueDistribution')}</h1>
           <p className="page-sub">{t('revenueDistributionSub')}</p>
         </div>
-        {data && (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          {data && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'rgba(5,150,105,0.10)', border: '1.5px solid rgba(5,150,105,0.25)',
@@ -209,8 +223,13 @@ export default function RevenuePage() {
               ✅ {isRTL ? 'نسبة التحصيل' : 'Collection rate'}:&nbsp;
               <span style={{ fontSize: '1.05rem', fontWeight: 900 }}>{collectionRate}%</span>
             </div>
-          </div>
-        )}
+          )}
+          {data && (
+            <button className="print-btn no-print" onClick={() => window.print()} title={isRTL ? 'طباعة التقرير' : 'Print Report'}>
+              🖨️ {isRTL ? 'طباعة' : 'Print Report'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Quick Insights strip ── */}
@@ -268,7 +287,7 @@ export default function RevenuePage() {
       )}
 
       {/* ── Filters ── */}
-      <div className="glass-card" style={{ marginBottom: 18, padding: '16px 20px', background: 'var(--bg-surface)' }}>
+      <div className="glass-card no-print" style={{ marginBottom: 18, padding: '16px 20px', background: 'var(--bg-surface)' }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
 
           {/* Quick presets with icons */}

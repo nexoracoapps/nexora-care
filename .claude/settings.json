@@ -80,7 +80,22 @@
       "Bash(curl -s http://localhost:6001/api/permissions -H \"Authorization: Bearer test\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:6001)",
       "Bash(npx kill-port *)",
-      "Bash(mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/roles\" 2>&1; mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/roles/[id]\" 2>&1; mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/permissions/import\" 2>&1)"
+      "Bash(mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/roles\" 2>&1; mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/roles/[id]\" 2>&1; mkdir \"c:/Users/mhamm/Desktop/Nexora/project-delivery/projects/nexora-care/app/api/permissions/import\" 2>&1)",
+      "Bash(ls -la .env*)",
+      "Bash(cat .env.local)",
+      "Bash(cat .env)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(cd \"c:\\\\Users\\\\mhamm\\\\Desktop\\\\Nexora\\\\project-delivery\\\\projects\\\\nexora-care\"; git add app/\\(dashboard\\)/permissions/page.tsx app/api/public/providers/; git commit -m \"feat: redesign permissions page + fix ratings API route\"; git push origin main 2>&1)",
+      "Bash(git commit *)",
+      "Bash(npx playwright *)",
+      "Bash(where chromium *)",
+      "Bash(where \"chromium-browser\")",
+      "Bash(node --experimental-vm-modules node_modules/.bin/playwright test --version)",
+      "Bash(node scripts/screenshot-permissions.mjs)",
+      "Bash(npm list *)",
+      "Bash(node scripts/screenshot-compare.mjs)",
+      "Bash(node scripts/ss-all.mjs)"
     ],
     "additionalDirectories": [
       "c:\\Users\\mhamm\\Desktop\\Nexora\\project-delivery\\projects\\nexora-care\\app\\api\\roles"

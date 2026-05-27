@@ -222,7 +222,7 @@ export default function RolesPage() {
   const colCount = roles.length + (unknown.length > 0 ? 1 : 0);
 
   return (
-    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="createUsers">
+    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKeys={['viewRoles', 'createUsers', 'managePermissions']}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes role-card-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         .role-card { transition: transform 0.18s, box-shadow 0.18s; animation: role-card-pop 0.24s cubic-bezier(.34,1.56,.64,1); }

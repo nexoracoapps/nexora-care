@@ -34,9 +34,9 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
     ],
   },
   {
-    group: 'Appointments & Calendar', groupAr: 'المواعيد والتقويم', icon: '📅', color: '#0891b2',
+    group: 'Appointments  (/appointments)', groupAr: 'المواعيد  (/appointments)', icon: '📅', color: '#0891b2',
     items: [
-      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments & Calendar  (/appointments, /calendar)',    labelAr: 'عرض المواعيد والتقويم  (/appointments, /calendar)' },
+      { key: 'manageAppointments',      icon: '📅', label: 'View Appointments Page  (/appointments)',                    labelAr: 'عرض صفحة المواعيد  (/appointments)' },
       { key: 'createAppointments',      icon: '➕', label: 'Create New Appointments',                                    labelAr: 'إنشاء مواعيد جديدة',           parentKey: 'manageAppointments' },
       { key: 'editAppointments',        icon: '✏️', label: 'Edit & Reschedule Appointments',                             labelAr: 'تعديل وإعادة جدولة المواعيد',  parentKey: 'manageAppointments' },
       { key: 'updateAppointmentStatus', icon: '✅', label: 'Update Status (Complete / Cancel / No-Show)',                labelAr: 'تحديث الحالة',                  parentKey: 'manageAppointments' },
@@ -45,36 +45,70 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
     ],
   },
   {
-    group: 'Reports & Revenue', groupAr: 'التقارير والإيرادات', icon: '📊', color: '#10b981',
+    group: 'Calendar  (/calendar)', groupAr: 'التقويم  (/calendar)', icon: '🗓️', color: '#06b6d4',
     items: [
-      { key: 'viewReports',   icon: '📊', label: 'View Reports & Revenue Pages  (/reports, /revenue)', labelAr: 'عرض التقارير والإيرادات  (/reports, /revenue)' },
-      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',                             labelAr: 'تصدير وطباعة التقارير',  parentKey: 'viewReports' },
+      { key: 'viewCalendar', icon: '🗓️', label: 'View Calendar Page  (/calendar)', labelAr: 'عرض صفحة التقويم  (/calendar)' },
     ],
   },
   {
-    group: 'Users & Roles', groupAr: 'المستخدمون والأدوار', icon: '👤', color: '#f59e0b',
+    group: 'Reports  (/reports)', groupAr: 'التقارير  (/reports)', icon: '📊', color: '#10b981',
     items: [
-      { key: 'viewUsers',   icon: '👤', label: 'View Users Page  (/users)',          labelAr: 'عرض صفحة المستخدمين  (/users)' },
-      { key: 'createUsers', icon: '➕', label: 'Create Users & Access Roles  (/roles)', labelAr: 'إنشاء مستخدمين والوصول للأدوار  (/roles)', parentKey: 'viewUsers' },
-      { key: 'editUsers',   icon: '✏️', label: 'Edit Users',                          labelAr: 'تعديل المستخدمين',  parentKey: 'viewUsers' },
-      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',                        labelAr: 'حذف المستخدمين',    parentKey: 'viewUsers' },
+      { key: 'viewReports',   icon: '📊', label: 'View Reports Page  (/reports)',  labelAr: 'عرض صفحة التقارير  (/reports)' },
+      { key: 'exportReports', icon: '📤', label: 'Export & Print Reports',         labelAr: 'تصدير وطباعة التقارير',  parentKey: 'viewReports' },
     ],
   },
   {
-    group: 'Administration', groupAr: 'الإدارة', icon: '⚙️', color: '#8b5cf6',
+    group: 'Revenue  (/revenue)', groupAr: 'الإيرادات  (/revenue)', icon: '💰', color: '#059669',
     items: [
-      { key: 'dashboard',          icon: '🏠', label: 'Dashboard & Analytics  (/dashboard)',              labelAr: 'لوحة التحكم  (/dashboard)' },
-      { key: 'manageServices',     icon: '🛠', label: 'Services, Providers & Specialists  (/services, /providers)', labelAr: 'الخدمات ومقدمو الخدمة  (/services, /providers)' },
-      { key: 'manageBranches',     icon: '🏢', label: 'Manage Branches  (/branches)',                     labelAr: 'إدارة الفروع  (/branches)' },
-      { key: 'manageStaffAbsence', icon: '📆', label: 'Staff Absence  (/staff-absence)',                  labelAr: 'غيابات الموظفين  (/staff-absence)' },
+      { key: 'viewRevenue', icon: '💰', label: 'View Revenue & Distribution Page  (/revenue)', labelAr: 'عرض صفحة الإيرادات والتوزيع  (/revenue)' },
+    ],
+  },
+  {
+    group: 'Users  (/users)', groupAr: 'المستخدمون  (/users)', icon: '👤', color: '#f59e0b',
+    items: [
+      { key: 'viewUsers',   icon: '👤', label: 'View Users Page  (/users)', labelAr: 'عرض صفحة المستخدمين  (/users)' },
+      { key: 'createUsers', icon: '➕', label: 'Add New Users',             labelAr: 'إضافة مستخدمين جدد',  parentKey: 'viewUsers' },
+      { key: 'editUsers',   icon: '✏️', label: 'Edit Users',               labelAr: 'تعديل المستخدمين',     parentKey: 'viewUsers' },
+      { key: 'deleteUsers', icon: '🗑', label: 'Delete Users',             labelAr: 'حذف المستخدمين',       parentKey: 'viewUsers' },
+    ],
+  },
+  {
+    group: 'Roles  (/roles)', groupAr: 'الأدوار  (/roles)', icon: '🎭', color: '#8b5cf6',
+    items: [
+      { key: 'viewRoles', icon: '🎭', label: 'View Roles Page  (/roles)', labelAr: 'عرض صفحة الأدوار  (/roles)' },
+    ],
+  },
+  {
+    group: 'Permissions  (/permissions)', groupAr: 'الصلاحيات  (/permissions)', icon: '🔐', color: '#7c3aed',
+    items: [
+      { key: 'managePermissions', icon: '🔐', label: 'Manage Permissions Matrix  (/permissions)', labelAr: 'إدارة مصفوفة الصلاحيات  (/permissions)' },
+    ],
+  },
+  {
+    group: 'Services  (/services)', groupAr: 'الخدمات  (/services)', icon: '🛠', color: '#0891b2',
+    items: [
+      { key: 'manageServices', icon: '🛠', label: 'Manage Services & Catalogue  (/services)', labelAr: 'إدارة الخدمات  (/services)' },
+    ],
+  },
+  {
+    group: 'Providers & Specialists  (/providers)', groupAr: 'المزودون والمتخصصون  (/providers)', icon: '🩺', color: '#2563eb',
+    items: [
+      { key: 'manageProviders', icon: '🩺', label: 'Manage Providers & Specialists  (/providers)', labelAr: 'إدارة مقدمي الخدمة والمتخصصين  (/providers)' },
+    ],
+  },
+  {
+    group: 'Administration', groupAr: 'الإدارة', icon: '⚙️', color: '#6366f1',
+    items: [
+      { key: 'dashboard',          icon: '🏠', label: 'Dashboard & Analytics  (/dashboard)', labelAr: 'لوحة التحكم  (/dashboard)' },
+      { key: 'manageBranches',     icon: '🏢', label: 'Manage Branches  (/branches)',        labelAr: 'إدارة الفروع  (/branches)' },
+      { key: 'manageStaffAbsence', icon: '📆', label: 'Staff Absence  (/staff-absence)',     labelAr: 'غيابات الموظفين  (/staff-absence)' },
     ],
   },
   {
     group: 'System', groupAr: 'النظام', icon: '🔧', color: '#ef4444',
     items: [
-      { key: 'systemBackup',      icon: '💾', label: 'System Backup  (/backup)',                          labelAr: 'النسخ الاحتياطي  (/backup)' },
-      { key: 'managePermissions', icon: '🔐', label: 'Manage Roles & Permissions  (/permissions, /roles)', labelAr: 'إدارة الصلاحيات  (/permissions, /roles)' },
-      { key: 'branchSwitching',   icon: '🔀', label: 'Branch Switching (header switcher)',                labelAr: 'التبديل بين الفروع' },
+      { key: 'systemBackup',   icon: '💾', label: 'System Backup  (/backup)',           labelAr: 'النسخ الاحتياطي  (/backup)' },
+      { key: 'branchSwitching', icon: '🔀', label: 'Branch Switching (header switcher)', labelAr: 'التبديل بين الفروع' },
     ],
   },
 ];

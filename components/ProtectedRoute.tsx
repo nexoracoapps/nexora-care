@@ -11,24 +11,32 @@ interface Props {
   adminOnly?: boolean;
   roles?: string[];
   permKey?: PermissionKey;
+  /** OR logic – access granted if user has ANY of these keys */
+  permKeys?: PermissionKey[];
 }
 
-export default function ProtectedRoute({ children, adminOnly = false, roles, permKey }: Props) {
+export default function ProtectedRoute({ children, adminOnly = false, roles, permKey, permKeys }: Props) {
   const { user, isLoading } = useAuth();
   const { canDo, loading: permLoading, initialized: permInitialized } = usePermissions();
   const { isRTL } = useLanguage();
   const router = useRouter();
 
+  const checkAccess = (canDoFn: (k: PermissionKey) => boolean) => {
+    const roleAllowed = roles ? roles.includes(user!.role) : (!adminOnly || user!.role === 'ADMIN');
+    if (permKeys && permKeys.length > 0) return permKeys.some(k => canDoFn(k));
+    if (permKey) return canDoFn(permKey);
+    return roleAllowed;
+  };
+
   // Redirect to login when unauthenticated; redirect to home page when access is denied.
   useEffect(() => {
     if (isLoading || (permLoading && !permInitialized)) return;
     if (!user) { router.replace('/login'); return; }
-    const roleAllowed = roles ? roles.includes(user.role) : (!adminOnly || user.role === 'ADMIN');
-    const hasAccess = permKey ? canDo(permKey) : roleAllowed;
-    if (!hasAccess) {
+    if (!checkAccess(canDo)) {
       router.replace(user.role === 'STAFF' ? '/customers' : '/dashboard');
     }
-  }, [user, isLoading, permLoading, permInitialized, adminOnly, roles, permKey, router, canDo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isLoading, permLoading, permInitialized, adminOnly, roles, permKey, permKeys, router, canDo]);
 
   if (isLoading || (permLoading && !permInitialized)) {
     return (
@@ -39,11 +47,7 @@ export default function ProtectedRoute({ children, adminOnly = false, roles, per
   }
 
   if (!user) return null;
-
-  const roleAllowed = roles ? roles.includes(user.role) : (!adminOnly || user.role === 'ADMIN');
-  const hasAccess = permKey ? canDo(permKey) : roleAllowed;
-
-  if (!hasAccess) return null;
+  if (!checkAccess(canDo)) return null;
 
   return <>{children}</>;
 }

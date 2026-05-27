@@ -177,7 +177,7 @@ export default function ProvidersPage() {
             <h1 className="page-title">{t('specialists')}</h1>
             <p className="page-sub">{filtered.length} {t('specialists').toLowerCase()}</p>
           </div>
-          {canDo('manageServices') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
+          {canDo('manageProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -245,7 +245,7 @@ export default function ProvidersPage() {
                       </div>
                     )}
                     {/* Link account row — clickable */}
-                    {canDo('manageServices') && (
+                    {canDo('manageProviders') && (
                       <div
                         onClick={() => openLink(p)}
                         style={{
@@ -290,7 +290,7 @@ export default function ProvidersPage() {
                         </svg>
                       </div>
                     )}
-                    {!canDo('manageServices') && p.linkedUser && (
+                    {!canDo('manageProviders') && p.linkedUser && (
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 4, background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 9px 2px 6px' }}>
                         <span style={{ fontSize: '0.75rem' }}>🔗</span>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669' }}>@{p.linkedUser.username}</span>
@@ -299,7 +299,7 @@ export default function ProvidersPage() {
                   </div>
 
                   {/* Actions */}
-                  {canDo('manageServices') && (
+                  {canDo('manageProviders') && (
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                         ✏️ {t('edit')}

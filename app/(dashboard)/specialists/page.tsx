@@ -113,7 +113,7 @@ export default function SpecialistsPage() {
   const filtered = providers.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="manageServices">
+    <ProtectedRoute permKeys={['manageProviders', 'manageServices']}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes svc-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
@@ -132,7 +132,7 @@ export default function SpecialistsPage() {
             <h1 className="page-title">{t('specialists')}</h1>
             <p className="page-sub">{filtered.length} {t('specialists').toLowerCase()}</p>
           </div>
-          {canDo('manageServices') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
+          {canDo('manageProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -196,7 +196,7 @@ export default function SpecialistsPage() {
                   </div>
 
                   {/* Actions */}
-                  {canDo('manageServices') && <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                  {canDo('manageProviders') && <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                     <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
                       ✏️ {t('edit')}
                     </button>

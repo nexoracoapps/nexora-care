@@ -5,6 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { usePermissions } from '@/context/PermissionsContext';
 import toast from 'react-hot-toast';
 
 type ProviderRevenue = {
@@ -49,6 +50,7 @@ export default function RevenuePage() {
   const { user } = useAuth();
   const { activeBranchId } = useBranch();
   const { t, lang, isRTL } = useLanguage();
+  const { canDo } = usePermissions();
 
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -224,7 +226,7 @@ export default function RevenuePage() {
               <span style={{ fontSize: '1.05rem', fontWeight: 900 }}>{collectionRate}%</span>
             </div>
           )}
-          {data && (
+          {data && canDo('exportReports') && (
             <button className="print-btn no-print" onClick={() => window.print()} title={isRTL ? 'طباعة التقرير' : 'Print Report'}>
               🖨️ {isRTL ? 'طباعة' : 'Print Report'}
             </button>

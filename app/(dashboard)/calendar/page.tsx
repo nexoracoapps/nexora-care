@@ -668,46 +668,44 @@ export default function CalendarPage() {
 
       {/* Controls */}
       <div className="glass-card" style={{ marginBottom: 14 }}>
-        <div className="cal-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
 
-          {/* Top row on mobile: view toggle + nav */}
-          <div className="cal-controls-top" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* View toggle */}
-            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4 }}>
-              {(['day', 'week', 'month'] as View[]).map(v => (
-                <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}
-                  style={{ padding: '6px 13px', borderRadius: 7, border: 'none' }}>
-                  {viewLabels[v]}
-                </button>
-              ))}
-            </div>
-
-            {/* Nav */}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <button onClick={() => goTo(-1)} className="cal-nav-btn" title="Previous">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={isRTL ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />
-                </svg>
+          {/* Left: View toggle */}
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4, flexShrink: 0 }}>
+            {(['day', 'week', 'month'] as View[]).map(v => (
+              <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}
+                style={{ padding: '6px 13px', borderRadius: 7, border: 'none' }}>
+                {viewLabels[v]}
               </button>
-              <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 14px', fontWeight: 700 }}>
-                {t('today')}
-              </button>
-              <button onClick={() => goTo(1)} className="cal-nav-btn" title="Next">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
-                </svg>
-              </button>
-            </div>
-
-            {/* Date heading */}
-            <div className="cal-heading-text" style={{ flex: 1, fontWeight: 800, fontSize: '0.92rem', color: 'var(--text)', textAlign: 'center', minWidth: 140 }}>
-              {headingLabel()}
-            </div>
+            ))}
           </div>
 
-          {/* Bottom row on mobile: provider filter */}
-          <div className="cal-controls-bottom" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* My Calendar badge (locked) or toggle (privileged) */}
+          {/* Center: ← Date heading → with Today */}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flex: 1, justifyContent: 'center', minWidth: 220 }}>
+            <button onClick={() => goTo(-1)} className="cal-nav-btn" title="Previous">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={isRTL ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />
+              </svg>
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 150 }}>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {headingLabel()}
+              </div>
+              <button onClick={goToday} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700, color: 'var(--rose)', fontFamily: 'var(--font)', padding: '1px 6px', borderRadius: 4, transition: 'background 0.12s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--rose-rgb),0.10)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                {t('today')}
+              </button>
+            </div>
+            <button onClick={() => goTo(1)} className="cal-nav-btn" title="Next">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+              </svg>
+            </button>
+          </div>
+
+          {/* Right: Provider filter */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             {isLockedToProvider ? (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 7,
@@ -729,7 +727,6 @@ export default function CalendarPage() {
                     🩺 {t('calMyCalendar')}
                   </button>
                 )}
-                {/* Provider filter — only for privileged users */}
                 {isPrivileged && (
                   <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
                     <option value="">{t('calAllProviders')}</option>

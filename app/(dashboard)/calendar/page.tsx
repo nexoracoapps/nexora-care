@@ -51,7 +51,7 @@ export default function CalendarPage() {
   const { activeBranchId } = useBranch();
   const { t, lang, isRTL } = useLanguage();
 
-  const [view, setView] = useState<View>('week');
+  const [view, setView] = useState<View>(() => typeof window !== 'undefined' && window.innerWidth < 640 ? 'day' : 'week');
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const [appts, setAppts] = useState<CalAppt[]>([]);
   const [providers, setProviders] = useState<CalProvider[]>([]);
@@ -280,8 +280,8 @@ export default function CalendarPage() {
     const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(sw); d.setDate(sw.getDate() + i); return d; });
     const today = new Date(); today.setHours(0,0,0,0);
     return (
-      <div style={{ overflowX: 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(130px, 1fr))', gap: 6, minWidth: 700 }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(110px, 1fr))', gap: 5, minWidth: 580 }}>
           {weekDays.map((d, i) => {
             const dayAppts = apptsByDay(d);
             const isToday = sameDay(d, today);
@@ -483,6 +483,31 @@ export default function CalendarPage() {
           min-width: 0;
         }
         .cal-select:focus { border-color: var(--rose); }
+        .cal-select { flex: 1; min-width: 120px; }
+
+        /* ── responsive controls ── */
+        @media (max-width: 640px) {
+          .cal-controls {
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+          .cal-controls-top {
+            display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+          }
+          .cal-controls-bottom {
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+          }
+          .cal-heading-text {
+            font-size: 0.85rem !important;
+            text-align: center;
+            width: 100%;
+            order: -1;
+          }
+          .cal-select { width: 100%; }
+        }
+        @media (min-width: 641px) {
+          .cal-controls-top, .cal-controls-bottom { display: contents; }
+        }
       `}} />
 
       {/* Page header */}
@@ -514,63 +539,69 @@ export default function CalendarPage() {
 
       {/* Controls */}
       <div className="glass-card" style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
+        <div className="cal-controls" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', direction: isRTL ? 'rtl' : 'ltr' }}>
 
-          {/* View toggle */}
-          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4 }}>
-            {(['day', 'week', 'month'] as View[]).map(v => (
-              <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}
-                style={{ padding: '6px 13px', borderRadius: 7, border: 'none' }}>
-                {viewLabels[v]}
-              </button>
-            ))}
-          </div>
-
-          {/* Nav */}
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <button onClick={() => goTo(-1)} className="cal-nav-btn">{isRTL ? '›' : '‹'}</button>
-            <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 12px' }}>
-              {t('today')}
-            </button>
-            <button onClick={() => goTo(1)} className="cal-nav-btn">{isRTL ? '‹' : '›'}</button>
-          </div>
-
-          {/* Date heading */}
-          <div style={{ flex: 1, fontWeight: 800, fontSize: '0.92rem', color: 'var(--text)', textAlign: 'center', minWidth: 0 }}>
-            {headingLabel()}
-          </div>
-
-          {/* My Calendar badge (locked) or toggle (privileged) */}
-          {isLockedToProvider ? (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(124,58,237,0.30)',
-              borderRadius: 9, padding: '6px 13px',
-              fontSize: '0.82rem', fontWeight: 700, color: '#7c3aed',
-            }}>
-              🩺 {t('calMyCalendar')}
-              <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: 2 }}>🔒</span>
-            </div>
-          ) : (
-            <>
-              {user?.providerId && (
-                <button
-                  onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
-                  className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-                >
-                  🩺 {t('calMyCalendar')}
+          {/* Top row on mobile: view toggle + nav */}
+          <div className="cal-controls-top" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* View toggle */}
+            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 11, padding: 4 }}>
+              {(['day', 'week', 'month'] as View[]).map(v => (
+                <button key={v} onClick={() => setView(v)} className={`cal-view-btn${view === v ? ' active' : ''}`}
+                  style={{ padding: '6px 13px', borderRadius: 7, border: 'none' }}>
+                  {viewLabels[v]}
                 </button>
-              )}
-              {/* Provider filter — only for privileged users */}
-              {isPrivileged && (
-                <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
-                  <option value="">{t('calAllProviders')}</option>
-                  {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              )}
-            </>
-          )}
+              ))}
+            </div>
+
+            {/* Nav */}
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <button onClick={() => goTo(-1)} className="cal-nav-btn">{isRTL ? '›' : '‹'}</button>
+              <button onClick={goToday} className="cal-view-btn" style={{ padding: '6px 12px' }}>
+                {t('today')}
+              </button>
+              <button onClick={() => goTo(1)} className="cal-nav-btn">{isRTL ? '‹' : '›'}</button>
+            </div>
+
+            {/* Date heading */}
+            <div className="cal-heading-text" style={{ flex: 1, fontWeight: 800, fontSize: '0.92rem', color: 'var(--text)', textAlign: 'center', minWidth: 140 }}>
+              {headingLabel()}
+            </div>
+          </div>
+
+          {/* Bottom row on mobile: provider filter */}
+          <div className="cal-controls-bottom" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* My Calendar badge (locked) or toggle (privileged) */}
+            {isLockedToProvider ? (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(124,58,237,0.30)',
+                borderRadius: 9, padding: '6px 13px',
+                fontSize: '0.82rem', fontWeight: 700, color: '#7c3aed',
+              }}>
+                🩺 {t('calMyCalendar')}
+                <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: 2 }}>🔒</span>
+              </div>
+            ) : (
+              <>
+                {user?.providerId && (
+                  <button
+                    onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
+                    className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                  >
+                    🩺 {t('calMyCalendar')}
+                  </button>
+                )}
+                {/* Provider filter — only for privileged users */}
+                {isPrivileged && (
+                  <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
+                    <option value="">{t('calAllProviders')}</option>
+                    {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

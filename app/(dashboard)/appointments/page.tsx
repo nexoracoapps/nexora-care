@@ -14,6 +14,7 @@ const STATUS_BADGE: Record<string, string> = {
   COMPLETED: 'badge-completed',
   CANCELLED: 'badge-cancelled',
   NO_SHOW: 'badge-no-show',
+  IN_PROGRESS: 'badge-in-progress',
 };
 const SERVICE_BADGE: Record<string, string> = {
   PENDING: 'badge-pending',
@@ -33,7 +34,7 @@ export default function AppointmentsPage() {
   const { t, lang, isRTL } = useLanguage();
   const { canDo } = usePermissions();
 
-  const STATUS_LABEL: Record<string, string> = { SCHEDULED: t('scheduled'), COMPLETED: t('completed'), CANCELLED: t('cancelled'), NO_SHOW: t('noShow') };
+  const STATUS_LABEL: Record<string, string> = { SCHEDULED: t('scheduled'), COMPLETED: t('completed'), CANCELLED: t('cancelled'), NO_SHOW: t('noShow'), IN_PROGRESS: t('inProgress') };
   const SERVICE_LABEL: Record<string, string> = { PENDING: t('pending'), IN_PROGRESS: t('inProgress'), DELIVERED: t('delivered'), PARTIAL: t('partialLabel'), NOT_DELIVERED: t('notDelivered') };
   const STATUS_COLOR: Record<string, string> = { SCHEDULED: '#059669', COMPLETED: '#2563eb', CANCELLED: '#dc2626', NO_SHOW: '#d97706' };
 
@@ -318,12 +319,19 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                       </div>
                     </td>
 
-                    {/* Service + Specialist stacked */}
-                    <td data-label="Service" style={{ textAlign: 'center' }}>
+                    {/* Service + Specialist + service delivery status */}
+                    <td data-label="Service" style={{ textAlign: 'left' }}>
                       <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{(isRTL && appt.service?.nameAr ? appt.service.nameAr : appt.service?.name) || '—'}</div>
                       {appt.serviceProvider?.name && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span style={{ opacity: 0.6 }}>👤</span>{appt.serviceProvider.name}
+                        </div>
+                      )}
+                      {appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
+                        <div style={{ marginTop: 5 }}>
+                          <span className={`badge ${SERVICE_BADGE[appt.serviceStatus] ?? 'badge-pending'}`} style={{ fontSize: '0.62rem' }}>
+                            {SERVICE_LABEL[appt.serviceStatus] ?? appt.serviceStatus}
+                          </span>
                         </div>
                       )}
                     </td>
@@ -338,18 +346,11 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Status — single badge only, always consistent height */}
                     <td data-label="Status">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-                        <span className={`badge ${STATUS_BADGE[appt.status] ?? 'badge-pending'}`}>
-                          {STATUS_LABEL[appt.status] ?? appt.status}
-                        </span>
-                        {appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
-                          <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)', fontWeight: 500 }}>
-                            {SERVICE_LABEL[appt.serviceStatus] ?? appt.serviceStatus}
-                          </span>
-                        )}
-                      </div>
+                      <span className={`badge ${STATUS_BADGE[appt.status] ?? 'badge-pending'}`}>
+                        {STATUS_LABEL[appt.status] ?? appt.status.replace(/_/g, ' ')}
+                      </span>
                     </td>
 
                     {/* Amount + payment pill */}

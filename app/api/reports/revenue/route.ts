@@ -43,10 +43,11 @@ export async function GET(req: NextRequest) {
   const paidRevenue  = appointments.filter(a => a.paymentStatus === 'PAID').reduce((s, a) => s + (a.amount ?? 0), 0);
 
   const byProvider = providers.map(p => {
-    const mine = appointments.filter(a => a.serviceProviderId === p.id);
+    const mine    = appointments.filter(a => a.serviceProviderId === p.id);
     const revenue = mine.reduce((s, a) => s + (a.amount ?? 0), 0);
     const paid    = mine.filter(a => a.paymentStatus === 'PAID').reduce((s, a) => s + (a.amount ?? 0), 0);
-    const payout  = totalRevenue > 0 ? (totalRevenue * (p.revenuePercentage / 100)) : 0;
+    // Payout = provider's OWN paid revenue × their contract percentage
+    const payout  = paid * (p.revenuePercentage / 100);
     return {
       provider: { id: p.id, name: p.name, type: p.type, revenuePercentage: p.revenuePercentage },
       appointmentCount: mine.length,

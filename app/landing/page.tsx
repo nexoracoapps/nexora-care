@@ -151,7 +151,10 @@ export default function LandingPage() {
         .step-connector { flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); margin:0 8px; align-self:center; }
 
         @media(max-width:700px){
-          .hero-btns{flex-direction:column;align-items:stretch;}
+          .hero-btns{flex-direction:column;align-items:stretch;padding:0 12px;}
+          .hero-btns a,.hero-btns button{width:100%!important;min-width:unset!important;text-align:center;}
+          .lp-btn-hero{padding:16px 24px!important;font-size:1rem!important;}
+          .lp-btn-outline{padding:15px 24px!important;font-size:0.97rem!important;}
           .lp-grid-3{grid-template-columns:1fr!important;}
           .lp-grid-2{grid-template-columns:1fr!important;}
           .step-connector{display:none;}
@@ -159,22 +162,31 @@ export default function LandingPage() {
       `}} />
 
       {/* ── NAV ── */}
-      <nav style={{ position:'sticky', top:0, zIndex:100, background:'rgba(18,11,26,0.95)', backdropFilter:'blur(14px)', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'0 24px' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', height:68 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <NexoraCareIcon size={36} />
-            <span style={{ fontWeight:800, fontSize:'1.1rem', background:GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Nexora Care</span>
+      <nav style={{ position:'sticky', top:0, zIndex:100, background:'rgba(18,11,26,0.96)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'0 20px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', height:62 }}>
+          {/* Logo */}
+          <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+            <NexoraCareIcon size={32} />
+            <span style={{ fontWeight:800, fontSize:'1.05rem', background:GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Nexora Care</span>
           </div>
-          <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-            {(['lang','login'] as const).map(id => (
-              <button key={id}
-                onClick={id==='lang' ? ()=>setLang(ar?'en':'ar') : goLogin}
-                style={{ position:'relative', overflow:'hidden', background:'linear-gradient(135deg,#e53e5a,#a855f7,#7B5EA8,#e53e5a)', backgroundSize:'300% 300%', color:'#fff', borderRadius:14, padding:'9px 22px', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', boxShadow:'0 4px 20px rgba(229,62,90,0.5)', animation:'hero-bg 5s ease infinite, hero-glow 2.8s ease-in-out infinite', transition:'transform 0.15s, filter 0.15s', letterSpacing:'0.2px', textShadow:'0 1px 6px rgba(0,0,0,0.2)' }}
-                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.filter='brightness(1.12)'}}
-                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.filter='none'}}>
-                {id==='lang' ? (ar?'EN':'عربي') : (ar?'تسجيل الدخول':'Sign In')}
-              </button>
-            ))}
+          {/* Actions */}
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            {/* Language toggle — subtle ghost style */}
+            <button
+              onClick={() => setLang(ar ? 'en' : 'ar')}
+              style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.75)', border:'1px solid rgba(255,255,255,0.13)', borderRadius:10, padding:'7px 16px', fontWeight:700, fontSize:13, cursor:'pointer', transition:'all 0.15s', letterSpacing:'0.04em' }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.75)';}}>
+              {ar ? 'EN' : 'عربي'}
+            </button>
+            {/* Login — gradient CTA */}
+            <button
+              onClick={goLogin}
+              style={{ background:GRAD, color:'#fff', border:'none', borderRadius:12, padding:'8px 22px', fontWeight:800, fontSize:14, cursor:'pointer', boxShadow:'0 4px 18px rgba(229,62,90,0.42)', transition:'transform 0.15s, filter 0.15s', letterSpacing:'0.2px' }}
+              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.1)';}}
+              onMouseLeave={e=>{e.currentTarget.style.transform='none'; e.currentTarget.style.filter='none';}}>
+              {ar ? 'تسجيل الدخول' : 'Sign In'}
+            </button>
           </div>
         </div>
       </nav>
@@ -221,13 +233,15 @@ export default function LandingPage() {
               : 'Nexora Care brings patient records, appointments, payments, and performance reports into one easy system — built specifically for clinics.'}
           </p>
 
-          <div className="hero-btns" style={{ display:'flex', gap:16, justifyContent:'center', flexWrap:'wrap', marginBottom:40 }}>
-            <button className="lp-btn-hero" onClick={goLogin}>
+          <div className="hero-btns" style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap', marginBottom:40 }}>
+            {/* Primary CTA — animated gradient */}
+            <button className="lp-btn-hero" onClick={goLogin} style={{ minWidth:200 }}>
               {ar ? '✦ ابدأ الآن' : '✦ Get Started Now'}
             </button>
-            <a href="#features" style={{ textDecoration:'none' }}>
-              <button className="lp-btn-hero" style={{ fontSize:'1.05rem' }}>
-                {ar ? 'اكتشف المميزات' : 'See Features'}
+            {/* Secondary CTA — ghost/outline */}
+            <a href="#features" style={{ textDecoration:'none', minWidth:200 }}>
+              <button className="lp-btn-outline" style={{ width:'100%', padding:'16px 36px', fontSize:'1rem' }}>
+                {ar ? '← اكتشف المميزات' : 'See Features →'}
               </button>
             </a>
           </div>

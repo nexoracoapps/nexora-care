@@ -31,7 +31,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   if (body.customerId !== undefined) data.customerId = body.customerId;
   if (body.serviceId !== undefined) data.serviceId = body.serviceId;
-  if (body.providerId !== undefined) data.providerId = body.providerId || null;
+  if (body.serviceProviderId !== undefined) data.serviceProviderId = body.serviceProviderId || null;
+  if (body.providerId !== undefined) data.serviceProviderId = body.providerId || null;
   if (body.dateTime !== undefined) data.dateTime = new Date(body.dateTime);
   if (body.status !== undefined) data.status = body.status;
   if (body.notes !== undefined) data.notes = body.notes;

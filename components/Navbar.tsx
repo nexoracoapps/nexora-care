@@ -19,7 +19,7 @@ const navItems: { href: string; labelKey: string; icon: string; roles: string[];
   { href: '/dashboard',    labelKey: 'dashboard',       icon: '⊞',  roles: PRIV,    permKey: 'dashboard' },
   { href: '/customers',    labelKey: 'customers',        icon: '👥', roles: ALL,     permKey: 'manageCustomers' },
   { href: '/appointments',  labelKey: 'appointments',     icon: '📅', roles: ALL,     permKey: 'manageAppointments' },
-  { href: '/prescriptions', labelKey: 'prescriptions',    icon: '💊', roles: ALL,     permKey: 'viewAppointments' },
+  { href: '/prescriptions', labelKey: 'prescriptions',    icon: '💊', roles: ALL,     permKey: 'manageAppointments' },
   { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,    permKeys: ['viewCalendar', 'manageAppointments'] },
   { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,   permKey: 'manageServices' },
   { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,    permKeys: ['manageProviders', 'manageServices'] },

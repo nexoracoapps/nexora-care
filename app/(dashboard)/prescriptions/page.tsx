@@ -199,7 +199,7 @@ export default function PrescriptionsPage() {
   }, {});
 
   return (
-    <ProtectedRoute permKey="viewAppointments">
+    <ProtectedRoute permKey="manageAppointments">
       <div className="page" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="page-header">
           <div>

@@ -60,6 +60,8 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false);
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
   const [hasPushSub, setHasPushSub] = useState(false);
+  const [reminderLeadMinutes, setReminderLeadMinutes] = useState(60);
+  const [savingLead, setSavingLead] = useState(false);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [testingNotif, setTestingNotif] = useState(false);
   const notifiedRef = useRef<Set<string>>(new Set());
@@ -85,6 +87,14 @@ export default function CalendarPage() {
       }).catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    if (!user?.token) return;
+    fetch('/api/notifications/config', { headers: { Authorization: `Bearer ${user.token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.reminderLeadMinutes) setReminderLeadMinutes(d.reminderLeadMinutes); })
+      .catch(() => {});
+  }, [user?.token]);
 
   const requestNotif = async () => {
     if (!('Notification' in window)) return;
@@ -184,6 +194,24 @@ export default function CalendarPage() {
     const timer = setInterval(check, 60_000);
     return () => clearInterval(timer);
   }, [appts]);
+
+  const saveLeadTime = async (minutes: number) => {
+    if (!user?.token) return;
+    setSavingLead(true);
+    try {
+      const res = await fetch('/api/notifications/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ reminderLeadMinutes: minutes }),
+      });
+      if (res.ok) {
+        setReminderLeadMinutes(minutes);
+        toast.success(`Reminder lead time set to ${minutes < 60 ? minutes + ' min' : (minutes / 60) + ' hr'}`);
+      }
+    } finally {
+      setSavingLead(false);
+    }
+  };
 
   const sendTestNotification = async () => {
     if (!user?.token) return;
@@ -666,15 +694,38 @@ export default function CalendarPage() {
             </div>
           )}
           {user?.role === 'ADMIN' && notifStatus === 'granted' && hasPushSub && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={sendTestNotification}
-              disabled={testingNotif}
-              title="Send a test push notification to your device"
-              style={{ fontSize: '0.78rem' }}
-            >
-              {testingNotif ? '⏳' : '🧪'} Test Notif
-            </button>
+            <>
+              <select
+                value={reminderLeadMinutes}
+                disabled={savingLead}
+                onChange={e => saveLeadTime(Number(e.target.value))}
+                title="Send reminder this many minutes before each appointment"
+                style={{
+                  fontSize: '0.78rem', fontWeight: 600, padding: '5px 8px',
+                  borderRadius: 8, border: '1.5px solid var(--border)',
+                  background: 'var(--bg-elevated)', color: 'var(--text)',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value={15}>⏰ 15 min before</option>
+                <option value={30}>⏰ 30 min before</option>
+                <option value={60}>⏰ 1 hr before</option>
+                <option value={120}>⏰ 2 hr before</option>
+                <option value={180}>⏰ 3 hr before</option>
+                <option value={360}>⏰ 6 hr before</option>
+                <option value={720}>⏰ 12 hr before</option>
+                <option value={1440}>⏰ 24 hr before</option>
+              </select>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={sendTestNotification}
+                disabled={testingNotif}
+                title="Send a test push notification to your device"
+                style={{ fontSize: '0.78rem' }}
+              >
+                {testingNotif ? '⏳' : '🧪'} Test Notif
+              </button>
+            </>
           )}
         </div>
       </div>

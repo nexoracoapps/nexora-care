@@ -4,26 +4,17 @@ import { getTokenFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-/* GET /api/cron/reminders
-   - Called by Vercel Cron daily at 9 AM
-   - Can also be triggered manually by ADMIN for testing
-   Query params:
-     hours=24   — look-ahead window in hours (default 24, max 168)
-     test=true  — send a "test" ping to the calling user only (ADMIN only)
+const DEFAULT_LEAD_MINUTES = 60;
+const CRON_WINDOW_MINUTES  = 35; // half-window around the lead time to catch each appointment once
 
-   Per-user delivery:
-     - ADMIN / MANAGER users → receive reminders for all upcoming appointments
-     - STAFF users → receive reminders only for appointments assigned to their linked provider
-*/
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isTest = searchParams.get('test') === 'true';
-  const hours  = Math.min(Math.max(parseInt(searchParams.get('hours') ?? '24', 10) || 24, 1), 168);
 
   // Auth: either Vercel cron secret OR a logged-in ADMIN user
-  const authHeader = req.headers.get('authorization');
-  const isCron     = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-  const callerPayload = getTokenFromRequest(req);
+  const authHeader     = req.headers.get('authorization');
+  const isCron         = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const callerPayload  = getTokenFromRequest(req);
 
   if (!isCron) {
     if (!callerPayload || callerPayload.role !== 'ADMIN') {
@@ -46,7 +37,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid VAPID keys', detail: String(err) }, { status: 503 });
   }
 
-  // Test mode — send a single ping only to the calling user's subscriptions
+  // Test mode — send a single ping to the calling user's subscriptions
   if (isTest && callerPayload) {
     const subs = await prisma.pushSubscription.findMany({ where: { userId: callerPayload.id } });
     if (subs.length === 0) {
@@ -75,42 +66,57 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent, test: true, staleCleaned: stale.length });
   }
 
-  // Normal mode — fetch upcoming appointments
-  const now    = new Date();
-  const cutoff = new Date(now.getTime() + hours * 60 * 60 * 1000);
+  // Read configurable lead time from SystemSetting
+  const setting = await prisma.systemSetting.findUnique({ where: { key: 'reminderLeadMinutes' } });
+  const leadMin = parseInt(setting?.value ?? String(DEFAULT_LEAD_MINUTES), 10) || DEFAULT_LEAD_MINUTES;
+
+  const now       = new Date();
+  const windowStart = new Date(now.getTime() + (leadMin - CRON_WINDOW_MINUTES) * 60 * 1000);
+  const windowEnd   = new Date(now.getTime() + (leadMin + CRON_WINDOW_MINUTES) * 60 * 1000);
 
   const upcoming = await prisma.appointment.findMany({
-    where: { status: 'SCHEDULED', dateTime: { gte: now, lte: cutoff } },
+    where: { status: 'SCHEDULED', dateTime: { gte: windowStart, lte: windowEnd } },
     include: { customer: true, service: true },
   });
 
   if (upcoming.length === 0) {
-    return NextResponse.json({ sent: 0, hours, message: 'No upcoming appointments in window' });
+    return NextResponse.json({ sent: 0, leadMin, message: 'No appointments in reminder window' });
   }
 
-  // Fetch all users with push subscriptions
-  const users = await prisma.user.findMany({
-    where: { fcmTokens: undefined },  // just fetch all users
-    select: { id: true, role: true, providerId: true },
+  // Skip appointments already notified
+  const alreadySent = await prisma.reminderSent.findMany({
+    where: { appointmentId: { in: upcoming.map(a => a.id) } },
+    select: { appointmentId: true },
   });
+  const sentIds = new Set(alreadySent.map(r => r.appointmentId));
+  const toNotify = upcoming.filter(a => !sentIds.has(a.id));
 
-  // Fetch all subscriptions keyed by userId
-  const allSubs = await prisma.pushSubscription.findMany();
+  if (toNotify.length === 0) {
+    return NextResponse.json({ sent: 0, leadMin, message: 'All appointments already notified' });
+  }
+
+  // Fetch push subscriptions grouped by user
+  const allSubs    = await prisma.pushSubscription.findMany();
   const subsByUser = new Map<string, typeof allSubs>();
   for (const sub of allSubs) {
     if (!subsByUser.has(sub.userId)) subsByUser.set(sub.userId, []);
     subsByUser.get(sub.userId)!.push(sub);
   }
 
+  const users = await prisma.user.findMany({
+    select: { id: true, role: true, providerId: true },
+  });
+
   let sent = 0;
   const stale: string[] = [];
 
-  for (const appt of upcoming) {
+  for (const appt of toNotify) {
     const dt      = new Date(appt.dateTime);
     const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const minutesAway = Math.round((dt.getTime() - now.getTime()) / 60000);
     const payload = JSON.stringify({
-      title: '📅 Upcoming Appointment',
+      title: `📅 Appointment in ${minutesAway} min`,
       body:  `${appt.customer?.name ?? 'Customer'} — ${appt.service?.name ?? 'Service'} at ${timeStr} on ${dateStr}`,
       url:   '/appointments',
       tag:   `appt-${appt.id}`,
@@ -120,7 +126,6 @@ export async function GET(req: NextRequest) {
       const userSubs = subsByUser.get(user.id);
       if (!userSubs || userSubs.length === 0) continue;
 
-      // ADMIN/MANAGER → all appointments; STAFF → only if their provider is assigned
       const shouldNotify =
         user.role === 'ADMIN' ||
         user.role === 'MANAGER' ||
@@ -140,8 +145,20 @@ export async function GET(req: NextRequest) {
         }
       }
     }
+
+    // Mark this appointment as reminded so subsequent cron runs skip it
+    await prisma.reminderSent.upsert({
+      where:  { appointmentId: appt.id },
+      update: { sentAt: now },
+      create: { appointmentId: appt.id },
+    });
   }
 
   if (stale.length > 0) await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: stale } } });
-  return NextResponse.json({ sent, hours, appointments: upcoming.length, staleCleaned: stale.length });
+
+  // Clean up reminder records older than 7 days
+  const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  await prisma.reminderSent.deleteMany({ where: { sentAt: { lt: cutoff } } });
+
+  return NextResponse.json({ sent, leadMin, appointments: toNotify.length, staleCleaned: stale.length });
 }

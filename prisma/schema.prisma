@@ -194,3 +194,9 @@ model PushSubscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model ReminderSent {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique
+  sentAt        DateTime @default(now())
+}

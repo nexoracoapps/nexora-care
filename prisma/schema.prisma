@@ -51,8 +51,9 @@ model Customer {
   branch       Branch?       @relation(fields: [branchId], references: [id])
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  appointments Appointment[]
-  callLogs     CallLog[]
+  appointments  Appointment[]
+  callLogs      CallLog[]
+  prescriptions Prescription[]
 }
 
 model Service {
@@ -105,6 +106,7 @@ model Appointment {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   ratings           SpecialistRating[]
+  prescription      Prescription?
 }
 
 model StaffAbsence {
@@ -199,4 +201,42 @@ model ReminderSent {
   id            String   @id @default(cuid())
   appointmentId String   @unique
   sentAt        DateTime @default(now())
+}
+
+model Medicine {
+  id            String             @id @default(cuid())
+  name          String
+  nameAr        String?
+  category      String             @default("General")
+  dosageOptions String             @default("[]")
+  instructions  String?
+  instructionsAr String?
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  items         PrescriptionItem[]
+}
+
+model Prescription {
+  id            String             @id @default(cuid())
+  customerId    String
+  customer      Customer           @relation(fields: [customerId], references: [id])
+  appointmentId String?            @unique
+  appointment   Appointment?       @relation(fields: [appointmentId], references: [id])
+  notes         String?
+  createdById   String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  items         PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medicineId     String
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+  dosage         String?
+  frequency      String?
+  duration       String?
+  notes          String?
 }

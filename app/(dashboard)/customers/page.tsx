@@ -26,6 +26,8 @@ export default function CustomersPage() {
   const [selected, setSelected] = useState<Customer | null>(null);
   const [history, setHistory] = useState<Appointment[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [prescriptions, setPrescriptions] = useState<Record<string, unknown>[]>([]);
+  const [historyTab, setHistoryTab] = useState<'appointments' | 'prescriptions'>('appointments');
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [form, setForm] = useState({ name: '', phone: '', email: '', branchId: '' });
 
@@ -86,11 +88,17 @@ export default function CustomersPage() {
   const openHistory = async (c: Customer) => {
     setSelected(c);
     setHistory([]);
+    setPrescriptions([]);
     setHistoryLoading(true);
+    setHistoryTab('appointments');
     setModal('history');
     try {
-      const res = await fetch(`/api/customers/${c.id}/appointments`, { headers: { Authorization: `Bearer ${user?.token}` } });
-      if (res.ok) setHistory(await res.json());
+      const [apptRes, rxRes] = await Promise.all([
+        fetch(`/api/customers/${c.id}/appointments`, { headers: { Authorization: `Bearer ${user?.token}` } }),
+        fetch(`/api/prescriptions?customerId=${c.id}`, { headers: { Authorization: `Bearer ${user?.token}` } }),
+      ]);
+      if (apptRes.ok) setHistory(await apptRes.json());
+      if (rxRes.ok) setPrescriptions(await rxRes.json());
     } finally {
       setHistoryLoading(false);
     }
@@ -706,32 +714,71 @@ export default function CustomersPage() {
                 <h2 className="modal-title">📋 {selected.name} — {t('history')}</h2>
                 <button className="modal-close" onClick={() => setModal(null)}>✕</button>
               </div>
+              {/* Tabs */}
+              <div style={{ display: 'flex', gap: 2, padding: '0 20px', borderBottom: '1px solid var(--border)' }}>
+                {(['appointments', 'prescriptions'] as const).map(tab => (
+                  <button key={tab} onClick={() => setHistoryTab(tab)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: historyTab === tab ? 700 : 400, color: historyTab === tab ? 'var(--rose)' : 'var(--text-muted)', borderBottom: historyTab === tab ? '2px solid var(--rose)' : '2px solid transparent', marginBottom: -1, fontSize: '0.88rem' }}>
+                    {tab === 'appointments' ? `📅 ${t('history')} (${history.length})` : `💊 Prescriptions (${prescriptions.length})`}
+                  </button>
+                ))}
+              </div>
               <div className="modal-body">
                 {historyLoading ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {[1,2,3].map(i => (
-                      <div key={i} className="skeleton" style={{ height: 44, borderRadius: 8, opacity: 1 - i * 0.15 }} />
-                    ))}
+                    {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 44, borderRadius: 8, opacity: 1 - i * 0.15 }} />)}
                   </div>
-                ) : history.length === 0 ? (
-                  <div className="empty-state"><div className="empty-state-icon">📭</div><div className="empty-state-title">{t('noAppointmentHistory')}</div></div>
+                ) : historyTab === 'appointments' ? (
+                  history.length === 0 ? (
+                    <div className="empty-state"><div className="empty-state-icon">📭</div><div className="empty-state-title">{t('noAppointmentHistory')}</div></div>
+                  ) : (
+                    <div className="table-wrap">
+                      <table className="glass-table">
+                        <thead><tr><th>{t('date')}</th><th>{t('service')}</th><th>{t('specialist')}</th><th>{t('status')}</th><th>{t('payment')}</th></tr></thead>
+                        <tbody>
+                          {history.map(a => (
+                            <tr key={a.id}>
+                              <td>{new Date(a.dateTime).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                              <td>{a.service?.name || '—'}</td>
+                              <td>{(a as Appointment & { serviceProvider?: { name: string } }).serviceProvider?.name || '—'}</td>
+                              <td><span className={`badge badge-${a.status.toLowerCase().replace('_', '-')}`}>{a.status.replace('_', ' ')}</span></td>
+                              <td><span className={`badge ${a.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-unpaid'}`}>{a.paymentStatus}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
                 ) : (
-                  <div className="table-wrap">
-                    <table className="glass-table">
-                      <thead><tr><th>{t('date')}</th><th>{t('service')}</th><th>{t('specialist')}</th><th>{t('status')}</th><th>{t('payment')}</th></tr></thead>
-                      <tbody>
-                        {history.map(a => (
-                          <tr key={a.id}>
-                            <td>{new Date(a.dateTime).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                            <td>{a.service?.name || '—'}</td>
-                            <td>{(a as Appointment & { serviceProvider?: { name: string } }).serviceProvider?.name || '—'}</td>
-                            <td><span className={`badge badge-${a.status.toLowerCase().replace('_', '-')}`}>{a.status.replace('_', ' ')}</span></td>
-                            <td><span className={`badge ${a.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-unpaid'}`}>{a.paymentStatus}</span></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  prescriptions.length === 0 ? (
+                    <div className="empty-state"><div className="empty-state-icon">💊</div><div className="empty-state-title">No prescriptions yet</div></div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {(prescriptions as Array<Record<string, unknown>>).map((rx) => {
+                        const p = rx as { id: string; createdAt: string; notes?: string; appointment?: { service?: { name: string } }; items: Array<{ medicine?: { name: string; nameAr?: string }; dosage?: string; frequency?: string; duration?: string }> };
+                        return (
+                          <div key={p.id} style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                                {new Date(p.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { dateStyle: 'medium' })}
+                              </span>
+                              {p.appointment?.service && <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: 6, padding: '2px 8px', border: '1px solid var(--border)' }}>{p.appointment.service.name}</span>}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {p.items.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.85rem' }}>
+                                  <span style={{ background: 'rgba(244,63,94,0.1)', color: 'var(--rose)', borderRadius: 20, padding: '2px 10px', fontWeight: 600, fontSize: '0.78rem', border: '1px solid rgba(244,63,94,0.2)' }}>{item.medicine?.name}</span>
+                                  {item.dosage && <span style={{ color: 'var(--text-muted)' }}>{item.dosage}</span>}
+                                  {item.frequency && <span style={{ color: 'var(--text-muted)' }}>· {item.frequency}</span>}
+                                  {item.duration && <span style={{ color: 'var(--text-muted)' }}>· {item.duration}</span>}
+                                </div>
+                              ))}
+                            </div>
+                            {p.notes && <div style={{ marginTop: 8, fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 8 }}>📝 {p.notes}</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
                 )}
               </div>
               <div className="modal-footer">

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
+import { queuedFetch } from '@/lib/queuedFetch';
 import type { Appointment, Customer, Service, ServiceProvider, PaymentMethod } from '@/types';
 
 const STATUS_BADGE: Record<string, string> = {
@@ -157,9 +158,9 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
           notes: form.notes || null,
           amount: form.amount ? parseFloat(form.amount) : null,
         };
-        const res = await fetch(`/api/appointments/${selected.id}`, { method: 'PUT', headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error((await res.json()).error);
-        toast.success(t('apptUpdated'));
+        const res = await queuedFetch(`/api/appointments/${selected.id}`, { method: 'PUT', headers, body: JSON.stringify(body) });
+        if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
+        toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('apptUpdated'));
         setModal(null);
         load();
       } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
@@ -194,12 +195,12 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
 
   const doAction = async (appt: Appointment, action: string, data: Record<string, unknown> = {}) => {
     try {
-      const res = await fetch(`/api/appointments/${appt.id}/actions`, {
+      const res = await queuedFetch(`/api/appointments/${appt.id}/actions`, {
         method: 'PATCH', headers,
         body: JSON.stringify({ action, ...data }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
-      toast.success(t('updatedSuccess'));
+      if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
+      toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('updatedSuccess'));
       setModal(null);
       load();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }

@@ -12,6 +12,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid subscription object' }, { status: 400 });
   }
 
+  // Remove any old subscriptions for this user on this device path before saving the new one
+  // (Each re-subscribe generates a new FCM endpoint; old ones accumulate as stale otherwise)
+  await prisma.pushSubscription.deleteMany({
+    where: { userId: payload.id, NOT: { endpoint } },
+  });
   await prisma.pushSubscription.upsert({
     where: { endpoint },
     update: { p256dh: keys.p256dh, auth: keys.auth, userId: payload.id },

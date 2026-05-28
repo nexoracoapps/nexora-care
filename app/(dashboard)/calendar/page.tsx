@@ -59,6 +59,7 @@ export default function CalendarPage() {
   const [filterProvider, setFilterProvider] = useState('');
   const [loading, setLoading] = useState(false);
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
+  const [hasPushSub, setHasPushSub] = useState(false);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [testingNotif, setTestingNotif] = useState(false);
   const notifiedRef = useRef<Set<string>>(new Set());
@@ -78,6 +79,11 @@ export default function CalendarPage() {
   useEffect(() => {
     if (!('Notification' in window)) { setNotifStatus('unsupported'); return; }
     setNotifStatus(Notification.permission);
+    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) reg.pushManager.getSubscription().then(sub => setHasPushSub(!!sub));
+      }).catch(() => {});
+    }
   }, []);
 
   const requestNotif = async () => {
@@ -94,27 +100,29 @@ export default function CalendarPage() {
     const perm = await Notification.requestPermission();
     setNotifStatus(perm);
     if (perm !== 'granted' || !user?.token) return;
-    // Also register push subscription so server can send reminders
+    // Always create a fresh push subscription so it matches the current VAPID key
     try {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
       const reg = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-        const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4);
-        const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const key = Uint8Array.from([...atob(base64)].map(c => c.charCodeAt(0)));
-        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
-      }
+      // Unsubscribe any stale subscription first
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) await existing.unsubscribe();
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+      const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4);
+      const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const key = Uint8Array.from([...atob(base64)].map(c => c.charCodeAt(0)));
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
       await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
         body: JSON.stringify(sub.toJSON()),
       });
+      setHasPushSub(true);
       toast.success('Reminders enabled — you\'ll receive push notifications');
     } catch (e) {
       console.warn('[Push] subscribe failed', e);
+      toast.error('Failed to enable reminders — ' + String(e));
     }
   };
 
@@ -641,12 +649,12 @@ export default function CalendarPage() {
           <p className="page-sub">{t('calSub')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          {notifStatus !== 'unsupported' && notifStatus !== 'granted' && (
+          {notifStatus !== 'unsupported' && (notifStatus !== 'granted' || !hasPushSub) && (
             <button onClick={requestNotif} className="btn btn-secondary btn-sm">
               🔔 {t('calEnableReminders')}
             </button>
           )}
-          {notifStatus === 'granted' && (
+          {notifStatus === 'granted' && hasPushSub && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6,
               background: 'rgba(5,150,105,0.12)',
@@ -657,7 +665,7 @@ export default function CalendarPage() {
               🔔 {t('calRemindersOn')}
             </div>
           )}
-          {user?.role === 'ADMIN' && notifStatus === 'granted' && (
+          {user?.role === 'ADMIN' && notifStatus === 'granted' && hasPushSub && (
             <button
               className="btn btn-ghost btn-sm"
               onClick={sendTestNotification}

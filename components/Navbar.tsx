@@ -265,7 +265,7 @@ export default function Navbar() {
             {t('signOut')}
           </button>
           <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
-            v2.0 · 28 May 2026
+            v2.1 · 28 May 2026
           </div>
         </div>
       )}

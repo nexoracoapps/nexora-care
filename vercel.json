@@ -1,6 +1,7 @@
 {
   "buildCommand": "prisma generate && next build",
   "installCommand": "npm install",
+  "alias": ["nexora-care-nu.vercel.app"],
   "crons": [
     {
       "path": "/api/cron/reminders",

@@ -31,12 +31,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const vapidPublic  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
+  const vapidPrivate = process.env.VAPID_PRIVATE_KEY ?? '';
+  const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:noreply@nexoracare.com';
+
+  if (!vapidPublic || !vapidPrivate) {
+    return NextResponse.json({ error: 'VAPID keys not configured on server', vapidPublicSet: !!vapidPublic, vapidPrivateSet: !!vapidPrivate }, { status: 503 });
+  }
+
   const webpush = (await import('web-push')).default;
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT ?? 'mailto:noreply@nexoracare.com',
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-    process.env.VAPID_PRIVATE_KEY ?? '',
-  );
+  try {
+    webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
+  } catch (err) {
+    return NextResponse.json({ error: 'Invalid VAPID keys', detail: String(err) }, { status: 503 });
+  }
 
   // Test mode — send a single ping only to the calling user's subscriptions
   if (isTest && callerPayload) {

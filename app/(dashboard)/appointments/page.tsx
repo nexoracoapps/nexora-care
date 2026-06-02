@@ -154,7 +154,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
           customerId: form.customerId || null,
           serviceId: form.serviceId || null,
           serviceProviderId: form.serviceProviderId || null,
-          branchId: activeBranchId,
+          branchId: selected.branchId ?? activeBranchId,
           notes: form.notes || null,
           amount: form.amount ? parseFloat(form.amount) : null,
         };

@@ -65,12 +65,15 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
       initial = user.branchId;
     } else {
       const saved = localStorage.getItem('nexora-branch');
-      if (saved && saved !== 'all') {
+      if (saved === 'all') {
+        // User explicitly chose All Branches — honour it
+        initial = null;
+      } else if (saved) {
+        // User chose a specific branch
         initial = saved;
       } else {
-        // No saved choice: default to user's own branch (or null = All)
+        // Never chosen before: default to user's own branch (or null = All)
         initial = user.branchId;
-        // Persist this default so future loads are consistent
         if (initial) localStorage.setItem('nexora-branch', initial);
       }
     }

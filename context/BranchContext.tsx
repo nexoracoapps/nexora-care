@@ -20,10 +20,30 @@ const BranchContext = createContext<BranchContextValue>({
   refreshBranches: async () => {},
 });
 
+function resolveInitialBranch(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    // Read saved user to check role and branchId
+    const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
+    const userData = raw ? JSON.parse(raw) : null;
+
+    // STAFF always use their assigned branch — no choice
+    if (userData?.role === 'STAFF') return userData.branchId ?? null;
+
+    // Admin/Manager: use their saved branch choice
+    const saved = localStorage.getItem('nexora-branch');
+    if (!saved || saved === 'all') return null;
+    return saved;
+  } catch {
+    return null;
+  }
+}
+
 export function BranchProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranchId, setActiveBranchIdState] = useState<string | null>(null);
+  // Initialise synchronously so the very first page fetch uses the correct filter
+  const [activeBranchId, setActiveBranchIdState] = useState<string | null>(resolveInitialBranch);
 
   const fetchBranches = async () => {
     if (!user?.token) return;
@@ -31,30 +51,32 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch('/api/branches', {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setBranches(data);
-      }
+      if (res.ok) setBranches(await res.json());
     } catch { /* ignore */ }
   };
 
+  // Re-evaluate when user changes (login / logout / role switch)
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    let initial: string | null;
+    if (user.role === 'STAFF') {
+      // Staff always see their branch — ignore any saved admin preference
+      initial = user.branchId;
+    } else {
       const saved = localStorage.getItem('nexora-branch');
-      let initial: string | null;
-      if (user.role === 'STAFF') {
-        initial = user.branchId;
-      } else if (saved === null) {
-        // Never chose — default to their assigned branch
-        initial = user.branchId;
-      } else if (saved === 'all') {
-        initial = null;
-      } else {
+      if (saved && saved !== 'all') {
         initial = saved;
+      } else {
+        // No saved choice: default to user's own branch (or null = All)
+        initial = user.branchId;
+        // Persist this default so future loads are consistent
+        if (initial) localStorage.setItem('nexora-branch', initial);
       }
-      setActiveBranchIdState(initial);
-      fetchBranches();
     }
+
+    setActiveBranchIdState(initial);
+    fetchBranches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

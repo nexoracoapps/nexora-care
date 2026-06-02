@@ -20,7 +20,11 @@ export type PermissionKey =
   | 'createServices'   | 'editServices'   | 'deleteServices'
   | 'createProviders'  | 'editProviders'  | 'deleteProviders'
   | 'createBranches'   | 'editBranches'   | 'deleteBranches'
-  | 'createStaffAbsence' | 'editStaffAbsence' | 'deleteStaffAbsence';
+  | 'createStaffAbsence' | 'editStaffAbsence' | 'deleteStaffAbsence'
+  // v4 prescriptions
+  | 'viewPrescriptions' | 'createPrescriptions' | 'editPrescriptions' | 'deletePrescriptions'
+  // v5 medicines
+  | 'manageMedicines' | 'createMedicines' | 'editMedicines' | 'deleteMedicines';
 
 export type RolePermissions = Record<PermissionKey, boolean>;
 export type AllPermissions = Record<string, RolePermissions>;
@@ -44,6 +48,9 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   'createProviders', 'editProviders', 'deleteProviders',
   'createBranches', 'editBranches', 'deleteBranches',
   'createStaffAbsence', 'editStaffAbsence', 'deleteStaffAbsence',
+  // v4 prescriptions
+  'viewPrescriptions', 'createPrescriptions', 'editPrescriptions', 'deletePrescriptions',
+  'manageMedicines', 'createMedicines', 'editMedicines', 'deleteMedicines',
 ];
 
 export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
@@ -65,6 +72,8 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     createProviders: true, editProviders: true, deleteProviders: true,
     createBranches: true, editBranches: true, deleteBranches: true,
     createStaffAbsence: true, editStaffAbsence: true, deleteStaffAbsence: true,
+    viewPrescriptions: true, createPrescriptions: true, editPrescriptions: true, deletePrescriptions: true,
+    manageMedicines: true, createMedicines: true, editMedicines: true, deleteMedicines: true,
   },
   MANAGER: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -84,6 +93,8 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     createProviders: true, editProviders: true, deleteProviders: false,
     createBranches: true, editBranches: true, deleteBranches: false,
     createStaffAbsence: true, editStaffAbsence: true, deleteStaffAbsence: false,
+    viewPrescriptions: true, createPrescriptions: true, editPrescriptions: true, deletePrescriptions: false,
+    manageMedicines: true, createMedicines: true, editMedicines: true, deleteMedicines: false,
   },
   STAFF: {
     deleteCustomers: false, deleteAppointments: false, deleteUsers: false,
@@ -103,6 +114,8 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     createProviders: false, editProviders: false, deleteProviders: false,
     createBranches: false, editBranches: false, deleteBranches: false,
     createStaffAbsence: false, editStaffAbsence: false, deleteStaffAbsence: false,
+    viewPrescriptions: true, createPrescriptions: false, editPrescriptions: false, deletePrescriptions: false,
+    manageMedicines: false, createMedicines: false, editMedicines: false, deleteMedicines: false,
   },
 };
 

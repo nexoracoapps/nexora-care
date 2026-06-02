@@ -45,6 +45,15 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
     ],
   },
   {
+    group: 'Prescriptions', groupAr: 'الوصفات الطبية', icon: '💊', color: '#7c3aed',
+    items: [
+      { key: 'viewPrescriptions',   icon: '💊', label: 'View Prescriptions Page',  labelAr: 'عرض صفحة الوصفات الطبية' },
+      { key: 'createPrescriptions', icon: '➕', label: 'Create Prescriptions',      labelAr: 'إنشاء وصفات طبية',    parentKey: 'viewPrescriptions' },
+      { key: 'editPrescriptions',   icon: '✏️', label: 'Edit Prescriptions',        labelAr: 'تعديل الوصفات الطبية', parentKey: 'viewPrescriptions' },
+      { key: 'deletePrescriptions', icon: '🗑', label: 'Delete Prescriptions',      labelAr: 'حذف الوصفات الطبية',   parentKey: 'viewPrescriptions' },
+    ],
+  },
+  {
     group: 'Calendar', groupAr: 'التقويم', icon: '🗓️', color: '#06b6d4',
     items: [
       { key: 'viewCalendar', icon: '🗓️', label: 'View Calendar Page', labelAr: 'عرض صفحة التقويم' },
@@ -85,6 +94,15 @@ const PERMISSION_GROUPS: { group: string; groupAr: string; icon: string; color: 
     group: 'Permissions', groupAr: 'الصلاحيات', icon: '🔐', color: '#7c3aed',
     items: [
       { key: 'managePermissions', icon: '🔐', label: 'Manage Permissions Matrix', labelAr: 'إدارة مصفوفة الصلاحيات' },
+    ],
+  },
+  {
+    group: 'Medicines', groupAr: 'الأدوية', icon: '💉', color: '#059669',
+    items: [
+      { key: 'manageMedicines',  icon: '💉', label: 'View Medicines Page',  labelAr: 'عرض صفحة الأدوية' },
+      { key: 'createMedicines',  icon: '➕', label: 'Add New Medicines',     labelAr: 'إضافة أدوية جديدة',  parentKey: 'manageMedicines' },
+      { key: 'editMedicines',    icon: '✏️', label: 'Edit Medicines',        labelAr: 'تعديل الأدوية',       parentKey: 'manageMedicines' },
+      { key: 'deleteMedicines',  icon: '🗑', label: 'Delete Medicines',      labelAr: 'حذف الأدوية',         parentKey: 'manageMedicines' },
     ],
   },
   {

@@ -1119,10 +1119,18 @@ body {
   .page-content { padding-top: 76px; }
   .sidebar {
     transform: translateX(-100%);
+    overflow-y: auto;
   }
   .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
     box-shadow: 4px 0 30px rgba(0,0,0,0.4);
+    pointer-events: all;
+  }
+  .sidebar.open .sidebar-item,
+  .sidebar.open .sidebar-footer a,
+  .sidebar.open .sidebar-footer button {
+    pointer-events: all;
+    cursor: pointer;
   }
 }
 
@@ -1558,10 +1566,14 @@ body {
 @media (max-width: 1023px) {
   [dir="rtl"] .topbar { direction: rtl; }
   [dir="rtl"] .page-content { margin-right: 0; }
-  /* RTL sidebar anchored to right edge — slide it off RIGHT, not left */
-  [dir="rtl"] .sidebar { transform: translateX(100%); }
+  /* RTL sidebar anchored to RIGHT edge */
+  [dir="rtl"] .sidebar {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+  }
   [dir="rtl"] .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
     box-shadow: -4px 0 30px rgba(0,0,0,0.4);
   }
 }

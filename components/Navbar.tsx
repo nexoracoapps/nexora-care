@@ -19,8 +19,9 @@ const navItems: { href: string; labelKey: string; icon: string; roles: string[];
   { href: '/dashboard',    labelKey: 'dashboard',       icon: '⊞',  roles: PRIV,    permKey: 'dashboard' },
   { href: '/customers',    labelKey: 'customers',        icon: '👥', roles: ALL,     permKey: 'manageCustomers' },
   { href: '/appointments',  labelKey: 'appointments',     icon: '📅', roles: ALL,     permKey: 'manageAppointments' },
-  { href: '/prescriptions', labelKey: 'prescriptions',    icon: '💊', roles: ALL,     permKey: 'manageAppointments' },
+  { href: '/prescriptions', labelKey: 'prescriptions',    icon: '💊', roles: ALL,     permKey: 'viewPrescriptions' },
   { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,    permKeys: ['viewCalendar', 'manageAppointments'] },
+  { href: '/medicines',    labelKey: 'medicines',         icon: '💉', roles: PRIV,   permKey: 'manageMedicines' },
   { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,   permKey: 'manageServices' },
   { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,    permKeys: ['manageProviders', 'manageServices'] },
   { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_,  permKey: 'viewUsers' },
@@ -51,6 +52,7 @@ export default function Navbar() {
   const notifRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
   const branchRef = useRef<HTMLDivElement>(null);
+  const mobileSidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -98,6 +100,26 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Close mobile sidebar when tapping outside — works on iOS where backdrop div can swallow events
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (mobileSidebarRef.current && !mobileSidebarRef.current.contains(e.target as Node)) {
+        setSidebarOpen(false);
+      }
+    };
+    // Small delay so the open-click doesn't immediately close
+    const t = setTimeout(() => {
+      document.addEventListener('mousedown', handler);
+      document.addEventListener('touchstart', handler, { passive: true });
+    }, 50);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, [sidebarOpen]);
+
   const { canDo } = usePermissions();
 
   if (!user) return null;
@@ -109,24 +131,29 @@ export default function Navbar() {
     return item.roles.includes(user.role);
   });
 
-  const sidebarContent = (
+  // forMobile=true forces expanded state so all labels are visible on mobile overlay
+  const makeSidebarContent = (forMobile: boolean) => {
+    const collapsed = forMobile ? false : sidebarCollapsed;
+    return (
     <>
       <div className="sidebar-logo">
         <NexoraCareIcon size={38} />
-        {!sidebarCollapsed && (
+        {!collapsed && (
           <div style={{ flex: 1 }}>
             <div className="sidebar-logo-text">Nexora Care</div>
           </div>
         )}
-        <button className="sidebar-collapse-btn" onClick={toggleSidebar} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d={sidebarCollapsed === isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
-          </svg>
-        </button>
+        {!forMobile && (
+          <button className="sidebar-collapse-btn" onClick={toggleSidebar} title={collapsed ? 'Expand' : 'Collapse'}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d={collapsed === isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+            </svg>
+          </button>
+        )}
         <button className="sidebar-mobile-close" onClick={() => setSidebarOpen(false)}>✕</button>
       </div>
 
-      {!sidebarCollapsed && branches.length > 0 && canDo('branchSwitching') && (
+      {!collapsed && branches.length > 0 && canDo('branchSwitching') && (
         <div style={{ padding: '10px 12px 6px' }} ref={branchRef}>
           <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.30)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.12em', paddingLeft: '2px' }}>
             {t('activeBranch')}
@@ -162,22 +189,22 @@ export default function Navbar() {
       )}
 
       <nav className="sidebar-nav">
-        {!sidebarCollapsed && <div className="sidebar-section-label">{t('navigation')}</div>}
+        {!collapsed && <div className="sidebar-section-label">{t('navigation')}</div>}
         {visibleItems.map(item => (
           <Link
             key={item.href}
             href={item.href}
             className={`sidebar-item${pathname === item.href ? ' active' : ''}`}
             onClick={() => setSidebarOpen(false)}
-            title={sidebarCollapsed ? t(item.labelKey) : undefined}
+            title={collapsed ? t(item.labelKey) : undefined}
           >
             <span style={{ fontSize: '1rem', flexShrink: 0 }}>{item.icon}</span>
-            {!sidebarCollapsed && <span>{t(item.labelKey)}</span>}
+            {!collapsed && <span>{t(item.labelKey)}</span>}
           </Link>
         ))}
       </nav>
 
-      {sidebarCollapsed ? (
+      {collapsed ? (
         <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <button
             onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
@@ -265,19 +292,17 @@ export default function Navbar() {
           >
             {t('signOut')}
           </button>
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
-            v2.1 · 28 May 2026
-          </div>
         </div>
       )}
     </>
   );
+  }; // end makeSidebarContent
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className={`sidebar${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        {sidebarContent}
+        {makeSidebarContent(false)}
       </aside>
 
       {/* Mobile Topbar */}
@@ -344,16 +369,18 @@ export default function Navbar() {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <>
+          {/* Backdrop — visual only, pointer-events:none so it never swallows taps */}
           <div
-            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
             style={{
               position: 'fixed', inset: 0,
               background: 'rgba(0,0,0,0.5)',
-              zIndex: 399,
+              zIndex: 9998,
+              pointerEvents: 'none',
             }}
           />
-          <aside className={`sidebar open`} style={{ zIndex: 400 }}>
-            {sidebarContent}
+          <aside ref={mobileSidebarRef} className={`sidebar open`} style={{ zIndex: 9999 }}>
+            {makeSidebarContent(true)}
           </aside>
         </>
       )}

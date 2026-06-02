@@ -41,9 +41,18 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       const saved = localStorage.getItem('nexora-branch');
-      setActiveBranchIdState(
-        user.role === 'STAFF' ? user.branchId : (saved || user.branchId)
-      );
+      let initial: string | null;
+      if (user.role === 'STAFF') {
+        initial = user.branchId;
+      } else if (saved === null) {
+        // Never chose — default to their assigned branch
+        initial = user.branchId;
+      } else if (saved === 'all') {
+        initial = null;
+      } else {
+        initial = saved;
+      }
+      setActiveBranchIdState(initial);
       fetchBranches();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,8 +60,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
 
   const setActiveBranchId = (id: string | null) => {
     setActiveBranchIdState(id);
-    if (id) localStorage.setItem('nexora-branch', id);
-    else localStorage.removeItem('nexora-branch');
+    localStorage.setItem('nexora-branch', id ?? 'all');
   };
 
   const activeBranch = branches.find(b => b.id === activeBranchId) ?? null;

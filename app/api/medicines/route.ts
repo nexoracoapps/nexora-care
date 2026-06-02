@@ -8,8 +8,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const payload = getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
+  const showAll = req.nextUrl.searchParams.get('all') === 'true';
+  const where = (showAll && (payload.role === 'ADMIN' || payload.role === 'MANAGER'))
+    ? {}
+    : { isActive: true };
   const medicines = await prisma.medicine.findMany({
-    where: { isActive: true },
+    where,
     orderBy: [{ category: 'asc' }, { name: 'asc' }],
   });
   return apiOk(medicines);
@@ -17,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const payload = getTokenFromRequest(req);
-  if (!payload || payload.role !== 'ADMIN') return apiError('Unauthorized', 401);
+  if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'MANAGER')) return apiError('Unauthorized', 401);
   const body = await req.json();
   const { name, nameAr, category, dosageOptions, instructions, instructionsAr } = body;
   if (!name?.trim()) return apiError('Name is required', 400);

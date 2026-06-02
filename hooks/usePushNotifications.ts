@@ -25,8 +25,9 @@ export function usePushNotifications() {
 
     const register = async () => {
       try {
-        // 1. Register the service worker
+        // 1. Register the service worker and check for updates
         const reg = await navigator.serviceWorker.register('/sw.js');
+        reg.update().catch(() => {}); // force check for new SW version
         await navigator.serviceWorker.ready;
 
         // 2. Check existing subscription

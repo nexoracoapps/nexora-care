@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexora Care — Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0b14;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Arabic', sans-serif;
+      padding: 24px;
+      text-align: center;
+      gap: 12px;
+    }
+    .icon { font-size: 4rem; margin-bottom: 8px; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #f1f5f9; }
+    p { color: #94a3b8; font-size: 0.92rem; max-width: 320px; line-height: 1.6; }
+    .note { font-size: 0.78rem; color: #475569; margin-top: 4px; max-width: 300px; }
+    button {
+      margin-top: 12px;
+      padding: 11px 30px;
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    button:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="icon">📡</div>
+  <h1 id="title">You're Offline</h1>
+  <p id="msg">No internet connection. Check your network and try again.</p>
+  <p class="note" id="note">Any changes you made will sync automatically when you're back online.</p>
+  <button onclick="location.reload()" id="btn">Try Again</button>
+
+  <script>
+    const lang = (document.cookie.match(/(?:^|;\s*)lang=([^;]+)/) || [])[1] || 'en';
+    if (lang === 'ar') {
+      document.documentElement.lang = 'ar';
+      document.documentElement.dir = 'rtl';
+      document.getElementById('title').textContent = 'أنت غير متصل بالإنترنت';
+      document.getElementById('msg').textContent = 'لا يوجد اتصال بالإنترنت. تحقق من الشبكة وحاول مجدداً.';
+      document.getElementById('note').textContent = 'ستتم مزامنة أي تغييرات أجريتها تلقائياً عند عودة الاتصال.';
+      document.getElementById('btn').textContent = 'حاول مجدداً';
+    }
+  </script>
+</body>
+</html>

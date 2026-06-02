@@ -708,44 +708,79 @@ export default function CustomersPage() {
 
         {/* History Modal */}
         {modal === 'history' && selected && (
-          <div className="modal-overlay">
-            <div className="modal modal-lg">
-              <div className="modal-header">
-                <h2 className="modal-title">📋 {selected.name} — {t('history')}</h2>
+          <div className="modal-overlay" style={{ padding: '16px' }}>
+            <div className="modal modal-lg" style={{ maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div className="modal-header" style={{ flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.85rem', color: '#fff', flexShrink: 0 }}>
+                    {selected.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="modal-title" style={{ margin: 0, fontSize: '0.95rem' }}>{selected.name}</h2>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{selected.phone || ''}</div>
+                  </div>
+                </div>
                 <button className="modal-close" onClick={() => setModal(null)}>✕</button>
               </div>
+
               {/* Tabs */}
-              <div style={{ display: 'flex', gap: 2, padding: '0 20px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: 2, padding: '0 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
                 {(['appointments', 'prescriptions'] as const).map(tab => (
-                  <button key={tab} onClick={() => setHistoryTab(tab)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: historyTab === tab ? 700 : 400, color: historyTab === tab ? 'var(--rose)' : 'var(--text-muted)', borderBottom: historyTab === tab ? '2px solid var(--rose)' : '2px solid transparent', marginBottom: -1, fontSize: '0.88rem' }}>
+                  <button key={tab} onClick={() => setHistoryTab(tab)} style={{ padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: historyTab === tab ? 700 : 400, color: historyTab === tab ? 'var(--rose)' : 'var(--text-muted)', borderBottom: historyTab === tab ? '2px solid var(--rose)' : '2px solid transparent', marginBottom: -1, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                     {tab === 'appointments' ? `📅 ${t('history')} (${history.length})` : `💊 Prescriptions (${prescriptions.length})`}
                   </button>
                 ))}
               </div>
-              <div className="modal-body">
+
+              {/* Scrollable body */}
+              <div className="modal-body" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 {historyLoading ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 44, borderRadius: 8, opacity: 1 - i * 0.15 }} />)}
+                    {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12, opacity: 1 - i * 0.15 }} />)}
                   </div>
                 ) : historyTab === 'appointments' ? (
                   history.length === 0 ? (
                     <div className="empty-state"><div className="empty-state-icon">📭</div><div className="empty-state-title">{t('noAppointmentHistory')}</div></div>
                   ) : (
-                    <div className="table-wrap">
-                      <table className="glass-table">
-                        <thead><tr><th>{t('date')}</th><th>{t('service')}</th><th>{t('specialist')}</th><th>{t('status')}</th><th>{t('payment')}</th></tr></thead>
-                        <tbody>
-                          {history.map(a => (
-                            <tr key={a.id}>
-                              <td>{new Date(a.dateTime).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                              <td>{a.service?.name || '—'}</td>
-                              <td>{(a as Appointment & { serviceProvider?: { name: string } }).serviceProvider?.name || '—'}</td>
-                              <td><span className={`badge badge-${a.status.toLowerCase().replace('_', '-')}`}>{a.status.replace('_', ' ')}</span></td>
-                              <td><span className={`badge ${a.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-unpaid'}`}>{a.paymentStatus}</span></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {history.map(a => {
+                        const appt = a as Appointment & { serviceProvider?: { name: string }; notes?: string };
+                        const statusColor: Record<string, string> = { SCHEDULED: '#0891b2', COMPLETED: '#059669', CANCELLED: '#e53e5a', NO_SHOW: '#f59e0b' };
+                        const sColor = statusColor[a.status] || 'var(--text-muted)';
+                        return (
+                          <div key={a.id} style={{ background: 'var(--bg-elevated)', borderRadius: 14, padding: '13px 16px', border: '1px solid var(--border)', borderLeft: `3px solid ${sColor}` }}>
+                            {/* Row 1: date + badges */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>
+                                📅 {new Date(a.dateTime).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <span className={`badge badge-${a.status.toLowerCase().replace('_', '-')}`}>{a.status.replace('_', ' ')}</span>
+                                <span className={`badge ${a.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-unpaid'}`}>{a.paymentStatus}</span>
+                              </div>
+                            </div>
+                            {/* Row 2: service + specialist */}
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.82rem', color: 'var(--text-sub)' }}>
+                              {a.service?.name && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <span style={{ opacity: 0.6 }}>✦</span> {a.service.name}
+                                </span>
+                              )}
+                              {appt.serviceProvider?.name && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <span style={{ opacity: 0.6 }}>👤</span> {appt.serviceProvider.name}
+                                </span>
+                              )}
+                            </div>
+                            {/* Row 3: notes */}
+                            {appt.notes && (
+                              <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', paddingTop: 7, borderTop: '1px solid var(--border)' }}>
+                                📝 {appt.notes}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )
                 ) : (
@@ -756,24 +791,28 @@ export default function CustomersPage() {
                       {(prescriptions as Array<Record<string, unknown>>).map((rx) => {
                         const p = rx as { id: string; createdAt: string; notes?: string; appointment?: { service?: { name: string } }; items: Array<{ medicine?: { name: string; nameAr?: string }; dosage?: string; frequency?: string; duration?: string }> };
                         return (
-                          <div key={p.id} style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--border)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                                {new Date(p.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { dateStyle: 'medium' })}
+                          <div key={p.id} style={{ background: 'var(--bg-elevated)', borderRadius: 14, padding: '13px 16px', border: '1px solid var(--border)', borderLeft: '3px solid #7c3aed' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 8, flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>
+                                💊 {new Date(p.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { dateStyle: 'medium' })}
                               </span>
-                              {p.appointment?.service && <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: 6, padding: '2px 8px', border: '1px solid var(--border)' }}>{p.appointment.service.name}</span>}
+                              {p.appointment?.service && (
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(124,58,237,0.08)', borderRadius: 6, padding: '2px 9px', border: '1px solid rgba(124,58,237,0.15)' }}>
+                                  {p.appointment.service.name}
+                                </span>
+                              )}
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                               {p.items.map((item, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.85rem' }}>
-                                  <span style={{ background: 'rgba(244,63,94,0.1)', color: 'var(--rose)', borderRadius: 20, padding: '2px 10px', fontWeight: 600, fontSize: '0.78rem', border: '1px solid rgba(244,63,94,0.2)' }}>{item.medicine?.name}</span>
-                                  {item.dosage && <span style={{ color: 'var(--text-muted)' }}>{item.dosage}</span>}
-                                  {item.frequency && <span style={{ color: 'var(--text-muted)' }}>· {item.frequency}</span>}
-                                  {item.duration && <span style={{ color: 'var(--text-muted)' }}>· {item.duration}</span>}
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(124,58,237,0.07)', borderRadius: 20, padding: '4px 10px', border: '1px solid rgba(124,58,237,0.15)' }}>
+                                  <span style={{ color: '#7c3aed', fontWeight: 700, fontSize: '0.8rem' }}>{item.medicine?.name}</span>
+                                  {item.dosage && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>· {item.dosage}</span>}
+                                  {item.frequency && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>· {item.frequency}</span>}
+                                  {item.duration && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>· {item.duration}</span>}
                                 </div>
                               ))}
                             </div>
-                            {p.notes && <div style={{ marginTop: 8, fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 8 }}>📝 {p.notes}</div>}
+                            {p.notes && <div style={{ marginTop: 9, fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 8 }}>📝 {p.notes}</div>}
                           </div>
                         );
                       })}
@@ -781,7 +820,8 @@ export default function CustomersPage() {
                   )
                 )}
               </div>
-              <div className="modal-footer">
+
+              <div className="modal-footer" style={{ flexShrink: 0 }}>
                 <button className="btn btn-secondary" onClick={() => setModal(null)}>{t('close')}</button>
               </div>
             </div>

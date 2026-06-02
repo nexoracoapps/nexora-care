@@ -39,7 +39,10 @@ export function useOfflineSync() {
           failed++;
         }
       }
-      if (succeeded > 0) toast.success(`✅ Synced ${succeeded} offline change${succeeded > 1 ? 's' : ''}`);
+      if (succeeded > 0) {
+        toast.success(`✅ Synced ${succeeded} offline change${succeeded > 1 ? 's' : ''}`);
+        window.dispatchEvent(new CustomEvent('nexora-sync-complete'));
+      }
       if (failed > 0)    toast.error(`${failed} change${failed > 1 ? 's' : ''} could not sync — will retry`);
     } finally {
       setSyncing(false);

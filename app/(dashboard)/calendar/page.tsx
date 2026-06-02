@@ -334,14 +334,13 @@ export default function CalendarPage() {
   // --- DAY VIEW ---
   const DayView = () => {
     const todayAppts = apptsByDay(cursor);
-    const hours = Array.from({ length: 16 }, (_, i) => i + 6);
     const isToday = sameDay(cursor, new Date());
     return (
       <div>
+        {/* Day header */}
         <div style={{
           textAlign: 'center', padding: '14px 0 16px',
-          borderBottom: '1px solid var(--border)',
-          marginBottom: 4,
+          borderBottom: '1px solid var(--border)', marginBottom: 8,
         }}>
           <div style={{ fontSize: '0.72rem', fontWeight: 700, color: isToday ? 'var(--rose)' : 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
             {days[cursor.getDay()]}
@@ -361,38 +360,48 @@ export default function CalendarPage() {
           <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: 6, fontWeight: 600 }}>
             {months[cursor.getMonth()]} {cursor.getFullYear()}
             {todayAppts.length > 0 && (
-              <span style={{ marginLeft: 8, background: 'var(--rose)', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: '0.68rem', fontWeight: 700 }}>
-                {todayAppts.length}
+              <span style={{ marginInlineStart: 8, background: 'var(--rose)', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: '0.68rem', fontWeight: 700 }}>
+                {todayAppts.length} {lang === 'ar' ? 'موعد' : 'appts'}
               </span>
             )}
           </div>
         </div>
+
+        {/* Back to week button */}
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button
+            onClick={() => setView('week')}
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-sub)', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            ← {lang === 'ar' ? 'العودة للأسبوع' : 'Back to week'}
+          </button>
+          {loading && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>...</span>}
+        </div>
+
+        {/* Appointments — full list, ALL hours (not filtered to 6–21) */}
         {todayAppts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-sub)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 10, opacity: 0.4 }}>📅</div>
             <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('calNoApptsDay')}</div>
           </div>
         ) : (
-          <div>
-            {hours.map(h => {
-              const slotAppts = todayAppts.filter(a => new Date(a.dateTime).getHours() === h);
-              if (slotAppts.length === 0) return null;
-              const label = `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}`;
-              return (
-                <div key={h} className="cal-day-slot" style={{ display: 'flex', gap: 14, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
-                  <div className="cal-day-time" style={{
-                    width: 58, flexShrink: 0, paddingTop: 6,
-                    fontSize: '0.7rem', color: 'var(--text-sub)', fontWeight: 700,
-                    textAlign: isRTL ? 'left' : 'right',
-                  }}>
-                    {label}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    {slotAppts.map(a => <ApptCard key={a.id} a={a} />)}
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {todayAppts.map(a => (
+              <div key={a.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                {/* Time label */}
+                <div style={{
+                  width: 62, flexShrink: 0, paddingTop: 10,
+                  fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 700,
+                  textAlign: isRTL ? 'left' : 'right',
+                }}>
+                  {fmtTime(a.dateTime)}
                 </div>
-              );
-            })}
+                {/* Full appointment card */}
+                <div style={{ flex: 1 }}>
+                  <ApptCard a={a} />
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -404,6 +413,7 @@ export default function CalendarPage() {
     const sw = startOfWeek(cursor);
     const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(sw); d.setDate(sw.getDate() + i); return d; });
     const today = new Date(); today.setHours(0,0,0,0);
+    const [hoveredDay, setHoveredDay] = useState<number | null>(null);
     return (
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(110px, 1fr))', gap: 5, minWidth: 580 }}>
@@ -411,19 +421,30 @@ export default function CalendarPage() {
             const dayAppts = apptsByDay(d);
             const isToday = sameDay(d, today);
             const hasSelf = isOwnCalendar;
+            const isHovered = hoveredDay === i;
             return (
-              <div key={i} style={{
-                background: isToday ? 'var(--bg-card)' : 'var(--bg-elevated)',
-                borderRadius: 12,
-                padding: '10px 8px 12px',
-                border: isToday
-                  ? '2px solid var(--rose)'
-                  : hasSelf && dayAppts.length > 0
-                    ? '1.5px solid rgba(124,58,237,0.3)'
-                    : '1.5px solid var(--border)',
-                minHeight: 110,
-                transition: 'box-shadow 0.15s',
-              }}>
+              <div
+                key={i}
+                onClick={() => { setCursor(d); setView('day'); }}
+                onMouseEnter={() => setHoveredDay(i)}
+                onMouseLeave={() => setHoveredDay(null)}
+                style={{
+                  background: isToday ? 'var(--bg-card)' : isHovered ? 'var(--bg-card)' : 'var(--bg-elevated)',
+                  borderRadius: 12,
+                  padding: '10px 8px 12px',
+                  border: isToday
+                    ? '2px solid var(--rose)'
+                    : isHovered
+                      ? '1.5px solid rgba(var(--rose-rgb),0.4)'
+                      : hasSelf && dayAppts.length > 0
+                        ? '1.5px solid rgba(124,58,237,0.3)'
+                        : '1.5px solid var(--border)',
+                  minHeight: 110,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  boxShadow: isHovered ? '0 4px 20px rgba(0,0,0,0.1)' : 'none',
+                  transform: isHovered ? 'translateY(-2px)' : 'none',
+                }}>
                 {/* Day header */}
                 <div style={{ textAlign: 'center', marginBottom: 8 }}>
                   <div style={{
@@ -458,6 +479,12 @@ export default function CalendarPage() {
                   <div style={{ fontSize: '0.62rem', color: 'var(--border)', textAlign: 'center', marginTop: 12 }}>·</div>
                 ) : (
                   dayAppts.map(a => <ApptCard key={a.id} a={a} compact />)
+                )}
+                {/* Click hint */}
+                {dayAppts.length > 0 && isHovered && (
+                  <div style={{ textAlign: 'center', marginTop: 6, fontSize: '0.58rem', color: 'var(--rose)', fontWeight: 700 }}>
+                    {lang === 'ar' ? 'انقر للتفاصيل' : 'tap for details'}
+                  </div>
                 )}
               </div>
             );
@@ -506,16 +533,18 @@ export default function CalendarPage() {
             return (
               <div
                 key={i}
-                onClick={() => setExpandedDay(isExpanded ? null : key)}
+                onClick={() => { setCursor(d); setView('day'); }}
                 style={{
                   background: isToday ? 'rgba(var(--rose-rgb),0.06)' : 'var(--bg-elevated)',
                   borderRadius: 10,
                   padding: '6px 5px 8px',
                   border: isToday ? '2px solid var(--rose)' : '1.5px solid var(--border)',
                   minHeight: 72,
-                  cursor: dayAppts.length > 0 ? 'pointer' : 'default',
-                  transition: 'background 0.12s',
+                  cursor: 'pointer',
+                  transition: 'all 0.12s',
                 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(var(--rose-rgb),0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isToday ? 'var(--rose)' : 'var(--border)'; (e.currentTarget as HTMLElement).style.transform = ''; }}
               >
                 <div style={{
                   width: 24, height: 24, borderRadius: '50%',

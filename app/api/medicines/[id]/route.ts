@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const payload = getTokenFromRequest(req);
-  if (!payload || payload.role !== 'ADMIN') return apiError('Unauthorized', 401);
+  if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'MANAGER')) return apiError('Unauthorized', 401);
   const body = await req.json();
   const medicine = await prisma.medicine.update({
     where: { id: params.id },

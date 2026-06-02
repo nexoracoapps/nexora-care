@@ -152,6 +152,8 @@ export default function CalendarPage() {
     return { from, to };
   }, [cursor, view]);
 
+  const [isOnline, setIsOnline] = useState(true);
+
   const load = useCallback(async () => {
     if (!user?.token) return;
     setLoading(true);
@@ -159,12 +161,43 @@ export default function CalendarPage() {
     const q = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
     if (filterProvider) q.set('providerId', filterProvider);
     if (activeBranchId) q.set('branchId', activeBranchId);
-    const res = await fetch(`/api/calendar?${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setAppts(await res.json());
+    try {
+      const res = await fetch(`/api/calendar?${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) setAppts(await res.json());
+    } catch {
+      // offline — SW serves cached response automatically; nothing to do
+    }
     setLoading(false);
   }, [user, activeBranchId, filterProvider, getRange]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Re-fetch when tab becomes visible again (user switched tabs to create/edit an appointment)
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [load]);
+
+  // Re-fetch after offline sync completes
+  useEffect(() => {
+    const onSync = () => load();
+    window.addEventListener('nexora-sync-complete', onSync);
+    return () => window.removeEventListener('nexora-sync-complete', onSync);
+  }, [load]);
+
+  // Track online/offline state
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const goOnline  = () => { setIsOnline(true);  load(); };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online',  goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online',  goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, [load]);
 
   useEffect(() => {
     if (!user?.token) return;
@@ -722,7 +755,7 @@ export default function CalendarPage() {
               🔔 {t('calRemindersOn')}
             </div>
           )}
-          {user?.role === 'ADMIN' && notifStatus === 'granted' && hasPushSub && (
+          {isPrivileged && notifStatus === 'granted' && hasPushSub && (
             <>
               <select
                 value={reminderLeadMinutes}
@@ -749,13 +782,28 @@ export default function CalendarPage() {
                 className="btn btn-ghost btn-sm"
                 onClick={sendTestNotification}
                 disabled={testingNotif}
-                title="Send a test push notification to your device"
+                title="Send a test push notification to your device now"
                 style={{ fontSize: '0.78rem' }}
               >
-                {testingNotif ? '⏳' : '🧪'} Test Notif
+                {testingNotif ? '⏳' : '🧪'} {lang === 'ar' ? 'اختبار الإشعار' : 'Test Notif'}
               </button>
             </>
           )}
+          {/* Offline indicator */}
+          {!isOnline && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.12)', border: '1.5px solid rgba(245,158,11,0.3)', borderRadius: 9, padding: '6px 12px', fontSize: '0.78rem', fontWeight: 700, color: '#d97706' }}>
+              📡 {lang === 'ar' ? 'غير متصل — عرض مؤقت' : 'Offline — cached view'}
+            </div>
+          )}
+          {/* Manual refresh */}
+          <button
+            onClick={() => load()}
+            disabled={loading}
+            title={lang === 'ar' ? 'تحديث البيانات' : 'Refresh calendar'}
+            style={{ background: 'var(--bg-elevated)', border: '1.5px solid var(--border)', borderRadius: 9, padding: '7px 12px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', opacity: loading ? 0.5 : 1, transition: 'opacity 0.15s' }}
+          >
+            🔄
+          </button>
         </div>
       </div>
 

@@ -12,8 +12,22 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get('search');
 
   const where: Record<string, unknown> = {};
-  if (branchId) where.branchId = branchId;
-  else if (payload.role === 'STAFF' && payload.branchId) where.branchId = payload.branchId;
+
+  if (payload.providerId) {
+    // Provider sees only customers who have had an appointment with them
+    const linked = await prisma.appointment.findMany({
+      where: { serviceProviderId: payload.providerId, customerId: { not: null } },
+      select: { customerId: true },
+      distinct: ['customerId'],
+    });
+    const ids = linked.map(a => a.customerId as string);
+    where.id = { in: ids.length > 0 ? ids : ['__none__'] };
+  } else if (branchId) {
+    where.branchId = branchId;
+  } else if (payload.role === 'STAFF' && payload.branchId) {
+    where.branchId = payload.branchId;
+  }
+
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },

@@ -21,8 +21,14 @@ export async function GET(req: NextRequest) {
   const size = parseInt(searchParams.get('size') || '500');
 
   const where: Record<string, unknown> = {};
-  if (branchId) where.branchId = branchId;
-  else if (payload.role === 'STAFF' && payload.branchId) where.branchId = payload.branchId;
+  if (payload.providerId) {
+    // Provider-linked user: see only their own appointments regardless of branch
+    where.serviceProviderId = payload.providerId;
+  } else if (branchId) {
+    where.branchId = branchId;
+  } else if (payload.role === 'STAFF' && payload.branchId) {
+    where.branchId = payload.branchId;
+  }
   if (status) where.status = status;
 
   const appointments = await prisma.appointment.findMany({

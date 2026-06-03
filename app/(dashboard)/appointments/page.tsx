@@ -10,6 +10,12 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { queuedFetch } from '@/lib/queuedFetch';
 import type { Appointment, Customer, Service, ServiceProvider, PaymentMethod } from '@/types';
 
+// Convert a Date to the "YYYY-MM-DDTHH:MM" format that datetime-local inputs expect (local time, not UTC)
+const toLocalISO = (d: Date): string => {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
 const STATUS_BADGE: Record<string, string> = {
   SCHEDULED: 'badge-scheduled',
   COMPLETED: 'badge-completed',
@@ -122,15 +128,16 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     setSelected(null);
     const now = new Date();
     now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15, 0, 0);
-    setForm({ dateTime: now.toISOString().slice(0, 16), customerId: '', serviceId: '', serviceProviderId: '', notes: '', amount: '', paymentMethod: 'CASH' });
-    setServiceLines([{ serviceId: '', serviceProviderId: '', amount: '' }]);
+    const defaultProvider = user?.providerId || '';
+    setForm({ dateTime: toLocalISO(now), customerId: '', serviceId: '', serviceProviderId: defaultProvider, notes: '', amount: '', paymentMethod: 'CASH' });
+    setServiceLines([{ serviceId: '', serviceProviderId: defaultProvider, amount: '' }]);
     setModal('create');
   };
 
   const openEdit = (a: Appointment) => {
     setSelected(a);
     setForm({
-      dateTime: new Date(a.dateTime).toISOString().slice(0, 16),
+      dateTime: toLocalISO(new Date(a.dateTime)),
       customerId: a.customerId || '',
       serviceId: a.serviceId || '',
       serviceProviderId: a.serviceProviderId || '',
@@ -150,7 +157,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (!form.serviceId) return toast.error(t('required'));
       try {
         const body = {
-          dateTime: form.dateTime,
+          dateTime: new Date(form.dateTime).toISOString(),
           customerId: form.customerId || null,
           serviceId: form.serviceId || null,
           serviceProviderId: form.serviceProviderId || null,
@@ -175,7 +182,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         fetch('/api/appointments', {
           method: 'POST', headers,
           body: JSON.stringify({
-            dateTime: form.dateTime,
+            dateTime: new Date(form.dateTime).toISOString(),
             customerId: form.customerId || null,
             serviceId: line.serviceId || null,
             serviceProviderId: line.serviceProviderId || null,
@@ -428,7 +435,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                                   { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
                                 ]) : []),
                                 ...(canDo('editAppointments') && appt.status === 'SCHEDULED' ? [
-                                  { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(new Date(appt.dateTime).toISOString().slice(0, 16)); setModal('reschedule'); setOpenMenuId(null); } },
+                                  { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(toLocalISO(new Date(appt.dateTime))); setModal('reschedule'); setOpenMenuId(null); } },
                                 ] : []),
                               ];
                               return (
@@ -752,7 +759,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setModal(null)}>{t('cancel')}</button>
-                <button className="btn btn-primary" onClick={() => doAction(selected, 'reschedule', { dateTime: newDateTime })}>
+                <button className="btn btn-primary" onClick={() => doAction(selected, 'reschedule', { dateTime: new Date(newDateTime).toISOString() })}>
                   {t('confirmReschedule')}
                 </button>
               </div>

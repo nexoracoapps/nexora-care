@@ -113,7 +113,7 @@ export const DEFAULT_PERMISSIONS: Record<string, RolePermissions> = {
     createServices: false, editServices: false, deleteServices: false,
     createProviders: false, editProviders: false, deleteProviders: false,
     createBranches: false, editBranches: false, deleteBranches: false,
-    createStaffAbsence: false, editStaffAbsence: false, deleteStaffAbsence: false,
+    manageStaffAbsence: true, createStaffAbsence: true, editStaffAbsence: true, deleteStaffAbsence: true,
     viewPrescriptions: true, createPrescriptions: false, editPrescriptions: false, deletePrescriptions: false,
     manageMedicines: false, createMedicines: false, editMedicines: false, deleteMedicines: false,
   },

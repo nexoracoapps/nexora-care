@@ -38,6 +38,8 @@ export default function StaffAbsencePage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ providerId: '', startDate: '', endDate: '', reason: '' });
+  const [saving, setSaving] = useState(false);
+  const isPrivileged = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
 
   const headers = { Authorization: `Bearer ${user?.token}`, 'Content-Type': 'application/json' };
 
@@ -68,7 +70,9 @@ export default function StaffAbsencePage() {
 
   const openCreate = () => {
     setEditId(null);
-    setForm({ providerId: defaultProviderId(providers), startDate: '', endDate: '', reason: '' });
+    // Non-privileged users are locked to their own provider
+    const pid = isPrivileged ? defaultProviderId(providers) : (user?.providerId || defaultProviderId(providers));
+    setForm({ providerId: pid, startDate: '', endDate: '', reason: '' });
     setModalOpen(true);
   };
 
@@ -84,14 +88,20 @@ export default function StaffAbsencePage() {
   };
 
   const save = async () => {
+    if (saving) return;
     if (!form.startDate || !form.endDate) return toast.error(t('datesRequired'));
-    const url = editId ? `/api/staff-absence/${editId}` : '/api/staff-absence';
-    const method = editId ? 'PUT' : 'POST';
-    const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
-    if (!res.ok) return toast.error(t('failedToSave'));
-    toast.success(editId ? t('absenceUpdated') : t('absenceRecorded'));
-    setModalOpen(false);
-    load();
+    setSaving(true);
+    try {
+      const url = editId ? `/api/staff-absence/${editId}` : '/api/staff-absence';
+      const method = editId ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+      if (!res.ok) return toast.error(t('failedToSave'));
+      toast.success(editId ? t('absenceUpdated') : t('absenceRecorded'));
+      setModalOpen(false);
+      load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const confirmDelete = async () => {
@@ -109,7 +119,7 @@ export default function StaffAbsencePage() {
     new Date(d).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="manageStaffAbsence">
+    <ProtectedRoute permKey="manageStaffAbsence">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes modal-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
@@ -144,6 +154,8 @@ export default function StaffAbsencePage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(255px, 1fr))', gap: 18 }}>
             {absences.map(a => {
+              const isOwn = (a as any).userId === user?.id || (!!user?.providerId && (a as any).providerId === user.providerId);
+              const canEdit = isPrivileged || isOwn;
               const name = a.provider?.name || a.user?.username || '?';
               const days = Math.ceil((new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
               const grad = nameToGradient(name);
@@ -189,18 +201,18 @@ export default function StaffAbsencePage() {
                     )}
                   </div>
 
-                  {/* Actions */}
-                  <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                    {canDo('editStaffAbsence') && <button className="abs-action-btn abs-action-edit" onClick={() => openEdit(a)}>
-                      ✏️ {t('edit')}
-                    </button>}
-                    {canDo('deleteStaffAbsence') && <>
-                      {canDo('editStaffAbsence') && <div style={{ width: 1, background: 'var(--border)' }} />}
+                  {/* Actions — visible only if admin/manager OR own record */}
+                  {canEdit && (
+                    <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                      <button className="abs-action-btn abs-action-edit" onClick={() => openEdit(a)}>
+                        ✏️ {t('edit')}
+                      </button>
+                      <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="abs-action-btn abs-action-del" onClick={() => setDeleteTarget(a.id)}>
                         🗑 {t('delete')}
                       </button>
-                    </>}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -228,10 +240,21 @@ export default function StaffAbsencePage() {
                   <label style={{ display: 'block', fontWeight: 600, fontSize: 11.5, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('specialist')}
                   </label>
-                  <select className="form-select" value={form.providerId} onChange={e => setForm(f => ({ ...f, providerId: e.target.value }))}>
+                  <select
+                    className="form-select"
+                    value={form.providerId}
+                    disabled={!isPrivileged}
+                    onChange={e => setForm(f => ({ ...f, providerId: e.target.value }))}
+                    style={{ opacity: isPrivileged ? 1 : 0.7, cursor: isPrivileged ? 'auto' : 'not-allowed' }}
+                  >
                     <option value="">{t('selectSpecialist')}</option>
                     {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
+                  {!isPrivileged && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', marginTop: 4 }}>
+                      🔒 {lang === 'ar' ? 'مقيّد بحسابك' : 'Locked to your account'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-grid-2">
@@ -264,8 +287,8 @@ export default function StaffAbsencePage() {
                   <button onClick={() => setModalOpen(false)} style={{ flex: 1, padding: '11px', border: '1.5px solid var(--border)', borderRadius: 12, background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                     {t('cancel')}
                   </button>
-                  <button onClick={save} style={{ flex: 1, padding: '11px', border: 'none', borderRadius: 12, background: 'linear-gradient(135deg,var(--rose),#c0392b)', color: '#fff', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                    {editId ? t('saveChanges') : t('recordVacation')}
+                  <button onClick={save} disabled={saving} style={{ flex: 1, padding: '11px', border: 'none', borderRadius: 12, background: 'linear-gradient(135deg,var(--rose),#c0392b)', color: '#fff', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+                    {saving ? '...' : (editId ? t('saveChanges') : t('recordVacation'))}
                   </button>
                 </div>
               </div>

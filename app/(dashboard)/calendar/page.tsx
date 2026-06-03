@@ -173,11 +173,15 @@ export default function CalendarPage() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [load]);
 
-  // Re-fetch after offline sync completes
+  // Re-fetch after offline sync or appointment changes
   useEffect(() => {
     const onSync = () => load();
     window.addEventListener('nexora-sync-complete', onSync);
-    return () => window.removeEventListener('nexora-sync-complete', onSync);
+    window.addEventListener('nexora-appointments-changed', onSync);
+    return () => {
+      window.removeEventListener('nexora-sync-complete', onSync);
+      window.removeEventListener('nexora-appointments-changed', onSync);
+    };
   }, [load]);
 
   // Track online/offline state
@@ -867,19 +871,12 @@ export default function CalendarPage() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-          {appts.length === 0 && loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-sub)' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 12, opacity: 0.4 }}>⏳</div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('loading')}</div>
-          </div>
-        ) : (
-          <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+          <div style={{ opacity: loading ? 0.55 : 1, transition: 'opacity 0.25s', pointerEvents: loading ? 'none' : 'auto' }}>
             {view === 'day'   && <DayView />}
             {view === 'week'  && <WeekView />}
             {view === 'month' && <MonthView />}
             <div className="cal-swipe-hint">← swipe to navigate →</div>
           </div>
-        )}
       </div>
 
       {/* Status legend */}

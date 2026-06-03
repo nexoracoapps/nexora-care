@@ -38,16 +38,13 @@ export default function ProtectedRoute({ children, adminOnly = false, roles, per
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading, permLoading, permInitialized, adminOnly, roles, permKey, permKeys, router, canDo]);
 
-  if (isLoading || (permLoading && !permInitialized)) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <div className="spin" style={{ fontSize: '2rem' }}>⟳</div>
-      </div>
-    );
-  }
-
+  // Only block on auth loading (reading localStorage) — never block on permissions
+  // loading after first init, as that caused a full-screen spinner on every navigation.
+  if (isLoading) return null;
   if (!user) return null;
-  if (!checkAccess(canDo)) return null;
+  // While permissions are still loading use DEFAULT_PERMISSIONS (already the initial state).
+  // The redirect effect above will correct access once permissions resolve.
+  if (permInitialized && !checkAccess(canDo)) return null;
 
   return <>{children}</>;
 }

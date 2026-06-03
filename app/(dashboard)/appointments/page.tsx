@@ -103,6 +103,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     };
   }, []);
 
+  const notifyCalendar = () => window.dispatchEvent(new CustomEvent('nexora-appointments-changed'));
+
   const load = useCallback(async () => {
     if (!user?.token) return;
     setLoading(true);
@@ -172,7 +174,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
         toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('apptUpdated'));
         setModal(null);
-        load();
+        load(); notifyCalendar();
       } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
       finally { setSaving(false); }
       return;
@@ -200,7 +202,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (failed.length > 0) throw new Error('Some appointments failed to create');
       toast.success(validLines.length > 1 ? `${validLines.length} appointments created` : t('apptCreated'));
       setModal(null);
-      load();
+      load(); notifyCalendar();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
     finally { setSaving(false); }
   };
@@ -214,7 +216,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
       toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('updatedSuccess'));
       setModal(null);
-      load();
+      load(); notifyCalendar();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   };
 
@@ -223,7 +225,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     setDeleting(true);
     const res = await fetch(`/api/appointments/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); notifyCalendar(); }
     else toast.error(t('failedToDelete'));
   };
 

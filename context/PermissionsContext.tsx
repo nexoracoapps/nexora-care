@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import {
   DEFAULT_PERMISSIONS,
@@ -32,7 +31,6 @@ const PermissionsContext = createContext<PermissionsContextValue>({
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const token = user?.token ?? null;
-  const pathname = usePathname();
 
   const [permissions, setPermissions] = useState<AllPermissions>(DEFAULT_PERMISSIONS);
   const [loading, setLoading]       = useState(true);
@@ -55,10 +53,8 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  useEffect(() => {
-    if (token && initialized) fetchAndApply(token);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  // Re-sync permissions when window regains focus on a different page
+  // (removed per-navigation refetch — it caused unnecessary re-renders on every nav)
 
   useEffect(() => {
     const onFocus = () => { if (token) fetchAndApply(token); };

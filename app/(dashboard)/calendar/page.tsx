@@ -867,18 +867,18 @@ export default function CalendarPage() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {loading ? (
+          {appts.length === 0 && loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-sub)' }}>
             <div style={{ fontSize: '1.8rem', marginBottom: 12, opacity: 0.4 }}>⏳</div>
             <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('loading')}</div>
           </div>
         ) : (
-          <>
+          <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
             {view === 'day'   && <DayView />}
             {view === 'week'  && <WeekView />}
             {view === 'month' && <MonthView />}
             <div className="cal-swipe-hint">← swipe to navigate →</div>
-          </>
+          </div>
         )}
       </div>
 

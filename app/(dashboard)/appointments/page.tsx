@@ -297,7 +297,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         </div>
 
         {/* Table */}
-        {loading ? (
+        {loading && appointments.length === 0 ? (
           <div className="skeleton" style={{ height: '400px' }} />
         ) : (
           <div className="table-wrap">

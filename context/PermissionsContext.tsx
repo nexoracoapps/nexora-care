@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import {
@@ -67,17 +67,22 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const canDo = (action: PermissionKey): boolean => {
+  const canDo = useCallback((action: PermissionKey): boolean => {
     if (!user) return false;
     const role = user.role ?? 'STAFF';
     if (role === 'ADMIN') return true;
     return permissions[role]?.[action] ?? false;
-  };
+  }, [user, permissions]);
 
-  const reload = () => { if (token) fetchAndApply(token); };
+  const reload = useCallback(() => { if (token) fetchAndApply(token); }, [token]);
+
+  const value = useMemo(
+    () => ({ permissions, canDo, loading, initialized, reload }),
+    [permissions, canDo, loading, initialized, reload]
+  );
 
   return (
-    <PermissionsContext.Provider value={{ permissions, canDo, loading, initialized, reload }}>
+    <PermissionsContext.Provider value={value}>
       {children}
     </PermissionsContext.Provider>
   );

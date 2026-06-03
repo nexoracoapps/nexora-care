@@ -70,13 +70,7 @@ export default function CalendarPage() {
   const days   = lang === 'ar' ? DAYS_AR   : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
   const isPrivileged = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
-  const isLockedToProvider = !isPrivileged && !!user?.providerId;
   const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
-
-  // Auto-select linked provider on load
-  useEffect(() => {
-    if (user?.providerId) setFilterProvider(user.providerId);
-  }, [user?.providerId]);
 
   useEffect(() => {
     if (!('Notification' in window)) { setNotifStatus('unsupported'); return; }
@@ -847,34 +841,20 @@ export default function CalendarPage() {
 
           {/* Right: Provider filter */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            {isLockedToProvider ? (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(124,58,237,0.30)',
-                borderRadius: 9, padding: '6px 13px',
-                fontSize: '0.82rem', fontWeight: 700, color: '#7c3aed',
-              }}>
+            {user?.providerId && (
+              <button
+                onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
+                className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+              >
                 🩺 {t('calMyCalendar')}
-                <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: 2 }}>🔒</span>
-              </div>
-            ) : (
-              <>
-                {user?.providerId && (
-                  <button
-                    onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
-                    className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-                  >
-                    🩺 {t('calMyCalendar')}
-                  </button>
-                )}
-                {isPrivileged && (
-                  <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
-                    <option value="">{t('calAllProviders')}</option>
-                    {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                )}
-              </>
+              </button>
+            )}
+            {isPrivileged && (
+              <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
+                <option value="">{t('calAllProviders')}</option>
+                {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
             )}
           </div>
         </div>

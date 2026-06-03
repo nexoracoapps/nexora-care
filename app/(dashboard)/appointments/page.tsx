@@ -69,6 +69,7 @@ export default function AppointmentsPage() {
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
 const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const headers = { Authorization: `Bearer ${user?.token}`, 'Content-Type': 'application/json' };
 
@@ -149,8 +150,10 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   };
 
   const saveAppointment = async () => {
+    if (saving) return;
     if (!form.dateTime) return toast.error(t('dateTimeRequired'));
     if (!form.customerId) return toast.error(t('required'));
+    setSaving(true);
 
     // EDIT: single service/specialist (unchanged)
     if (selected) {
@@ -171,6 +174,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         setModal(null);
         load();
       } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
+      finally { setSaving(false); }
       return;
     }
 
@@ -198,6 +202,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       setModal(null);
       load();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
+    finally { setSaving(false); }
   };
 
   const doAction = async (appt: Appointment, action: string, data: Record<string, unknown> = {}) => {
@@ -629,8 +634,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
               {/* Footer */}
               <div style={{ padding: '14px 24px 20px', display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid var(--border)' }}>
                 <button className="btn btn-secondary" onClick={() => setModal(null)}>{t('cancel')}</button>
-                <button className="btn btn-primary" onClick={saveAppointment} style={{ minWidth: 130 }}>
-                  {modal === 'create' ? t('createAppt') : t('saveChanges')}
+                <button className="btn btn-primary" onClick={saveAppointment} disabled={saving} style={{ minWidth: 130, opacity: saving ? 0.7 : 1 }}>
+                  {saving ? '...' : (modal === 'create' ? t('createAppt') : t('saveChanges'))}
                 </button>
               </div>
             </div>

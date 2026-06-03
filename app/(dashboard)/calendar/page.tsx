@@ -72,6 +72,11 @@ export default function CalendarPage() {
   const isPrivileged = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
   const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
 
+  // Staff linked to a provider: default to their own calendar
+  useEffect(() => {
+    if (user?.providerId) setFilterProvider(user.providerId);
+  }, [user?.providerId]);
+
   useEffect(() => {
     if (!('Notification' in window)) { setNotifStatus('unsupported'); return; }
     setNotifStatus(Notification.permission);
@@ -871,7 +876,7 @@ export default function CalendarPage() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-          <div style={{ opacity: loading ? 0.55 : 1, transition: 'opacity 0.25s', pointerEvents: loading ? 'none' : 'auto' }}>
+          <div>
             {view === 'day'   && <DayView />}
             {view === 'week'  && <WeekView />}
             {view === 'month' && <MonthView />}

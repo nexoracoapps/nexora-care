@@ -21,8 +21,15 @@ export async function GET(req: NextRequest) {
       ...(to   ? { lte: new Date(to)   } : {}),
     };
   }
-  if (providerId) where.serviceProviderId = providerId;
-  if (branchId)   where.branchId = branchId;
+  if (providerId) {
+    // Filter by provider only — don't restrict by branch so providers see
+    // all their appointments even if some were created under "All Branches"
+    where.serviceProviderId = providerId;
+  } else if (branchId) {
+    // No provider filter: show all appointments for the branch, including
+    // those created without a branch (branchId null) so nothing is hidden
+    where.OR = [{ branchId }, { branchId: null }];
+  }
 
   const appointments = await prisma.appointment.findMany({
     where,

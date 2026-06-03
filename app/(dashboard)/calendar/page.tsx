@@ -70,9 +70,11 @@ export default function CalendarPage() {
   const days   = lang === 'ar' ? DAYS_AR   : DAYS_EN;
   const months = lang === 'ar' ? MONTHS_AR : MONTHS_EN;
   const isPrivileged = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
+  // Provider (non-admin) linked to a provider: always locked to their own calendar
+  const isLockedProvider = !isPrivileged && !!user?.providerId;
   const isOwnCalendar = !!user?.providerId && filterProvider === user.providerId;
 
-  // Staff linked to a provider: default to their own calendar
+  // Always lock providers to their own appointments
   useEffect(() => {
     if (user?.providerId) setFilterProvider(user.providerId);
   }, [user?.providerId]);
@@ -850,21 +852,23 @@ export default function CalendarPage() {
 
           {/* Right: Provider filter */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            {user?.providerId && (
-              <button
-                onClick={() => setFilterProvider(isOwnCalendar ? '' : user.providerId!)}
-                className={`cal-view-btn${isOwnCalendar ? ' active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-              >
+            {isLockedProvider ? (
+              // Providers see only their own calendar — no toggle
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(124,58,237,0.30)',
+                borderRadius: 9, padding: '6px 13px',
+                fontSize: '0.82rem', fontWeight: 700, color: '#7c3aed',
+              }}>
                 🩺 {t('calMyCalendar')}
-              </button>
-            )}
-            {isPrivileged && (
+              </div>
+            ) : isPrivileged ? (
+              // Admin/Manager: dropdown to filter by any provider
               <select value={filterProvider} onChange={e => setFilterProvider(e.target.value)} className="cal-select">
                 <option value="">{t('calAllProviders')}</option>
                 {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

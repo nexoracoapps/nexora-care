@@ -33,8 +33,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const token = user?.token ?? null;
 
   const [permissions, setPermissions] = useState<AllPermissions>(DEFAULT_PERMISSIONS);
-  const [loading, setLoading]       = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  // Start as initialized with default permissions so ProtectedRoute never blocks on loading.
+  // The fetch below replaces defaults with DB-stored values silently in the background.
+  const [loading, setLoading]         = useState(false);
+  const [initialized, setInitialized] = useState(true);
 
   const fetchAndApply = async (authToken: string) => {
     try {
@@ -47,9 +49,8 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   };
 
   useEffect(() => {
-    if (!token) { setInitialized(false); setLoading(true); return; }
-    setLoading(true);
-    fetchAndApply(token).finally(() => { setLoading(false); setInitialized(true); });
+    if (!token) { setInitialized(false); setPermissions(DEFAULT_PERMISSIONS); return; }
+    fetchAndApply(token).finally(() => setInitialized(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 

@@ -12,7 +12,7 @@ const ALL_PAGES = [
   '/backup', '/messages', '/call-logs', '/profile',
 ];
 
-const CACHE_NAME = 'nexora-shell-v7';
+const CACHE_NAME = 'nexora-shell-v8';
 
 export default function PushRegistrar() {
   usePushNotifications();

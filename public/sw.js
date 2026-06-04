@@ -1,10 +1,10 @@
 /* ─────────────────────────────────────────────────────────
-   NexoraCare Service Worker v7 — True Offline-First
+   NexoraCare Service Worker v8 — True Offline-First
    ───────────────────────────────────────────────────────── */
 
-const SHELL_CACHE  = 'nexora-shell-v7';
-const API_CACHE    = 'nexora-api-v7';
-const STATIC_CACHE = 'nexora-static-v7';
+const SHELL_CACHE  = 'nexora-shell-v8';
+const API_CACHE    = 'nexora-api-v8';
+const STATIC_CACHE = 'nexora-static-v8';
 
 /* ── Install ── */
 self.addEventListener('install', event => {

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const callerPayload  = getTokenFromRequest(req);
 
   if (!isCron) {
-    if (!callerPayload || callerPayload.role !== 'ADMIN') {
+    if (!callerPayload || !['ADMIN', 'MANAGER'].includes(callerPayload.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

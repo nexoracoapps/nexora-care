@@ -39,9 +39,18 @@ function resolveInitialBranch(): string | null {
   }
 }
 
+function loadCachedBranches(): Branch[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('nexora-branches-cache');
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
 export function BranchProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [branches, setBranches] = useState<Branch[]>([]);
+  // Seed from cache so the branch selector never flashes empty on navigation
+  const [branches, setBranches] = useState<Branch[]>(loadCachedBranches);
   // Initialise synchronously so the very first page fetch uses the correct filter
   const [activeBranchId, setActiveBranchIdState] = useState<string | null>(resolveInitialBranch);
 
@@ -51,7 +60,11 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch('/api/branches', {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      if (res.ok) setBranches(await res.json());
+      if (res.ok) {
+        const data: Branch[] = await res.json();
+        setBranches(data);
+        try { localStorage.setItem('nexora-branches-cache', JSON.stringify(data)); } catch {}
+      }
     } catch { /* ignore */ }
   };
 

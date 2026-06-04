@@ -122,25 +122,22 @@ export default function MusicPlayer() {
   }, [buildGraph]);
 
   useEffect(() => {
-    // Try immediate autoplay (works when navigated via link click)
+    // Try immediate autoplay
     buildGraph();
 
-    // If browser blocked it, reset and restart on first real interaction
-    if (ctxRef.current?.state !== 'running') {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      try { ctxRef.current?.close(); } catch (_) {}
-      ctxRef.current = null;
-      masterRef.current = null;
-      startedRef.current = false;
-
-      const events = ['click', 'keydown', 'mousedown', 'touchstart', 'scroll'] as const;
-      const onInteraction = () => {
-        events.forEach(ev => document.removeEventListener(ev, onInteraction));
-        if (!startedRef.current) buildGraph();
-      };
-      events.forEach(ev => document.addEventListener(ev, onInteraction, { once: true, passive: true }));
-      return () => events.forEach(ev => document.removeEventListener(ev, onInteraction));
-    }
+    // If browser blocked autoplay, resume or rebuild on first interaction
+    // WITHOUT resetting — keeps the scheduled timers alive
+    const events = ['click', 'keydown', 'mousedown', 'touchstart'] as const;
+    const onInteraction = () => {
+      events.forEach(ev => document.removeEventListener(ev, onInteraction));
+      if (ctxRef.current?.state === 'suspended') {
+        ctxRef.current.resume();
+      } else if (!startedRef.current) {
+        buildGraph();
+      }
+    };
+    events.forEach(ev => document.addEventListener(ev, onInteraction, { once: true, passive: true }));
+    return () => events.forEach(ev => document.removeEventListener(ev, onInteraction));
   }, [buildGraph]);
 
   useEffect(() => {

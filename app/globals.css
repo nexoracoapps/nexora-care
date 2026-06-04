@@ -1015,7 +1015,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s, color 0.15s;
   text-decoration: none;
   margin-bottom: 2px;
   position: relative;

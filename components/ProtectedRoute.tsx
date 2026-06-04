@@ -22,10 +22,12 @@ export default function ProtectedRoute({ children, adminOnly = false, roles, per
   const router = useRouter();
 
   const checkAccess = (canDoFn: (k: PermissionKey) => boolean) => {
+    // roles is always a hard gate first
     const roleAllowed = roles ? roles.includes(user!.role) : (!adminOnly || user!.role === 'ADMIN');
+    if (!roleAllowed) return false;
     if (permKeys && permKeys.length > 0) return permKeys.some(k => canDoFn(k));
     if (permKey) return canDoFn(permKey);
-    return roleAllowed;
+    return true;
   };
 
   // Redirect to login when unauthenticated; redirect to home page when access is denied.

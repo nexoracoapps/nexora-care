@@ -123,12 +123,12 @@ export default function Navbar() {
   const { canDo } = usePermissions();
 
   if (!user) return null;
-  // If a nav item has a permKey, the permission is the sole visibility gate.
-  // permKeys = OR logic; permKey = single key; fallback = roles check
+  // roles is always a hard gate; permKey/permKeys is an additional permission check
   const visibleItems = navItems.filter(item => {
+    if (!item.roles.includes(user.role)) return false;
     if (item.permKeys && item.permKeys.length > 0) return item.permKeys.some(k => canDo(k));
     if (item.permKey) return canDo(item.permKey);
-    return item.roles.includes(user.role);
+    return true;
   });
 
   // forMobile=true forces expanded state so all labels are visible on mobile overlay

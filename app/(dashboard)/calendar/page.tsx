@@ -273,6 +273,28 @@ export default function CalendarPage() {
     }
   };
 
+  const [sendingBriefing, setSendingBriefing] = useState(false);
+  const sendTodaysBriefing = async () => {
+    if (!user?.token) return;
+    setSendingBriefing(true);
+    try {
+      const res = await fetch('/api/cron/reminders', {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `Server error ${res.status}`);
+      if (data.sent === 0) {
+        toast(data.message ?? 'No appointments to notify for today', { icon: 'ℹ️' });
+      } else {
+        toast.success(`Today's briefing sent — ${data.sent} notification(s) for ${data.appointments} appointment(s)`);
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to send briefing');
+    } finally {
+      setSendingBriefing(false);
+    }
+  };
+
   const onTouchStart = (e: TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchEnd = (e: TouchEvent) => {
     if (touchStartX.current === null) return;
@@ -791,6 +813,15 @@ export default function CalendarPage() {
                 style={{ fontSize: '0.78rem' }}
               >
                 {testingNotif ? '⏳' : '🧪'} {lang === 'ar' ? 'اختبار الإشعار' : 'Test Notif'}
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={sendTodaysBriefing}
+                disabled={sendingBriefing}
+                title="Send today's appointment reminders to all subscribed users now"
+                style={{ fontSize: '0.78rem' }}
+              >
+                {sendingBriefing ? '⏳' : '📬'} {lang === 'ar' ? 'إرسال مواعيد اليوم' : "Send Today's"}
               </button>
             </>
           )}

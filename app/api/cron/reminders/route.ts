@@ -71,14 +71,17 @@ export async function GET(req: NextRequest) {
   const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
   const dayEnd   = new Date(now); dayEnd.setHours(23, 59, 59, 999);
 
+  // Cron only notifies future appointments; manual trigger sends all of today's
+  const fromTime = isCron ? now : dayStart;
+
   const upcoming = await prisma.appointment.findMany({
-    where: { status: 'SCHEDULED', dateTime: { gte: now, lte: dayEnd } },
+    where: { status: 'SCHEDULED', dateTime: { gte: fromTime, lte: dayEnd } },
     include: { customer: true, service: true },
     orderBy: { dateTime: 'asc' },
   });
 
   if (upcoming.length === 0) {
-    return NextResponse.json({ sent: 0, message: 'No appointments scheduled for the rest of today' });
+    return NextResponse.json({ sent: 0, message: 'No appointments found for today' });
   }
 
   // Cron deduplicates; manual trigger always resends so admins can refresh

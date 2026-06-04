@@ -42,8 +42,9 @@ async function getAllPermissions(): Promise<AllPermissions> {
   for (const r of roles) {
     let stored: Partial<Record<string, boolean>> = {};
     try { stored = JSON.parse(r.permissions); } catch {}
+    const defaults = DEFAULT_PERMISSIONS[r.name] ?? {};
     result[r.name] = Object.fromEntries(
-      ALL_PERMISSION_KEYS.map(k => [k, stored[k] ?? false])
+      ALL_PERMISSION_KEYS.map(k => [k, stored[k] ?? (defaults as any)[k] ?? false])
     ) as RolePermissions;
   }
   return result;

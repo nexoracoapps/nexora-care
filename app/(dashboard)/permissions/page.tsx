@@ -291,7 +291,7 @@ export default function PermissionsPage() {
   const activeRole = roles.find(r => r.name === selectedRole);
 
   return (
-    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKey="managePermissions">
+    <ProtectedRoute roles={['ADMIN']} permKey="managePermissions">
       <style dangerouslySetInnerHTML={{ __html: `
         .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; animation:fadeIn 0.18s ease; }
         .pm-modal { background:var(--bg-surface); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); max-height:calc(100vh - 40px); overflow-y:auto; }

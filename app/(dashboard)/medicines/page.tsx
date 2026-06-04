@@ -192,7 +192,7 @@ export default function MedicinesPage() {
   }, {});
 
   return (
-    <ProtectedRoute permKey="manageMedicines">
+    <ProtectedRoute roles={["ADMIN","MANAGER"]} permKey="manageMedicines">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes med-pop { from{opacity:0;transform:scale(0.92) translateY(18px)} to{opacity:1;transform:scale(1) translateY(0)} }
         .med-card { transition:transform 0.18s,box-shadow 0.18s; }

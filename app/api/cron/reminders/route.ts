@@ -81,13 +81,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent: 0, message: 'No appointments scheduled for the rest of today' });
   }
 
-  // Skip appointments already notified today
-  const alreadySent = await prisma.reminderSent.findMany({
-    where: { appointmentId: { in: upcoming.map(a => a.id) }, sentAt: { gte: dayStart } },
-    select: { appointmentId: true },
-  });
-  const sentIds = new Set(alreadySent.map(r => r.appointmentId));
-  const toNotify = upcoming.filter(a => !sentIds.has(a.id));
+  // Cron deduplicates; manual trigger always resends so admins can refresh
+  const toNotify = isCron ? await (async () => {
+    const alreadySent = await prisma.reminderSent.findMany({
+      where: { appointmentId: { in: upcoming.map(a => a.id) }, sentAt: { gte: dayStart } },
+      select: { appointmentId: true },
+    });
+    const sentIds = new Set(alreadySent.map(r => r.appointmentId));
+    return upcoming.filter(a => !sentIds.has(a.id));
+  })() : upcoming;
 
   if (toNotify.length === 0) {
     return NextResponse.json({ sent: 0, message: 'All of today\'s appointments already notified' });

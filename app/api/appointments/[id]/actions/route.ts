@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
+import { notifyAppointment } from '@/lib/push';
 
 const include = {
   customer: { select: { id: true, name: true, phone: true } },
@@ -65,6 +66,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data,
     include,
   });
+
+  const pushAction = action === 'cancel' ? 'cancelled'
+    : action === 'reschedule' ? 'rescheduled'
+    : action === 'complete' || action === 'deliver' || action === 'partial-deliver' ? 'completed'
+    : action === 'no-show' || action === 'not-deliver' ? 'no-show'
+    : 'updated';
+  notifyAppointment(appointment, pushAction).catch(() => {});
 
   return apiOk(appointment);
 }

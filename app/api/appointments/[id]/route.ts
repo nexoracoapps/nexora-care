@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
+import { notifyAppointment } from '@/lib/push';
 
 const include = {
   customer: { select: { id: true, name: true, phone: true } },
@@ -47,6 +48,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     include,
   });
 
+  const action = data.dateTime ? 'rescheduled' : 'updated';
+  notifyAppointment(appointment, action).catch(() => {});
   return apiOk(appointment);
 }
 

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
+import { notifyAppointment } from '@/lib/push';
 
 const include = {
   customer: true,
@@ -68,5 +69,6 @@ export async function POST(req: NextRequest) {
     include,
   });
 
+  notifyAppointment(appointment, 'created').catch(() => {});
   return apiOk(appointment, 201);
 }

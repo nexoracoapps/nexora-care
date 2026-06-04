@@ -66,33 +66,31 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent, test: true, staleCleaned: stale.length });
   }
 
-  // Read configurable lead time from SystemSetting
-  const setting = await prisma.systemSetting.findUnique({ where: { key: 'reminderLeadMinutes' } });
-  const leadMin = parseInt(setting?.value ?? String(DEFAULT_LEAD_MINUTES), 10) || DEFAULT_LEAD_MINUTES;
-
-  const now       = new Date();
-  const windowStart = new Date(now.getTime() + (leadMin - CRON_WINDOW_MINUTES) * 60 * 1000);
-  const windowEnd   = new Date(now.getTime() + (leadMin + CRON_WINDOW_MINUTES) * 60 * 1000);
+  // Morning briefing: send all of today's scheduled appointments (Hobby plan = daily cron only)
+  const now = new Date();
+  const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+  const dayEnd   = new Date(now); dayEnd.setHours(23, 59, 59, 999);
 
   const upcoming = await prisma.appointment.findMany({
-    where: { status: 'SCHEDULED', dateTime: { gte: windowStart, lte: windowEnd } },
+    where: { status: 'SCHEDULED', dateTime: { gte: now, lte: dayEnd } },
     include: { customer: true, service: true },
+    orderBy: { dateTime: 'asc' },
   });
 
   if (upcoming.length === 0) {
-    return NextResponse.json({ sent: 0, leadMin, message: 'No appointments in reminder window' });
+    return NextResponse.json({ sent: 0, message: 'No appointments scheduled for the rest of today' });
   }
 
-  // Skip appointments already notified
+  // Skip appointments already notified today
   const alreadySent = await prisma.reminderSent.findMany({
-    where: { appointmentId: { in: upcoming.map(a => a.id) } },
+    where: { appointmentId: { in: upcoming.map(a => a.id) }, sentAt: { gte: dayStart } },
     select: { appointmentId: true },
   });
   const sentIds = new Set(alreadySent.map(r => r.appointmentId));
   const toNotify = upcoming.filter(a => !sentIds.has(a.id));
 
   if (toNotify.length === 0) {
-    return NextResponse.json({ sent: 0, leadMin, message: 'All appointments already notified' });
+    return NextResponse.json({ sent: 0, message: 'All of today\'s appointments already notified' });
   }
 
   // Fetch push subscriptions grouped by user
@@ -113,11 +111,9 @@ export async function GET(req: NextRequest) {
   for (const appt of toNotify) {
     const dt      = new Date(appt.dateTime);
     const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const minutesAway = Math.round((dt.getTime() - now.getTime()) / 60000);
     const payload = JSON.stringify({
-      title: `📅 Appointment in ${minutesAway} min`,
-      body:  `${appt.customer?.name ?? 'Customer'} — ${appt.service?.name ?? 'Service'} at ${timeStr} on ${dateStr}`,
+      title: `📅 Today's Appointment — ${timeStr}`,
+      body:  `${appt.customer?.name ?? 'Customer'} · ${appt.service?.name ?? 'Service'}`,
       url:   '/appointments',
       tag:   `appt-${appt.id}`,
     });
@@ -160,5 +156,5 @@ export async function GET(req: NextRequest) {
   const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   await prisma.reminderSent.deleteMany({ where: { sentAt: { lt: cutoff } } });
 
-  return NextResponse.json({ sent, leadMin, appointments: toNotify.length, staleCleaned: stale.length });
+  return NextResponse.json({ sent, appointments: toNotify.length, staleCleaned: stale.length });
 }

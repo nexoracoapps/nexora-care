@@ -15,10 +15,26 @@ import Icon from '@/components/ui/Icon';
 
 type ModalType = 'create' | 'edit' | 'history' | 'whatsapp' | 'call-log' | 'delete' | 'email' | 'sms' | 'broadcast' | null;
 
+function FlagImg({ iso, size = 24 }: { iso: string; size?: number }) {
+  const lc = iso.toLowerCase();
+  return (
+    <img
+      src={`https://flagcdn.com/w${size}/${lc}.png`}
+      srcSet={`https://flagcdn.com/w${size * 2}/${lc}.png 2x`}
+      width={size} height={Math.round(size * 0.67)}
+      alt={iso}
+      style={{ borderRadius: 3, objectFit: 'cover', flexShrink: 0, display: 'block' }}
+      onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
+    />
+  );
+}
+
 function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { lang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
@@ -26,54 +42,78 @@ function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string)
     document.addEventListener('keydown', k);
     return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k); };
   }, []);
+
   const q = search.toLowerCase();
   const filtered = useMemo(() =>
-    q ? ALL_COUNTRIES.filter(([iso,,name]) => name.toLowerCase().includes(q) || iso.toLowerCase().includes(q))
+    q ? ALL_COUNTRIES.filter(([iso,, name]) => name.toLowerCase().includes(q) || iso.toLowerCase().includes(q))
       : ALL_COUNTRIES,
   [q]);
   const sel = ALL_COUNTRIES.find(([iso]) => iso === value);
+
+  // Always keep dropdown anchored to left so it stays inside the modal in RTL
   return (
-    <div ref={ref} style={{ position:'relative', display:'flex', alignItems:'stretch' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'stretch', direction: 'ltr' }}>
       <button
         type="button"
         onClick={() => { setOpen(o => !o); setSearch(''); }}
-        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 10px', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:100, outline:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', borderRadius:'9px 0 0 9px' }}
+        style={{ border: 'none', borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)', padding: '0 10px', fontFamily: 'var(--font)', color: 'var(--text)', cursor: 'pointer', minWidth: 90, outline: 'none', display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap', borderRadius: '9px 0 0 9px' }}
       >
-        {sel
-          ? <><span style={{fontSize:20,lineHeight:1}}>{flagEmoji(sel[0])}</span><span style={{fontSize:12,color:'var(--text-sub)'}}>+{sel[1]}</span></>
-          : <span style={{color:'var(--text-sub)',fontSize:13}}>+?</span>}
-        <span style={{ fontSize:9, opacity:0.35, marginLeft:'auto' }}>▼</span>
+        {sel ? (
+          <>
+            <FlagImg iso={sel[0]} size={22} />
+            <span style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 600 }}>+{sel[1]}</span>
+          </>
+        ) : (
+          <span style={{ color: 'var(--text-sub)', fontSize: 13 }}>+?</span>
+        )}
+        <svg width="9" height="6" viewBox="0 0 9 6" fill="none" style={{ marginLeft: 'auto', opacity: 0.4, flexShrink: 0 }}>
+          <path d="M1 1L4.5 5L8 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </button>
+
       {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, zIndex:9999, background:'var(--bg-surface)', border:'1px solid var(--border)', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.18)', width:280, maxHeight:320, overflow:'hidden', display:'flex', flexDirection:'column' }}>
-          <div style={{ padding:'10px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-            <input
-              autoFocus
-              placeholder="Search country…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width:'100%', border:'1px solid var(--border)', borderRadius:8, padding:'7px 10px', fontSize:13, fontFamily:'var(--font)', outline:'none', background:'var(--bg-elevated)', color:'var(--text)', boxSizing:'border-box' }}
-            />
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 9999, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.20)', width: 300, maxHeight: 340, overflow: 'hidden', display: 'flex', flexDirection: 'column', direction: 'ltr' }}>
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', borderRadius: 8, padding: '0 10px', border: '1px solid var(--border)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, flexShrink: 0 }}>
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                autoFocus
+                placeholder={lang === 'ar' ? 'ابحث عن دولة...' : 'Search country…'}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ flex: 1, border: 'none', outline: 'none', padding: '8px 0', fontSize: 13, fontFamily: 'var(--font)', background: 'transparent', color: 'var(--text)' }}
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-sub)', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+              )}
+            </div>
           </div>
-          <div style={{ overflowY:'auto', flex:1 }}>
+
+          <div style={{ overflowY: 'auto', flex: 1 }}>
             {!q && (
               <button type="button" onClick={() => { onChange(''); setOpen(false); }}
-                style={{ width:'100%', padding:'8px 14px', border:'none', background:'transparent', cursor:'pointer', textAlign:'left', fontSize:13, fontFamily:'var(--font)', color:'var(--text-sub)' }}>
-                — No country
+                style={{ width: '100%', padding: '9px 14px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: 13, fontFamily: 'var(--font)', color: 'var(--text-sub)', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)' }}>
+                — {lang === 'ar' ? 'بدون دولة' : 'No country'}
               </button>
             )}
             {filtered.map(([iso, dc, name]) => (
               <button key={iso} type="button" onClick={() => { onChange(iso); setOpen(false); setSearch(''); }}
-                style={{ width:'100%', padding:'8px 14px', border:'none', background: value===iso ? 'rgba(var(--rose-rgb),0.08)' : 'transparent', cursor:'pointer', textAlign:'left', fontFamily:'var(--font)', color: value===iso ? 'var(--rose)' : 'var(--text)', display:'flex', alignItems:'center', gap:10 }}
-                onMouseEnter={e => { if (value!==iso) (e.currentTarget as HTMLButtonElement).style.background='var(--bg-elevated)'; }}
-                onMouseLeave={e => { if (value!==iso) (e.currentTarget as HTMLButtonElement).style.background='transparent'; }}
+                style={{ width: '100%', padding: '9px 14px', border: 'none', background: value === iso ? 'rgba(var(--rose-rgb),0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font)', color: value === iso ? 'var(--rose)' : 'var(--text)', display: 'flex', alignItems: 'center', gap: 10, transition: 'background 0.1s' }}
+                onMouseEnter={e => { if (value !== iso) (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'; }}
+                onMouseLeave={e => { if (value !== iso) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
-                <span style={{ fontSize:22, lineHeight:1, flexShrink:0 }}>{flagEmoji(iso)}</span>
-                <span style={{ flex:1, fontSize:13 }}>{name}</span>
-                <span style={{ fontSize:12, color:'var(--text-sub)', flexShrink:0 }}>+{dc}</span>
+                <FlagImg iso={iso} size={24} />
+                <span style={{ flex: 1, fontSize: 13, fontWeight: value === iso ? 600 : 400 }}>{name}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 500 }}>+{dc}</span>
               </button>
             ))}
-            {filtered.length === 0 && <p style={{ padding:'16px', fontSize:13, color:'var(--text-sub)', textAlign:'center', margin:0 }}>No results</p>}
+            {filtered.length === 0 && (
+              <p style={{ padding: '20px', fontSize: 13, color: 'var(--text-sub)', textAlign: 'center', margin: 0 }}>
+                {lang === 'ar' ? 'لا توجد نتائج' : 'No results'}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -613,7 +653,7 @@ export default function CustomersPage() {
                         >
                           {c.country && (
                             <span style={{ display:'inline-flex', alignItems:'center', gap:5, width:'fit-content', padding:'2px 8px 2px 5px', borderRadius:20, background:'var(--bg-elevated)', border:'1px solid var(--border)', fontSize:11, fontWeight:600, color:'var(--text-sub)' }}>
-                              <span style={{ fontSize:15, lineHeight:1 }}>{flagEmoji(c.country)}</span>
+                              <FlagImg iso={c.country} size={18} />
                               {countryNames.of(c.country) ?? c.country}
                             </span>
                           )}
@@ -747,7 +787,7 @@ export default function CustomersPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">{t('phone')}</label>
-                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg-surface)' }}>
+                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg-surface)', direction:'ltr' }}>
                       <PhonePrefix value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
                       <input
                         type="tel"

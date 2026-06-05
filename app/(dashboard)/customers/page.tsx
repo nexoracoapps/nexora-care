@@ -88,6 +88,10 @@ export default function CustomersPage() {
   const { muteForCall, unmuteAfterCall } = useMusic();
   const { t, lang } = useLanguage();
   const { canDo } = usePermissions();
+  const countryNames = useMemo(
+    () => new Intl.DisplayNames([lang === 'ar' ? 'ar' : 'en'], { type: 'region' }),
+    [lang]
+  );
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -600,18 +604,26 @@ export default function CustomersPage() {
                         <span style={{ fontWeight: 600 }}>{c.name}</span>
                       </div>
                     </td>
-                    <td data-label="Phone" style={{ color: 'var(--text-muted)' }}>
+                    <td data-label="Phone">
                       {c.phone ? (
-                        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                        <div
+                          style={{ display:'flex', flexDirection:'column', gap:5, cursor:'pointer' }}
+                          title={`${c.phone} — click to copy`}
+                          onClick={() => navigator.clipboard.writeText(c.phone!).then(() => toast.success(lang === 'ar' ? 'تم النسخ' : 'Copied!'))}
+                        >
                           {c.country && (
-                            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'var(--text-sub)' }}>
-                              <span style={{ fontSize:17, lineHeight:1 }}>{flagEmoji(c.country)}</span>
-                              <span>{(() => { try { return new Intl.DisplayNames([lang === 'ar' ? 'ar' : 'en'], { type:'region' }).of(c.country) ?? c.country; } catch { return c.country; } })()}</span>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:5, width:'fit-content', padding:'2px 8px 2px 5px', borderRadius:20, background:'var(--bg-elevated)', border:'1px solid var(--border)', fontSize:11, fontWeight:600, color:'var(--text-sub)' }}>
+                              <span style={{ fontSize:15, lineHeight:1 }}>{flagEmoji(c.country)}</span>
+                              {countryNames.of(c.country) ?? c.country}
                             </span>
                           )}
-                          <span style={{ fontSize:13 }}>{c.phone}</span>
+                          <span style={{ fontSize:13, fontWeight:500, color:'var(--text)', letterSpacing:'0.02em', fontVariantNumeric:'tabular-nums' }}>
+                            {c.country && DIAL_CODE_MAP[c.country]
+                              ? `+${DIAL_CODE_MAP[c.country]} ${c.phone.slice(DIAL_CODE_MAP[c.country].length)}`
+                              : c.phone}
+                          </span>
                         </div>
-                      ) : '—'}
+                      ) : <span style={{ color:'var(--text-muted)' }}>—</span>}
                     </td>
                     <td data-label="Email" style={{ color: 'var(--text-sub)', fontSize: '0.875rem' }}>{c.email || '—'}</td>
                     <td data-label="Branch">

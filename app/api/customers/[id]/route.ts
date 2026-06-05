@@ -18,7 +18,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const payload = getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
-  const { name, phone, email, branchId } = await req.json();
+  const { name, phone, email, country, branchId } = await req.json();
 
   const customer = await prisma.customer.update({
     where: { id: params.id },
@@ -26,6 +26,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       ...(name && { name }),
       ...(phone !== undefined && { phone }),
       ...(email !== undefined && { email }),
+      ...(country !== undefined && { country }),
       ...(branchId !== undefined && { branchId }),
     },
     include,

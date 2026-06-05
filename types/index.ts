@@ -32,6 +32,7 @@ export interface Customer {
   name: string;
   phone?: string | null;
   email?: string | null;
+  country?: string | null;
   branchId?: string | null;
   branch?: Branch | null;
   createdAt: string;

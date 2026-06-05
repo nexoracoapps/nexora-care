@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   const payload = getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
-  const { name, phone, email, branchId } = await req.json();
+  const { name, phone, email, country, branchId } = await req.json();
   if (!name) return apiError('Name is required');
 
   const customer = await prisma.customer.create({
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       name,
       phone: phone || null,
       email: email || null,
+      country: country || null,
       branchId: branchId || payload.branchId || null,
     },
     include: {

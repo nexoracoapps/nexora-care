@@ -31,7 +31,7 @@ export default function CustomersPage() {
   const [prescriptions, setPrescriptions] = useState<Record<string, unknown>[]>([]);
   const [historyTab, setHistoryTab] = useState<'appointments' | 'prescriptions'>('appointments');
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
-  const [form, setForm] = useState({ name: '', phone: '', email: '', branchId: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', country: '', branchId: '' });
 
   const headers = { Authorization: `Bearer ${user?.token}`, 'Content-Type': 'application/json' };
 
@@ -79,13 +79,13 @@ export default function CustomersPage() {
 
   const openCreate = () => {
     setSelected(null);
-    setForm({ name: '', phone: '', email: '', branchId: activeBranchId || '' });
+    setForm({ name: '', phone: '', email: '', country: '', branchId: activeBranchId || '' });
     setModal('create');
   };
 
   const openEdit = (c: Customer) => {
     setSelected(c);
-    setForm({ name: c.name, phone: c.phone || '', email: c.email || '', branchId: c.branchId || '' });
+    setForm({ name: c.name, phone: c.phone || '', email: c.email || '', country: c.country || '', branchId: c.branchId || '' });
     setModal('edit');
   };
 
@@ -651,6 +651,28 @@ export default function CustomersPage() {
                     <input className="form-input" type="email" placeholder={t('emailPlaceholder')}
                       value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                   </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t('country')}</label>
+                  <select className="form-input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
+                    style={{ cursor: 'pointer' }}>
+                    <option value="">{isRTL ? '— اختر الدولة —' : '— Select country —'}</option>
+                    {[
+                      ['JO','Jordan','الأردن'],['SA','Saudi Arabia','المملكة العربية السعودية'],
+                      ['AE','UAE','الإمارات'],['KW','Kuwait','الكويت'],['QA','Qatar','قطر'],
+                      ['BH','Bahrain','البحرين'],['OM','Oman','عُمان'],['LB','Lebanon','لبنان'],
+                      ['SY','Syria','سوريا'],['IQ','Iraq','العراق'],['EG','Egypt','مصر'],
+                      ['PS','Palestine','فلسطين'],['YE','Yemen','اليمن'],['LY','Libya','ليبيا'],
+                      ['TN','Tunisia','تونس'],['DZ','Algeria','الجزائر'],['MA','Morocco','المغرب'],
+                      ['SD','Sudan','السودان'],['TR','Turkey','تركيا'],['PK','Pakistan','باكستان'],
+                      ['IN','India','الهند'],['PH','Philippines','الفلبين'],['US','United States','الولايات المتحدة'],
+                      ['GB','United Kingdom','المملكة المتحدة'],['FR','France','فرنسا'],
+                      ['DE','Germany','ألمانيا'],['CA','Canada','كندا'],['AU','Australia','أستراليا'],
+                      ['Other','Other','أخرى'],
+                    ].map(([code, en, ar]) => (
+                      <option key={code} value={code}>{isRTL ? ar : en}</option>
+                    ))}
+                  </select>
                 </div>
                 {canDo('branchSwitching') && branches.length > 0 && (
                   <div className="form-group">

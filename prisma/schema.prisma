@@ -47,6 +47,7 @@ model Customer {
   name         String
   phone        String?
   email        String?
+  country      String?
   branchId     String?
   branch       Branch?       @relation(fields: [branchId], references: [id])
   createdAt    DateTime      @default(now())

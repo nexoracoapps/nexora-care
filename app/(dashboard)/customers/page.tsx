@@ -656,10 +656,10 @@ export default function CustomersPage() {
                         <span style={{ fontWeight: 600 }}>{c.name}</span>
                       </div>
                     </td>
-                    <td data-label="Phone">
+                    <td data-label="Phone" style={{ textAlign:'center' }}>
                       {c.phone ? (
                         <div
-                          style={{ display:'flex', flexDirection:'column', gap:5, cursor:'pointer' }}
+                          style={{ display:'flex', flexDirection:'column', gap:5, cursor:'pointer', alignItems:'center' }}
                           title={`${c.phone} — click to copy`}
                           onClick={() => navigator.clipboard.writeText(c.phone!).then(() => toast.success(lang === 'ar' ? 'تم النسخ' : 'Copied!'))}
                         >
@@ -796,24 +796,35 @@ export default function CustomersPage() {
                   <input className="form-input" type="text" placeholder={t('clientName')}
                     value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">{t('phone')}</label>
-                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg-surface)', direction:'ltr' }}>
-                      <PhonePrefix value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
-                      <input
-                        type="tel"
-                        placeholder="790891028"
-                        value={form.phone}
-                        onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, '') }))}
-                        style={{ border:'none', outline:'none', flex:1, padding:'10px 12px', background:'transparent', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', borderRadius:'0 9px 9px 0' }}
-                      />
-                    </div>
+                <div className="form-group">
+                  <label className="form-label">{t('phone')}</label>
+                  <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg-surface)', direction:'ltr' }}>
+                    <PhonePrefix value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
+                    <input
+                      type="tel"
+                      placeholder="790891028"
+                      value={form.phone}
+                      onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, '') }))}
+                      style={{ border:'none', outline:'none', flex:1, padding:'10px 14px', background:'transparent', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', borderRadius:'0 9px 9px 0' }}
+                    />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">{t('email')}</label>
-                    <input className="form-input" type="email" placeholder={t('emailPlaceholder')}
-                      value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t('email')}</label>
+                  <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ position:'absolute', left:14, color:'var(--text-sub)', pointerEvents:'none', flexShrink:0 }}>
+                      <rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    <input
+                      type="email"
+                      placeholder={t('emailPlaceholder')}
+                      value={form.email}
+                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      style={{ width:'100%', border:'1px solid var(--border)', borderRadius:10, padding:'11px 14px 11px 40px', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', background:'var(--bg-surface)', outline:'none', boxSizing:'border-box', transition:'border-color 0.2s' }}
+                      onFocus={e => (e.currentTarget.style.borderColor = 'var(--rose)')}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                    />
                   </div>
                 </div>
                 {canDo('branchSwitching') && branches.length > 0 && (

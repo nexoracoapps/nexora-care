@@ -656,7 +656,7 @@ export default function CustomersPage() {
                   <label className="form-label">{t('country')}</label>
                   <select className="form-input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
                     style={{ cursor: 'pointer' }}>
-                    <option value="">{isRTL ? '— اختر الدولة —' : '— Select country —'}</option>
+                    <option value="">{lang === 'ar' ? '— اختر الدولة —' : '— Select country —'}</option>
                     {[
                       ['JO','Jordan','الأردن'],['SA','Saudi Arabia','المملكة العربية السعودية'],
                       ['AE','UAE','الإمارات'],['KW','Kuwait','الكويت'],['QA','Qatar','قطر'],
@@ -670,7 +670,7 @@ export default function CustomersPage() {
                       ['DE','Germany','ألمانيا'],['CA','Canada','كندا'],['AU','Australia','أستراليا'],
                       ['Other','Other','أخرى'],
                     ].map(([code, en, ar]) => (
-                      <option key={code} value={code}>{isRTL ? ar : en}</option>
+                      <option key={code} value={code}>{lang === 'ar' ? ar : en}</option>
                     ))}
                   </select>
                 </div>

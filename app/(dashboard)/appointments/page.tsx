@@ -79,7 +79,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   // at click time — avoids ref/layout timing issues entirely.
   const calcMenuHeight = (appt: Appointment): number => {
     let n = 0;
-    if (canDo('editAppointments')) n++;
+    if (canDo('editAppointments') && appt.status !== 'CANCELLED') n++;
     if (canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED') n += 3;
     if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED') n++;
     if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW') n++;
@@ -399,6 +399,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                     {/* Actions */}
                     <td data-label="Actions">
                       <div className="dd-wrap" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                      {appt.status === 'COMPLETED' ? null : (<>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={e => {
@@ -427,7 +428,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                           }}>
                             {(() => {
                               const menuItems = [
-                                ...(canDo('editAppointments') ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
+                                ...(canDo('editAppointments') && appt.status !== 'CANCELLED' ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
                                 ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' ? [
                                   { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
                                   { label: `✗  ${t('noShow')}`, color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
@@ -475,6 +476,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             })()}
                           </div>
                         )}
+                      {/* close COMPLETED guard */}
+                      </>)}
                       </div>
                     </td>
                   </tr>

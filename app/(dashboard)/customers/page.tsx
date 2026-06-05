@@ -14,6 +14,22 @@ import Icon from '@/components/ui/Icon';
 
 type ModalType = 'create' | 'edit' | 'history' | 'whatsapp' | 'call-log' | 'delete' | 'email' | 'sms' | 'broadcast' | null;
 
+const DIAL_CODES: Record<string, string> = {
+  JO:'962',SA:'966',AE:'971',KW:'965',QA:'974',BH:'973',OM:'968',
+  LB:'961',SY:'963',IQ:'964',EG:'20',PS:'970',YE:'967',LY:'218',
+  TN:'216',DZ:'213',MA:'212',SD:'249',TR:'90',PK:'92',IN:'91',
+  PH:'63',US:'1',GB:'44',FR:'33',DE:'49',CA:'1',AU:'61',
+};
+const COUNTRY_LIST: [string,string,string][] = [
+  ['JO','🇯🇴','962'],['SA','🇸🇦','966'],['AE','🇦🇪','971'],['KW','🇰🇼','965'],
+  ['QA','🇶🇦','974'],['BH','🇧🇭','973'],['OM','🇴🇲','968'],['LB','🇱🇧','961'],
+  ['SY','🇸🇾','963'],['IQ','🇮🇶','964'],['EG','🇪🇬','20'],['PS','🇵🇸','970'],
+  ['YE','🇾🇪','967'],['LY','🇱🇾','218'],['TN','🇹🇳','216'],['DZ','🇩🇿','213'],
+  ['MA','🇲🇦','212'],['SD','🇸🇩','249'],['TR','🇹🇷','90'],['PK','🇵🇰','92'],
+  ['IN','🇮🇳','91'],['PH','🇵🇭','63'],['US','🇺🇸','1'],['GB','🇬🇧','44'],
+  ['FR','🇫🇷','33'],['DE','🇩🇪','49'],['CA','🇨🇦','1'],['AU','🇦🇺','61'],
+];
+
 
 export default function CustomersPage() {
   const { user } = useAuth();
@@ -85,7 +101,18 @@ export default function CustomersPage() {
 
   const openEdit = (c: Customer) => {
     setSelected(c);
-    setForm({ name: c.name, phone: c.phone || '', email: c.email || '', country: c.country || '', branchId: c.branchId || '' });
+    let localPhone = c.phone || '';
+    let country = c.country || '';
+    if (country && DIAL_CODES[country]) {
+      const dc = DIAL_CODES[country];
+      if (localPhone.startsWith(dc)) localPhone = localPhone.slice(dc.length);
+    } else if (localPhone) {
+      const sorted = Object.entries(DIAL_CODES).sort((a, b) => b[1].length - a[1].length);
+      for (const [iso, dc] of sorted) {
+        if (localPhone.startsWith(dc)) { country = iso; localPhone = localPhone.slice(dc.length); break; }
+      }
+    }
+    setForm({ name: c.name, phone: localPhone, email: c.email || '', country, branchId: c.branchId || '' });
     setModal('edit');
   };
 
@@ -120,7 +147,9 @@ export default function CustomersPage() {
     try {
       const url = selected ? `/api/customers/${selected.id}` : '/api/customers';
       const method = selected ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+      const dialCode = form.country ? (DIAL_CODES[form.country] ?? '') : '';
+      const phone = form.phone ? `${dialCode}${form.phone}` : '';
+      const res = await fetch(url, { method, headers, body: JSON.stringify({ ...form, phone }) });
       if (!res.ok) throw new Error((await res.json()).error);
       toast.success(selected ? 'Customer updated' : 'Customer created');
       setModal(null);
@@ -643,36 +672,31 @@ export default function CustomersPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">{t('phone')}</label>
-                    <input className="form-input" type="tel" placeholder={t('phonePlaceholder')}
-                      value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden', background:'var(--bg-surface)' }}>
+                      <select
+                        value={form.country}
+                        onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
+                        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 8px', fontSize:13, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:90, outline:'none' }}
+                      >
+                        <option value="">+?</option>
+                        {COUNTRY_LIST.map(([code, flag, dc]) => (
+                          <option key={code} value={code}>{flag} +{dc}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        placeholder="790891028"
+                        value={form.phone}
+                        onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, '') }))}
+                        style={{ border:'none', outline:'none', flex:1, padding:'10px 12px', background:'transparent', fontSize:14, fontFamily:'var(--font)', color:'var(--text)' }}
+                      />
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">{t('email')}</label>
                     <input className="form-input" type="email" placeholder={t('emailPlaceholder')}
                       value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                   </div>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{t('country')}</label>
-                  <select className="form-input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-                    style={{ cursor: 'pointer' }}>
-                    <option value="">{lang === 'ar' ? '— اختر الدولة —' : '— Select country —'}</option>
-                    {[
-                      ['JO','Jordan','الأردن'],['SA','Saudi Arabia','المملكة العربية السعودية'],
-                      ['AE','UAE','الإمارات'],['KW','Kuwait','الكويت'],['QA','Qatar','قطر'],
-                      ['BH','Bahrain','البحرين'],['OM','Oman','عُمان'],['LB','Lebanon','لبنان'],
-                      ['SY','Syria','سوريا'],['IQ','Iraq','العراق'],['EG','Egypt','مصر'],
-                      ['PS','Palestine','فلسطين'],['YE','Yemen','اليمن'],['LY','Libya','ليبيا'],
-                      ['TN','Tunisia','تونس'],['DZ','Algeria','الجزائر'],['MA','Morocco','المغرب'],
-                      ['SD','Sudan','السودان'],['TR','Turkey','تركيا'],['PK','Pakistan','باكستان'],
-                      ['IN','India','الهند'],['PH','Philippines','الفلبين'],['US','United States','الولايات المتحدة'],
-                      ['GB','United Kingdom','المملكة المتحدة'],['FR','France','فرنسا'],
-                      ['DE','Germany','ألمانيا'],['CA','Canada','كندا'],['AU','Australia','أستراليا'],
-                      ['Other','Other','أخرى'],
-                    ].map(([code, en, ar]) => (
-                      <option key={code} value={code}>{lang === 'ar' ? ar : en}</option>
-                    ))}
-                  </select>
                 </div>
                 {canDo('branchSwitching') && branches.length > 0 && (
                   <div className="form-group">

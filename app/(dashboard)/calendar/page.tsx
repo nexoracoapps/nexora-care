@@ -777,15 +777,27 @@ export default function CalendarPage() {
             </button>
           )}
           {notifStatus === 'granted' && hasPushSub && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(5,150,105,0.12)',
-              border: '1.5px solid rgba(5,150,105,0.3)',
-              borderRadius: 9, padding: '7px 13px',
-              fontSize: '0.8rem', fontWeight: 700, color: '#059669',
-            }}>
-              🔔 {t('calRemindersOn')}
-            </div>
+            <>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(5,150,105,0.12)',
+                border: '1.5px solid rgba(5,150,105,0.3)',
+                borderRadius: 9, padding: '7px 13px',
+                fontSize: '0.8rem', fontWeight: 700, color: '#059669',
+              }}>
+                🔔 {t('calRemindersOn')}
+              </div>
+              {/* Test button visible to all subscribed users */}
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={sendTestNotification}
+                disabled={testingNotif}
+                title="Send a test push notification to your device now"
+                style={{ fontSize: '0.78rem' }}
+              >
+                {testingNotif ? '⏳' : '🧪'} {lang === 'ar' ? 'اختبار الإشعار' : 'Test Notif'}
+              </button>
+            </>
           )}
           {isPrivileged && notifStatus === 'granted' && hasPushSub && (
             <>
@@ -810,15 +822,6 @@ export default function CalendarPage() {
                 <option value={720}>⏰ 12 hr before</option>
                 <option value={1440}>⏰ 24 hr before</option>
               </select>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={sendTestNotification}
-                disabled={testingNotif}
-                title="Send a test push notification to your device now"
-                style={{ fontSize: '0.78rem' }}
-              >
-                {testingNotif ? '⏳' : '🧪'} {lang === 'ar' ? 'اختبار الإشعار' : 'Test Notif'}
-              </button>
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={sendTodaysBriefing}

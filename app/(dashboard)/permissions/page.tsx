@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Pencil, Trash2 } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -291,7 +292,7 @@ export default function PermissionsPage() {
   const activeRole = roles.find(r => r.name === selectedRole);
 
   return (
-    <ProtectedRoute roles={['ADMIN']} permKey="managePermissions">
+    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="managePermissions">
       <style dangerouslySetInnerHTML={{ __html: `
         .pm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; animation:fadeIn 0.18s ease; }
         .pm-modal { background:var(--bg-surface); border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.35); max-height:calc(100vh - 40px); overflow-y:auto; }
@@ -387,11 +388,11 @@ export default function PermissionsPage() {
                 {isAdmin && (
                   <>
                     <button onClick={() => openEdit(activeRole)} style={{ padding:'7px 14px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-sub)', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)' }}>
-                      ✏️ {isRTL ? 'تعديل' : 'Edit'}
+                      <Pencil size={13} style={{flexShrink:0}} /> {isRTL ? 'تعديل' : 'Edit'}
                     </button>
                     {!activeRole.isAdmin && (
                       <button onClick={() => setDeleteTarget(activeRole)} style={{ padding:'7px 12px', borderRadius:10, border:'1px solid rgba(239,68,68,0.2)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'var(--font)' }}>
-                        🗑 {isRTL ? 'حذف' : 'Delete'}
+                        <Trash2 size={13} style={{flexShrink:0}} /> {isRTL ? 'حذف' : 'Delete'}
                       </button>
                     )}
                   </>

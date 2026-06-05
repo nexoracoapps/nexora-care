@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import { queuedFetch } from '@/lib/queuedFetch';
+import Icon from '@/components/ui/Icon';
 
 interface Medicine {
   id: string;
@@ -79,9 +82,11 @@ export default function MedicinesPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const res = await fetch('/api/medicines?all=true', { headers: headers() });
-    if (res.ok) setMedicines(await res.json());
+    const ck = '/api/medicines?all=true';
+    const stale = swrGet<Medicine[]>(ck);
+    if (stale) { setMedicines(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: headers() });
+    if (res.ok) { const d = await res.json(); setMedicines(d); swrSet(ck, d); }
     setLoading(false);
   }, [user?.token, headers]);
 
@@ -151,6 +156,7 @@ export default function MedicinesPage() {
         toast.success(lang === 'ar' ? '⏳ حُفظ مؤقتاً — سيُزامَن عند الاتصال' : '⏳ Saved locally — will sync when online');
       } else {
         toast.success(isEdit ? (lang === 'ar' ? 'تم تحديث الدواء' : 'Medicine updated') : (lang === 'ar' ? 'تمت إضافة الدواء' : 'Medicine added'));
+        swrBust('/api/medicines');
         load();
       }
       setModal(null);
@@ -171,7 +177,7 @@ export default function MedicinesPage() {
         ? (lang === 'ar' ? '⏳ حُذف مؤقتاً — سيُزامَن عند الاتصال' : '⏳ Removed locally — will sync when online')
         : (lang === 'ar' ? 'تم حذف الدواء' : 'Medicine removed'));
       setModal(null); setSelected(null);
-      if (!data?.queued) load();
+      if (!data?.queued) { swrBust('/api/medicines'); load(); }
     } else toast.error(lang === 'ar' ? 'فشل الحذف' : 'Failed to delete');
   };
 
@@ -192,7 +198,7 @@ export default function MedicinesPage() {
   }, {});
 
   return (
-    <ProtectedRoute roles={["ADMIN","MANAGER"]} permKey="manageMedicines">
+    <ProtectedRoute permKey="manageMedicines">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes med-pop { from{opacity:0;transform:scale(0.92) translateY(18px)} to{opacity:1;transform:scale(1) translateY(0)} }
         .med-card { transition:transform 0.18s,box-shadow 0.18s; }
@@ -214,8 +220,8 @@ export default function MedicinesPage() {
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {canDo('createMedicines') && (
-              <button className="btn btn-primary" onClick={openCreate}>
-                + {lang === 'ar' ? 'إضافة دواء' : 'Add Medicine'}
+              <button className="action-btn action-btn-add" onClick={openCreate}>
+                <Icon name="add" size={15} /> {lang === 'ar' ? 'إضافة دواء' : 'Add Medicine'}
               </button>
             )}
           </div>
@@ -224,7 +230,7 @@ export default function MedicinesPage() {
         {/* Filters */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           <div className="search-wrap" style={{ flex: 1, minWidth: 180 }}>
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={lang === 'ar' ? 'ابحث عن دواء...' : 'Search medicines...'} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.82rem', color: 'var(--text-sub)', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}>
@@ -323,7 +329,7 @@ export default function MedicinesPage() {
                         <div style={{ display: 'flex', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
                           {canDo('editMedicines') && (
                             <button className="med-action-btn" onClick={() => openEdit(m)}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              <Icon name="edit" size={12} />
                               {lang === 'ar' ? 'تعديل' : 'Edit'}
                             </button>
                           )}
@@ -331,7 +337,7 @@ export default function MedicinesPage() {
                             <>
                               {canDo('editMedicines') && <div style={{ width: 1, background: 'var(--border)' }} />}
                               <button className="med-action-btn med-action-del" onClick={() => { setSelected(m); setModal('delete'); }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                                <Icon name="delete" size={12} />
                                 {lang === 'ar' ? 'حذف' : 'Delete'}
                               </button>
                             </>
@@ -357,7 +363,7 @@ export default function MedicinesPage() {
             <div className="med-modal glass-card">
               <div className="modal-header" style={{ flexShrink: 0, borderBottom: '1px solid var(--border)', padding: '16px 20px' }}>
                 <h2 className="modal-title" style={{ fontSize: '1rem' }}>
-                  💉 {modal === 'edit' ? (lang === 'ar' ? 'تعديل الدواء' : 'Edit Medicine') : (lang === 'ar' ? 'إضافة دواء' : 'Add Medicine')}
+                  <Icon name="medicine" size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} /> {modal === 'edit' ? (lang === 'ar' ? 'تعديل الدواء' : 'Edit Medicine') : (lang === 'ar' ? 'إضافة دواء' : 'Add Medicine')}
                 </h2>
                 <button className="modal-close" onClick={() => setModal(null)}>✕</button>
               </div>
@@ -452,7 +458,7 @@ export default function MedicinesPage() {
                   {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                 </button>
                 <button className="btn btn-primary" onClick={save} disabled={saving}>
-                  {saving ? '⏳' : '💾'} {modal === 'edit' ? (lang === 'ar' ? 'حفظ' : 'Save Changes') : (lang === 'ar' ? 'إضافة' : 'Add Medicine')}
+                  <Icon name={saving ? 'loading' : 'save'} size={14} style={saving ? {animation:'spin 1s linear infinite'} : undefined} /> {modal === 'edit' ? (lang === 'ar' ? 'حفظ' : 'Save Changes') : (lang === 'ar' ? 'إضافة' : 'Add Medicine')}
                 </button>
               </div>
             </div>
@@ -465,7 +471,7 @@ export default function MedicinesPage() {
             <div style={{ background: 'var(--bg-surface)', borderRadius: 22, width: '100%', maxWidth: 360, boxShadow: '0 24px 80px rgba(0,0,0,0.2)', overflow: 'hidden', animation: 'med-pop 0.22s ease' }}>
               <div style={{ height: 5, background: 'linear-gradient(90deg,#e53e5a,#ff6b81)' }} />
               <div style={{ padding: '28px 24px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: '2.2rem', marginBottom: 10 }}>🗑️</div>
+                <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'center' }}><Trash2 size={44} strokeWidth={1.5} style={{ color: '#e53e5a' }} /></div>
                 <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>
                   {lang === 'ar' ? 'حذف الدواء؟' : 'Remove Medicine?'}
                 </div>

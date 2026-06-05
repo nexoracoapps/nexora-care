@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -9,6 +10,7 @@ import { useMusic } from '@/context/MusicContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import type { Customer, Branch, Appointment, CallLog } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 type ModalType = 'create' | 'edit' | 'history' | 'whatsapp' | 'call-log' | 'delete' | 'email' | 'sms' | 'broadcast' | null;
 
@@ -41,13 +43,15 @@ export default function CustomersPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
+    const q = new URLSearchParams();
+    if (activeBranchId) q.set('branchId', activeBranchId);
+    if (search) q.set('search', search);
+    const ck = `/api/customers?${q}`;
+    const stale = swrGet<Customer[]>(ck);
+    if (stale) { setCustomers(stale); setLoading(false); } else setLoading(true);
     try {
-      const q = new URLSearchParams();
-      if (activeBranchId) q.set('branchId', activeBranchId);
-      if (search) q.set('search', search);
-      const res = await fetch(`/api/customers?${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-      if (res.ok) setCustomers(await res.json());
+      const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) { const d = await res.json(); setCustomers(d); swrSet(ck, d); }
     } catch { /* ignore */ }
     setLoading(false);
   }, [user, activeBranchId, search]);
@@ -120,6 +124,7 @@ export default function CustomersPage() {
       if (!res.ok) throw new Error((await res.json()).error);
       toast.success(selected ? 'Customer updated' : 'Customer created');
       setModal(null);
+      swrBust('/api/customers');
       load();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   };
@@ -202,7 +207,7 @@ export default function CustomersPage() {
     setDeleting(true);
     const res = await fetch(`/api/customers/${selected.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success('Customer deleted'); setModal(null); load(); }
+    if (res.ok) { toast.success('Customer deleted'); setModal(null); swrBust('/api/customers'); load(); }
     else toast.error('Failed to delete');
   };
 
@@ -387,7 +392,7 @@ export default function CustomersPage() {
               </svg>
               {t('broadcast')}
             </button>}
-            {canDo('createCustomers') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addClient')}</button>}
+            {canDo('createCustomers') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('addClient')}</button>}
           </div>
         </div>
 
@@ -412,7 +417,7 @@ export default function CustomersPage() {
           <div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
               <div className="search-wrap" style={{ flex: 1 }}>
-                <span className="search-icon">🔍</span>
+                <span className="search-icon"><Icon name="search" size={15} /></span>
                 <input className="search-input" placeholder={t('searchClients')}
                   value={allCallsSearch} onChange={e => setAllCallsSearch(e.target.value)} />
               </div>
@@ -432,7 +437,7 @@ export default function CustomersPage() {
                 ) : (
                   <button className="btn btn-secondary" onClick={() => setConfirmClear(true)}
                     style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, color: '#e53e5a', borderColor: 'rgba(229,62,90,0.3)' }}>
-                    🗑 {t('clearAll')}
+                    <Icon name="delete" size={14} /> {t('clearAll')}
                   </button>
                 )
               )}
@@ -477,7 +482,7 @@ export default function CustomersPage() {
           /* ── Customers view ── */
           <><div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input
               className="search-input"
               placeholder={t('searchClients')}
@@ -569,7 +574,7 @@ export default function CustomersPage() {
                             minWidth: 175, padding: '4px 0', overflow: 'hidden', direction: 'ltr',
                           }}>
                             {([
-                              ...(canDo('editCustomers') ? [{ id: 'edit', label: `✏️  ${t('edit')}`, color: 'var(--text)', action: () => { openEdit(c); setOpenDropdown(null); } }] : []),
+                              ...(canDo('editCustomers') ? [{ id: 'edit', label: t('edit'), isEdit: true, color: 'var(--text)', action: () => { openEdit(c); setOpenDropdown(null); } }] : []),
                               { id: 'history', label: `📋  ${t('history')}`, color: 'var(--text)', action: () => { openHistory(c); setOpenDropdown(null); } },
                               ...(c.phone && canDo('sendWhatsApp') ? [
                                 { id: 'whatsapp', label: 'WhatsApp', icon: true, color: '#25D366', action: () => { setSelected(c); setWaSending(false); setWaError(''); setWaResult(false); setWaPhone(c.phone || ''); setModal('whatsapp'); setOpenDropdown(null); } },
@@ -583,13 +588,14 @@ export default function CustomersPage() {
                               ...(c.email && canDo('sendEmail') ? [
                                 { id: 'email', label: `✉️  ${t('email')}`, color: '#7b5ea8', action: () => { openMsg(c, 'email'); setOpenDropdown(null); } },
                               ] : []),
-                            ] as { id: string; label: string; icon?: boolean; color: string; action: () => void }[]).map(item => (
+                            ] as { id: string; label: string; icon?: boolean; isEdit?: boolean; color: string; action: () => void }[]).map(item => (
                               <button key={item.id} onClick={item.action}
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: item.color, transition: 'background 0.1s' }}
                                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                               >
                                 {item.icon && <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366" style={{ flexShrink: 0 }}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.107.549 4.09 1.514 5.814L.057 23.886a.5.5 0 0 0 .611.611l6.123-1.463A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.93 0-3.738-.548-5.267-1.498l-.378-.226-3.912.934.964-3.84-.247-.395A9.817 9.817 0 0 1 2.182 12c0-5.426 4.392-9.818 9.818-9.818 5.426 0 9.818 4.392 9.818 9.818 0 5.426-4.392 9.818-9.818 9.818z"/></svg>}
+                                {item.isEdit && <Icon name="edit" size={14} />}
                                 {item.label}
                               </button>
                             ))}
@@ -597,11 +603,11 @@ export default function CustomersPage() {
                               <>
                                 <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
                                 <button onClick={() => { confirmDelete(c); setOpenDropdown(null); }}
-                                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
                                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,62,90,0.07)')}
                                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                 >
-                                  🗑  {t('delete')}
+                                  <Icon name="delete" size={14} />  {t('delete')}
                                 </button>
                               </>
                             )}
@@ -1123,7 +1129,7 @@ export default function CustomersPage() {
                 <div>
                   <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 10 }}>{t('selectRecipients')}</div>
                   <div className="search-wrap" style={{ marginBottom: 10 }}>
-                    <span className="search-icon">🔍</span>
+                    <span className="search-icon"><Icon name="search" size={15} /></span>
                     <input className="search-input" style={{ minWidth: 0 }} placeholder={t('searchClients')}
                       value={broadcastSearch} onChange={e => setBroadcastSearch(e.target.value)} />
                   </div>

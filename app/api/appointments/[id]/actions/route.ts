@@ -32,11 +32,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     case 'start-service':
       data.status = 'IN_PROGRESS';
       break;
-    case 'pay':
+    case 'pay': {
       data.paymentStatus = 'PAID';
       if (paymentMethod) data.paymentMethod = paymentMethod;
       if (amount !== undefined) data.amount = parseFloat(amount);
+      // Auto-advance status: a fully paid appointment is considered Delivered/Completed
+      const current = await prisma.appointment.findUnique({
+        where: { id: params.id },
+        select: { status: true },
+      });
+      if (current && current.status === 'SCHEDULED') {
+        data.status = 'COMPLETED';
+      }
       break;
+    }
     case 'unpay':
       data.paymentStatus = 'UNPAID';
       data.paymentMethod = null;

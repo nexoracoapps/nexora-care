@@ -549,6 +549,71 @@ body {
   justify-content: center;
 }
 
+/* ── Unified action buttons (icon + optional label) ── */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  white-space: nowrap;
+  line-height: 1;
+}
+.action-btn:active { transform: scale(0.97); }
+.action-btn-edit {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-sub);
+}
+.action-btn-edit:hover {
+  background: rgba(99,102,241,0.10);
+  border-color: rgba(99,102,241,0.35);
+  color: #818cf8;
+}
+.action-btn-delete {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-sub);
+}
+.action-btn-delete:hover {
+  background: rgba(229,62,90,0.08);
+  border-color: rgba(229,62,90,0.25);
+  color: #e53e5a;
+}
+.action-btn-add {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(var(--rose-rgb),0.28);
+}
+.action-btn-add:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px rgba(var(--rose-rgb),0.38);
+}
+.action-btn-secondary {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-sub);
+}
+.action-btn-secondary:hover {
+  background: var(--bg-card);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+/* Icon-only square variant */
+.action-btn-icon {
+  padding: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
 /* ─────────────────────────────────────────────
    BADGES
 ───────────────────────────────────────────── */

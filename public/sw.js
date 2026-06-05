@@ -1,10 +1,10 @@
 /* ─────────────────────────────────────────────────────────
-   NexoraCare Service Worker v8 — True Offline-First
+   NexoraCare Service Worker v9 — Next.js-Safe Offline-First
    ───────────────────────────────────────────────────────── */
 
-const SHELL_CACHE  = 'nexora-shell-v8';
-const API_CACHE    = 'nexora-api-v8';
-const STATIC_CACHE = 'nexora-static-v8';
+const SHELL_CACHE  = 'nexora-shell-v9';
+const API_CACHE    = 'nexora-api-v9';
+const STATIC_CACHE = 'nexora-static-v9';
 
 /* ── Install ── */
 self.addEventListener('install', event => {
@@ -35,7 +35,12 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   if (url.pathname.startsWith('/api/cron')) return;
 
-  /* ── /_next/static/ — cache-first forever ── */
+  // CRITICAL: never intercept Next.js RSC or HMR fetch requests.
+  // Returning cached HTML for these causes Next.js to detect a format
+  // mismatch and fall back to a full hard reload on every navigation.
+  if (url.searchParams.has('_rsc') || url.searchParams.has('_next')) return;
+
+  /* ── /_next/static/ — cache-first forever (content-addressed filenames) ── */
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(
       caches.match(request).then(hit => hit || fetch(request).then(res => {
@@ -46,7 +51,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  /* Skip other /_next/ internals */
+  /* Skip other internal Next.js paths (HMR, image optimisation, etc.) */
   if (url.pathname.startsWith('/_next/')) return;
 
   /* ── API GET — network-first (always fresh online), cache fallback offline ── */
@@ -74,42 +79,33 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  /* ── Navigation — stale-while-revalidate ──
-     Key trick: Next.js RSC requests come as /path?_rsc=hash
-     We match them against the cached /path (ignoreSearch),
-     which causes Next.js to detect "HTML for RSC" and do a
-     hard reload — which then hits our cached /path entry. ── */
+  /* ── Navigation — network-first, offline fallback ──
+     Only intercept clean HTML page requests (no query params that
+     look like RSC/HMR). RSC and /_next/ requests are already
+     excluded above so they go straight to the network. ── */
   event.respondWith((async () => {
-    const isRSC = url.searchParams.has('_rsc') || url.searchParams.has('_next');
-
-    // For cache lookup: use base path (ignore RSC query params)
-    const cacheKey = isRSC ? new Request(url.pathname) : request;
-    const cached = await caches.match(cacheKey);
-
-    // Always fetch fresh (update cache in background)
-    const fresh = fetch(request).then(res => {
-      if (res.ok && !isRSC) {
-        // Only cache clean page navigations, not RSC payloads
-        caches.open(SHELL_CACHE).then(c => c.put(url.pathname, res.clone()));
+    try {
+      const res = await fetch(request);
+      if (res.ok) {
+        // Cache the HTML page for offline use
+        const clone = res.clone();
+        caches.open(SHELL_CACHE).then(c => c.put(url.pathname, clone));
       }
       return res;
-    }).catch(() => null);
-
-    if (cached) { fresh; return cached; } // serve cache immediately
-
-    const res = await fresh;
-    if (res?.ok) return res;
-
-    // Fallback
-    return (await caches.match('/offline.html')) ||
-      new Response(
-        '<!DOCTYPE html><html><body style="background:#0a0b14;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px"><h1 style="font-size:1.5rem">📡 ' +
-        (self.location.pathname.includes('/ar') ? 'أنت غير متصل' : "You're Offline") +
-        '</h1><p style="color:#64748b;text-align:center">Pages you\'ve visited will load from cache.<br>New pages need internet first.</p>' +
-        '<button onclick="location.reload()" style="margin-top:8px;padding:10px 24px;background:#1d4ed8;color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem">Retry</button>' +
-        '</body></html>',
-        { status: 200, headers: { 'Content-Type': 'text/html' } }
-      );
+    } catch {
+      // Offline: serve cached page or offline fallback
+      const cached = await caches.match(url.pathname);
+      if (cached) return cached;
+      return (await caches.match('/offline.html')) ||
+        new Response(
+          '<!DOCTYPE html><html><body style="background:#0a0b14;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px">' +
+          '<h1 style="font-size:1.5rem">You\'re Offline</h1>' +
+          '<p style="color:#64748b;text-align:center">Pages you\'ve visited will load from cache.<br>New pages need internet first.</p>' +
+          '<button onclick="location.reload()" style="margin-top:8px;padding:10px 24px;background:#1d4ed8;color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem">Retry</button>' +
+          '</body></html>',
+          { status: 200, headers: { 'Content-Type': 'text/html' } }
+        );
+    }
   })());
 });
 

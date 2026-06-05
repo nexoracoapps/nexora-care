@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import toast from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
+import Icon from '@/components/ui/Icon';
 
 interface RoleDefinition {
   id: string;
@@ -94,15 +96,18 @@ export default function RolesPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
+    const ckRoles = '/api/roles', ckUsers = '/api/users';
+    const staleRoles = swrGet<RoleDefinition[]>(ckRoles), staleUsers = swrGet<User[]>(ckUsers);
+    if (staleRoles && staleUsers) { setRoles(staleRoles); setUsers(staleUsers); setLoading(false); } else setLoading(true);
     const [rolesRes, usersRes] = await Promise.all([
-      fetch('/api/roles', { headers: { Authorization: `Bearer ${user.token}` } }),
-      fetch('/api/users', { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckRoles, { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckUsers, { headers: { Authorization: `Bearer ${user.token}` } }),
     ]);
-    if (rolesRes.ok) setRoles(await rolesRes.json());
+    if (rolesRes.ok) { const d = await rolesRes.json(); setRoles(d); swrSet(ckRoles, d); }
     if (usersRes.ok) {
       const data = await usersRes.json();
-      setUsers(Array.isArray(data) ? data : (data.data ?? []));
+      const d = Array.isArray(data) ? data : (data.data ?? []);
+      setUsers(d); swrSet(ckUsers, d);
     }
     setLoading(false);
   }, [user]);
@@ -153,6 +158,7 @@ export default function RolesPage() {
         toast.success(`Role "${data.label}" created`);
         setShowAddModal(false);
         setNewName(''); setNewLabel(''); setNewLabelAr(''); setNewCopyFrom('STAFF');
+        swrBust('/api/roles');
         await load();
       } else {
         toast.error(data.error ?? 'Failed to create role');
@@ -177,6 +183,7 @@ export default function RolesPage() {
       if (res.ok) {
         toast.success(`Role "${data.label}" updated`);
         setEditTarget(null);
+        swrBust('/api/roles');
         await load();
       } else {
         toast.error(data.error ?? 'Failed to update role');
@@ -196,6 +203,7 @@ export default function RolesPage() {
       if (res.ok) {
         toast.success(`Role "${deleteTarget.label}" deleted`);
         setDeleteTarget(null);
+        swrBust('/api/roles');
         await load();
       } else {
         toast.error(data.error ?? 'Failed to delete');
@@ -222,7 +230,7 @@ export default function RolesPage() {
   const colCount = roles.length + (unknown.length > 0 ? 1 : 0);
 
   return (
-    <ProtectedRoute roles={['ADMIN']} permKeys={['viewRoles', 'createUsers', 'managePermissions']}>
+    <ProtectedRoute roles={['ADMIN','MANAGER']} permKeys={['viewRoles', 'managePermissions']}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes role-card-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         .role-card { transition: transform 0.18s, box-shadow 0.18s; animation: role-card-pop 0.24s cubic-bezier(.34,1.56,.64,1); }
@@ -253,9 +261,9 @@ export default function RolesPage() {
             {canDo('createRoles') && (
               <button
                 onClick={() => setShowAddModal(true)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--rose)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                className="action-btn action-btn-add"
               >
-                + {isRTL ? 'دور جديد' : 'Add Role'}
+                <Icon name="add" size={15} /> {isRTL ? 'دور جديد' : 'Add Role'}
               </button>
             )}
             {canDo('managePermissions') && (
@@ -340,14 +348,14 @@ export default function RolesPage() {
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       {canDo('editRoles') && (
                         <button className="role-action-btn role-action-edit" onClick={() => openEdit(role)}>
-                          ✏️ {isRTL ? 'تعديل' : 'Edit'}
+                          <Icon name="edit" size={14} /> {isRTL ? 'تعديل' : 'Edit'}
                         </button>
                       )}
                       {canDo('deleteRoles') && !role.isAdmin && (
                         <>
                           {canDo('editRoles') && <div style={{ width: 1, background: 'var(--border)' }} />}
                           <button className="role-action-btn role-action-del" onClick={() => setDeleteTarget(role)}>
-                            🗑 {isRTL ? 'حذف' : 'Delete'}
+                            <Icon name="delete" size={14} /> {isRTL ? 'حذف' : 'Delete'}
                           </button>
                         </>
                       )}

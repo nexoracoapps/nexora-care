@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { HardDrive, Upload, FolderOpen, AlertTriangle, Loader2 } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -129,7 +130,7 @@ export default function BackupPage() {
 
           {/* Export */}
           <div className="glass-card" style={{ padding: 28 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--grad-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', fontSize: '1.5rem', marginBottom: 16 }}>💾</div>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--grad-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', marginBottom: 16 }}><HardDrive size={26} strokeWidth={1.5} /></div>
             <h2 style={{ fontFamily: 'var(--font)', fontSize: '1.2rem', marginBottom: 8, color: 'var(--text)' }}>
               {isRTL ? 'تصدير النسخة الاحتياطية' : 'Export Backup'}
             </h2>
@@ -139,14 +140,14 @@ export default function BackupPage() {
                 : 'Export all your data including appointments, customers, services, providers, and branches as a JSON file.'}
             </p>
             <button className="btn btn-primary" onClick={exportData} disabled={exporting}>
-              {exporting ? <span className="spin">⟳</span> : '💾'}
+              {exporting ? <Loader2 size={15} style={{ animation:'spin 1s linear infinite' }} /> : <HardDrive size={15} />}
               {exporting ? (isRTL ? 'جاري التصدير...' : 'Exporting...') : (isRTL ? 'تصدير جميع البيانات' : 'Export All Data')}
             </button>
           </div>
 
           {/* Import */}
           <div className="glass-card" style={{ padding: 28 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(14,165,233,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9', fontSize: '1.5rem', marginBottom: 16 }}>📤</div>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(14,165,233,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9', marginBottom: 16 }}><Upload size={26} strokeWidth={1.5} /></div>
             <h2 style={{ fontFamily: 'var(--font)', fontSize: '1.2rem', marginBottom: 8, color: 'var(--text)' }}>
               {isRTL ? 'استيراد نسخة احتياطية' : 'Import Backup'}
             </h2>
@@ -159,7 +160,7 @@ export default function BackupPage() {
             {!preview ? (
               <>
                 <button className="btn btn-secondary" onClick={() => importFileRef.current?.click()}>
-                  📂 {isRTL ? 'اختر ملف النسخة الاحتياطية' : 'Choose Backup File'}
+                  <FolderOpen size={15} style={{ flexShrink:0 }} /> {isRTL ? 'اختر ملف النسخة الاحتياطية' : 'Choose Backup File'}
                 </button>
                 <input ref={importFileRef} type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
               </>
@@ -191,10 +192,10 @@ export default function BackupPage() {
                 </div>
 
                 {/* Warning */}
-                <div style={{ marginBottom: 14, padding: '9px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 9, fontSize: '0.78rem', color: 'var(--text-sub)', lineHeight: 1.6 }}>
-                  ⚠️ {isRTL
+                <div style={{ marginBottom: 14, padding: '9px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 9, fontSize: '0.78rem', color: 'var(--text-sub)', lineHeight: 1.6, display:'flex', alignItems:'flex-start', gap:7 }}>
+                  <AlertTriangle size={14} style={{ flexShrink:0, marginTop:2, color:'#d97706' }} /> <span>{isRTL
                     ? 'سيؤدي الاستيراد إلى تحديث السجلات الموجودة بنفس المعرف وإضافة السجلات الجديدة. لن يتم حذف أي بيانات.'
-                    : 'Import will update existing records with matching IDs and add new ones. No existing data will be deleted.'}
+                    : 'Import will update existing records with matching IDs and add new ones. No existing data will be deleted.'}</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: 8 }}>

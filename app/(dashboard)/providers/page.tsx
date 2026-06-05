@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import type { ServiceProvider, ProviderType } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 const TYPE_ICON: Record<ProviderType, string> = {
   DOCTOR: '🩺', STYLIST: '✂️', THERAPIST: '🧘', ESTHETICIAN: '💆', NAIL_ARTIST: '💅',
@@ -66,16 +68,18 @@ export default function ProvidersPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const q = activeBranchId ? `?branchId=${activeBranchId}` : '';
+    const ckProv = `/api/providers${activeBranchId ? `?branchId=${activeBranchId}` : ''}`, ckUsers = '/api/users';
+    const staleProv = swrGet<ServiceProvider[]>(ckProv), staleUsers = swrGet<UserOption[]>(ckUsers);
+    if (staleProv && staleUsers) { setProviders(staleProv); setUserOptions(staleUsers); setLoading(false); } else setLoading(true);
     const [provRes, usrRes] = await Promise.all([
-      fetch(`/api/providers${q}`, { headers: { Authorization: `Bearer ${user.token}` } }),
-      fetch('/api/users', { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckProv, { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckUsers, { headers: { Authorization: `Bearer ${user.token}` } }),
     ]);
-    if (provRes.ok) setProviders(await provRes.json());
+    if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckProv, d); }
     if (usrRes.ok) {
       const allUsers = await usrRes.json();
-      setUserOptions(allUsers.map((u: { id: string; username: string }) => ({ id: u.id, username: u.username })));
+      const d = allUsers.map((u: { id: string; username: string }) => ({ id: u.id, username: u.username }));
+      setUserOptions(d); swrSet(ckUsers, d);
     }
     setLoading(false);
   }, [user, activeBranchId]);
@@ -112,6 +116,7 @@ export default function ProvidersPage() {
     if (!res.ok) return toast.error('Failed to save');
     toast.success(selected ? t('providerUpdated') : t('providerCreated'));
     setModalOpen(false);
+    swrBust('/api/providers');
     load();
     new BroadcastChannel('nexora-providers').postMessage('changed');
   };
@@ -121,7 +126,7 @@ export default function ProvidersPage() {
     setDeleting(true);
     const res = await fetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); new BroadcastChannel('nexora-providers').postMessage('changed'); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load(); new BroadcastChannel('nexora-providers').postMessage('changed'); }
     else toast.error(t('failedToDelete'));
   };
 
@@ -177,12 +182,12 @@ export default function ProvidersPage() {
             <h1 className="page-title">{t('specialists')}</h1>
             <p className="page-sub">{filtered.length} {t('specialists').toLowerCase()}</p>
           </div>
-          {canDo('createProviders') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newSpecialist')}</button>}
+          {canDo('createProviders') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('newSpecialist')}</button>}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={t('searchSpecialists')} value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>
@@ -302,11 +307,11 @@ export default function ProvidersPage() {
                   {(canDo('editProviders') || canDo('deleteProviders')) && (
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       {canDo('editProviders') && <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
-                        ✏️ {t('edit')}
+                        <Icon name="edit" size={14} /> {t('edit')}
                       </button>}
                       {canDo('editProviders') && canDo('deleteProviders') && <div style={{ width: 1, background: 'var(--border)' }} />}
                       {canDo('deleteProviders') && <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
-                        🗑 {t('delete')}
+                        <Icon name="delete" size={14} /> {t('delete')}
                       </button>}
                     </div>
                   )}

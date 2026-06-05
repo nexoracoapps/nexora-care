@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -233,15 +235,17 @@ export default function PrescriptionsPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
+    const ckP = '/api/prescriptions', ckM = '/api/medicines', ckC = '/api/customers';
+    const staleP = swrGet<Prescription[]>(ckP), staleM = swrGet<Medicine[]>(ckM), staleC = swrGet<Customer[]>(ckC);
+    if (staleP && staleM && staleC) { setPrescriptions(staleP); setMedicines(staleM); setCustomers(staleC); setLoading(false); } else setLoading(true);
     const [pRes, mRes, cRes] = await Promise.all([
-      fetch('/api/prescriptions', { headers: headers() }),
-      fetch('/api/medicines',     { headers: headers() }),
-      fetch('/api/customers',     { headers: headers() }),
+      fetch(ckP, { headers: headers() }),
+      fetch(ckM, { headers: headers() }),
+      fetch(ckC, { headers: headers() }),
     ]);
-    if (pRes.ok) setPrescriptions(await pRes.json());
-    if (mRes.ok) setMedicines(await mRes.json());
-    if (cRes.ok) setCustomers(await cRes.json());
+    if (pRes.ok) { const d = await pRes.json(); setPrescriptions(d); swrSet(ckP, d); }
+    if (mRes.ok) { const d = await mRes.json(); setMedicines(d); swrSet(ckM, d); }
+    if (cRes.ok) { const d = await cRes.json(); setCustomers(d); swrSet(ckC, d); }
     setLoading(false);
   }, [user?.token, headers]);
 
@@ -326,6 +330,7 @@ export default function PrescriptionsPage() {
         toast.success(lang === 'ar' ? '⏳ حُفظت مؤقتاً — ستُزامَن عند الاتصال' : '⏳ Saved locally — will sync when online');
       } else {
         toast.success(isEdit ? (lang === 'ar' ? 'تم تحديث الوصفة' : 'Prescription updated') : (lang === 'ar' ? 'تم حفظ الوصفة' : 'Prescription saved'));
+        swrBust('/api/prescriptions');
         load();
       }
       setModal(null);
@@ -351,7 +356,7 @@ export default function PrescriptionsPage() {
         ? (lang === 'ar' ? '⏳ حُذف مؤقتاً — سيُزامَن عند الاتصال' : '⏳ Removed locally — will sync when online')
         : (lang === 'ar' ? 'تم الحذف' : 'Deleted'));
       setModal(null); setDeleteTarget(null);
-      if (!data?.queued) load();
+      if (!data?.queued) { swrBust('/api/prescriptions'); load(); }
     } else toast.error(lang === 'ar' ? 'فشل الحذف' : 'Failed to delete');
   };
 
@@ -800,7 +805,7 @@ export default function PrescriptionsPage() {
               <style dangerouslySetInnerHTML={{ __html: `@keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }` }} />
               <div style={{ height: 5, background: 'linear-gradient(90deg,#e53e5a,#ff6b81)' }} />
               <div style={{ padding: '28px 24px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🗑️</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Trash2 size={48} strokeWidth={1.5} style={{ color: '#e53e5a' }} /></div>
                 <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 6 }}>
                   {lang === 'ar' ? 'حذف الوصفة؟' : 'Delete Prescription?'}
                 </div>

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Pencil } from 'lucide-react';
+import { swrGet, swrSet } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -80,11 +82,13 @@ export default function RevenuePage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
     const q = new URLSearchParams({ from: fromDate, to: toDate });
     if (activeBranchId) q.set('branchId', activeBranchId);
-    const res = await fetch(`/api/reports/revenue?${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setData(await res.json());
+    const ck = `/api/reports/revenue?${q}`;
+    const stale = swrGet<RevenueData>(ck);
+    if (stale) { setData(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setData(d); swrSet(ck, d); }
     setLoading(false);
   }, [user, activeBranchId, fromDate, toDate]);
 
@@ -139,7 +143,7 @@ export default function RevenuePage() {
   const subHeaders = [t('revDate'), t('revClient'), t('revService'), t('revAmount'), t('revPayment'), t('revStatus')];
 
   return (
-    <ProtectedRoute roles={['ADMIN', 'MANAGER']} permKeys={['viewRevenue', 'viewReports']}>
+    <ProtectedRoute permKey="viewRevenue">
       <style dangerouslySetInnerHTML={{ __html: `
         .pct-input {
           width: 70px;
@@ -574,7 +578,7 @@ export default function RevenuePage() {
                               <button onClick={() => setEditingPct(prev => ({ ...prev, [pid]: String(pct) }))}
                                 title={t('revEditContractPct')}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-sub)', fontSize: '0.9rem', padding: '2px 4px', lineHeight: 1 }}>
-                                ✏️
+                                <Pencil size={13} />
                               </button>
                             </div>
                           )}

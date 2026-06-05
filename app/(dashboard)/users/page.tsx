@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
+import Icon from '@/components/ui/Icon';
 
 interface UserRecord {
   id: string; username: string; email?: string | null; phone?: string | null;
@@ -75,15 +77,17 @@ export default function UsersPage() {
 
   const load = useCallback(async () => {
     if (!me?.token) return;
-    setLoading(true);
+    const ckUsers = '/api/users', ckRoles = '/api/roles', ckProv = '/api/providers';
+    const staleU = swrGet<UserRecord[]>(ckUsers), staleR = swrGet<RoleDefinition[]>(ckRoles), staleP = swrGet<ProviderOption[]>(ckProv);
+    if (staleU && staleR && staleP) { setUsers(staleU); setRoles(staleR); setProviderOptions(staleP); setLoading(false); } else setLoading(true);
     const [usersRes, rolesRes, providersRes] = await Promise.all([
-      fetch('/api/users',     { headers: { Authorization: `Bearer ${me.token}` } }),
-      fetch('/api/roles',     { headers: { Authorization: `Bearer ${me.token}` } }),
-      fetch('/api/providers', { headers: { Authorization: `Bearer ${me.token}` } }),
+      fetch(ckUsers,   { headers: { Authorization: `Bearer ${me.token}` } }),
+      fetch(ckRoles,   { headers: { Authorization: `Bearer ${me.token}` } }),
+      fetch(ckProv,    { headers: { Authorization: `Bearer ${me.token}` } }),
     ]);
-    if (usersRes.ok)     setUsers(await usersRes.json());
-    if (rolesRes.ok)     setRoles(await rolesRes.json());
-    if (providersRes.ok) setProviderOptions(await providersRes.json());
+    if (usersRes.ok)     { const d = await usersRes.json();     setUsers(d); swrSet(ckUsers, d); }
+    if (rolesRes.ok)     { const d = await rolesRes.json();     setRoles(d); swrSet(ckRoles, d); }
+    if (providersRes.ok) { const d = await providersRes.json(); setProviderOptions(d); swrSet(ckProv, d); }
     setLoading(false);
   }, [me]);
 
@@ -128,6 +132,7 @@ export default function UsersPage() {
       if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to save'); }
       toast.success(selected ? t('userUpdated') : t('userCreated'));
       setModalOpen(false);
+      swrBust('/api/users');
       load();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   };
@@ -140,6 +145,7 @@ export default function UsersPage() {
       if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to delete'); }
       toast.success(t('userDeleted'));
       setDeleteTarget(null);
+      swrBust('/api/users');
       load();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
     finally { setDeleting(false); }
@@ -181,12 +187,12 @@ export default function UsersPage() {
             <h1 className="page-title">{t('users')}</h1>
             <p className="page-sub">{filtered.length} {t('users').toLowerCase()}</p>
           </div>
-          {canDo('createUsers') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addUser')}</button>}
+          {canDo('createUsers') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('addUser')}</button>}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={t('searchUsers')} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <select className="form-select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ width: 'auto' }}>
@@ -287,13 +293,13 @@ export default function UsersPage() {
                   {(canDo('editUsers') || canDo('deleteUsers')) && (
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       {canDo('editUsers') && <button className="usr-action-btn usr-action-edit" onClick={() => openEdit(u)}>
-                        ✏️ {t('edit')}
+                        <Icon name="edit" size={14} /> {t('edit')}
                       </button>}
                       {canDo('deleteUsers') && u.id !== me?.id && (
                         <>
                           {canDo('editUsers') && <div style={{ width: 1, background: 'var(--border)' }} />}
                           <button className="usr-action-btn usr-action-del" onClick={() => setDeleteTarget(u)}>
-                            🗑 {t('delete')}
+                            <Icon name="delete" size={14} /> {t('delete')}
                           </button>
                         </>
                       )}

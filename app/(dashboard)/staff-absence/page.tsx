@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import type { StaffAbsence, ServiceProvider } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 const GRADIENTS = [
   'linear-gradient(135deg,#f9a8d4,#ec4899)',
@@ -45,13 +47,15 @@ export default function StaffAbsencePage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
+    const ckAbs = '/api/staff-absence', ckProv = '/api/providers';
+    const staleAbs = swrGet<StaffAbsence[]>(ckAbs), staleProv = swrGet<ServiceProvider[]>(ckProv);
+    if (staleAbs && staleProv) { setAbsences(staleAbs); setProviders(staleProv); setLoading(false); } else setLoading(true);
     const [absRes, provRes] = await Promise.all([
-      fetch('/api/staff-absence', { headers: { Authorization: `Bearer ${user.token}` } }),
-      fetch('/api/providers', { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckAbs, { headers: { Authorization: `Bearer ${user.token}` } }),
+      fetch(ckProv, { headers: { Authorization: `Bearer ${user.token}` } }),
     ]);
-    if (absRes.ok) setAbsences(await absRes.json());
-    if (provRes.ok) setProviders(await provRes.json());
+    if (absRes.ok) { const d = await absRes.json(); setAbsences(d); swrSet(ckAbs, d); }
+    if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckProv, d); }
     setLoading(false);
   }, [user]);
 
@@ -98,6 +102,7 @@ export default function StaffAbsencePage() {
       if (!res.ok) return toast.error(t('failedToSave'));
       toast.success(editId ? t('absenceUpdated') : t('absenceRecorded'));
       setModalOpen(false);
+      swrBust('/api/staff-absence');
       load();
     } finally {
       setSaving(false);
@@ -109,7 +114,7 @@ export default function StaffAbsencePage() {
     setDeleting(true);
     const res = await fetch(`/api/staff-absence/${deleteTarget}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/staff-absence'); load(); }
     else toast.error(t('failedToDelete'));
   };
 
@@ -137,8 +142,8 @@ export default function StaffAbsencePage() {
             <h1 className="page-title">{t('staffAbsence')}</h1>
             <p className="page-sub">{absences.length} {t('vacationManagement')}</p>
           </div>
-          {canDo('createStaffAbsence') && <button className="btn btn-primary" onClick={openCreate}>
-            + {t('recordVacation')}
+          {canDo('createStaffAbsence') && <button className="action-btn action-btn-add" onClick={openCreate}>
+            <Icon name="add" size={15} /> {t('recordVacation')}
           </button>}
         </div>
 
@@ -205,11 +210,11 @@ export default function StaffAbsencePage() {
                   {canEdit && (
                     <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                       <button className="abs-action-btn abs-action-edit" onClick={() => openEdit(a)}>
-                        ✏️ {t('edit')}
+                        <Icon name="edit" size={14} /> {t('edit')}
                       </button>
                       <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="abs-action-btn abs-action-del" onClick={() => setDeleteTarget(a.id)}>
-                        🗑 {t('delete')}
+                        <Icon name="delete" size={14} /> {t('delete')}
                       </button>
                     </div>
                   )}
@@ -230,7 +235,7 @@ export default function StaffAbsencePage() {
               <div style={{ height: 5, background: 'linear-gradient(90deg,var(--rose),#a855f7,#3b82f6)' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 22px 10px' }}>
                 <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>
-                  {editId ? `✏️ ${t('editAbsence')}` : `📅 ${t('recordVacation')}`}
+                  <span style={{ display:'flex', alignItems:'center', gap:7 }}>{editId ? <Icon name="edit" size={16}/> : <Icon name="calendar" size={16}/>}{editId ? t('editAbsence') : t('recordVacation')}</span>
                 </div>
                 <button onClick={() => setModalOpen(false)} style={{ background: 'var(--bg-elevated)', border: 'none', cursor: 'pointer', color: 'var(--text-sub)', fontSize: 14, width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>

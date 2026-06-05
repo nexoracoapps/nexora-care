@@ -58,6 +58,19 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN', 'MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
-  await prisma.appointment.delete({ where: { id: params.id } });
-  return apiOk({ message: 'Deleted' });
+  const appt = await prisma.appointment.findUnique({
+    where: { id: params.id },
+    select: { status: true, customer: { select: { name: true } } },
+  });
+  if (!appt) return apiError('Appointment not found.', 404);
+
+  if (appt.status === 'COMPLETED')
+    return apiError('Completed appointments cannot be deleted. Archive or keep for records.', 409);
+
+  try {
+    await prisma.appointment.delete({ where: { id: params.id } });
+    return apiOk({ message: 'Appointment deleted successfully.' });
+  } catch {
+    return apiError('Failed to delete appointment.', 500);
+  }
 }

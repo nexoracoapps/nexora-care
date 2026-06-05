@@ -252,7 +252,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="dashboard">
+    <ProtectedRoute permKey="dashboard">
       <>
         <style dangerouslySetInnerHTML={{ __html: `
           .db-kpi {

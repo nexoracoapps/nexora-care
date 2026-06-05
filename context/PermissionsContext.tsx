@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import {
   DEFAULT_PERMISSIONS,
@@ -11,6 +11,20 @@ import {
 // Re-export types so existing imports from this file keep working
 export type { AllPermissions, PermissionKey };
 export { DEFAULT_PERMISSIONS as DEFAULT };
+
+// Same pattern as AuthContext — layoutEffect on client (before paint), effect on server (SSR-safe)
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+const CACHE_KEY = 'nexora-permissions-cache';
+
+function readCached(): AllPermissions {
+  if (typeof window === 'undefined') return DEFAULT_PERMISSIONS;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return DEFAULT_PERMISSIONS;
+}
 
 interface PermissionsContextValue {
   permissions: AllPermissions;
@@ -32,37 +46,53 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const { user } = useAuth();
   const token = user?.token ?? null;
 
+  // Start with DEFAULT_PERMISSIONS so server-render and initial client-render match
+  // (avoids React hydration mismatch). useIsomorphicLayoutEffect immediately replaces
+  // this with the localStorage cache before the first paint — the sidebar never flashes
+  // "all items → fewer items" that occurred when DEFAULT differed from DB permissions.
   const [permissions, setPermissions] = useState<AllPermissions>(DEFAULT_PERMISSIONS);
-  // Start as initialized with default permissions so ProtectedRoute never blocks on loading.
-  // The fetch below replaces defaults with DB-stored values silently in the background.
   const [loading, setLoading]         = useState(false);
   const [initialized, setInitialized] = useState(true);
 
-  const fetchAndApply = async (authToken: string) => {
+  // Runs synchronously before the first paint on the client. If the user has logged in
+  // before, cached DB permissions are applied immediately so the first visual render
+  // shows the correct nav items with zero flash.
+  useIsomorphicLayoutEffect(() => {
+    setPermissions(readCached());
+  }, []);
+
+  const fetchAndApply = useCallback(async (authToken: string) => {
     try {
       const res = await fetch('/api/permissions', {
         headers: { Authorization: `Bearer ${authToken}` },
         cache: 'no-store',
       });
-      if (res.ok) setPermissions(await res.json());
+      if (res.ok) {
+        const data: AllPermissions = await res.json();
+        setPermissions(data);
+        // Update cache so the next page load renders with correct permissions immediately.
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+      }
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
-    if (!token) { setInitialized(false); setPermissions(DEFAULT_PERMISSIONS); return; }
+    if (!token) {
+      setInitialized(false);
+      setPermissions(DEFAULT_PERMISSIONS);
+      // Clear cache on logout so a different user starts fresh.
+      try { localStorage.removeItem(CACHE_KEY); } catch {}
+      return;
+    }
     fetchAndApply(token).finally(() => setInitialized(true));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, fetchAndApply]);
 
-  // Re-sync permissions when window regains focus on a different page
-  // (removed per-navigation refetch — it caused unnecessary re-renders on every nav)
-
+  // Re-fetch when the window regains focus (e.g. admin changed permissions in another tab).
   useEffect(() => {
     const onFocus = () => { if (token) fetchAndApply(token); };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, fetchAndApply]);
 
   const canDo = useCallback((action: PermissionKey): boolean => {
     if (!user) return false;
@@ -71,7 +101,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     return permissions[role]?.[action] ?? false;
   }, [user, permissions]);
 
-  const reload = useCallback(() => { if (token) fetchAndApply(token); }, [token]);
+  const reload = useCallback(() => { if (token) fetchAndApply(token); }, [token, fetchAndApply]);
 
   const value = useMemo(
     () => ({ permissions, canDo, loading, initialized, reload }),

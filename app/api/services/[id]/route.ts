@@ -28,6 +28,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
-  await prisma.service.delete({ where: { id: params.id } });
-  return apiOk({ message: 'Deleted' });
+  const service = await prisma.service.findUnique({ where: { id: params.id }, select: { name: true } });
+  if (!service) return apiError('Service not found.', 404);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Nullify service on appointments (preserve appointment history)
+      await tx.appointment.updateMany({
+        where: { serviceId: params.id },
+        data: { serviceId: null },
+      });
+      // Delete prescription items linked to this service's medicines (via appointments)
+      // Services don't link directly to prescriptions — safe to delete
+      await tx.service.delete({ where: { id: params.id } });
+    });
+    return apiOk({ message: `Service "${service.name}" deleted. Existing appointments kept with service unassigned.` });
+  } catch (e: unknown) {
+    console.error('Service delete failed:', e);
+    return apiError('Failed to delete service.', 500);
+  }
 }

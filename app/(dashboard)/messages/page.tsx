@@ -94,7 +94,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="sendBroadcasts">
+    <ProtectedRoute permKey="sendBroadcasts">
       <>
         <style dangerouslySetInnerHTML={{ __html: `
           .msg-wrap { max-width: 900px; }

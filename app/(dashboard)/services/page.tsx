@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import type { Service } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 const BEAUTY_EMOJIS = ['💇','💅','🧖','💆','💄','👁','✨','🛁','🪒','🦷','🎨','🌸','💐','🩷','🌟','⭐','🔮','🫧','🧴','🪞'];
 
@@ -63,9 +65,11 @@ export default function ServicesPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const res = await fetch('/api/services', { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setServices(await res.json());
+    const ck = '/api/services';
+    const stale = swrGet<typeof services>(ck);
+    if (stale) { setServices(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setServices(d); swrSet(ck, d); }
     setLoading(false);
   }, [user]);
 
@@ -106,7 +110,7 @@ export default function ServicesPage() {
     } catch {}
     toast.success(selected ? t('serviceUpdated') : t('serviceCreated'));
     setModalOpen(false);
-    load();
+    swrBust('/api/services'); load();
   };
 
   const confirmDelete = async () => {
@@ -118,14 +122,14 @@ export default function ServicesPage() {
       if (typeof window !== 'undefined') localStorage.removeItem(`serviceIcon_${deleteTarget.id}`);
       toast.success(t('deleted'));
       setDeleteTarget(null);
-      load();
+      swrBust('/api/services'); load();
     } else toast.error(t('failedToDelete'));
   };
 
   const filtered = services.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="manageServices">
+    <ProtectedRoute permKey="manageServices">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes svc-pop { from { opacity:0; transform:scale(0.92) translateY(18px); } to { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes del-pop { from { opacity:0; transform:scale(0.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
@@ -144,12 +148,12 @@ export default function ServicesPage() {
             <h1 className="page-title">{t('services')}</h1>
             <p className="page-sub">{filtered.length} {t('services').toLowerCase()}</p>
           </div>
-          {canDo('createServices') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addService')}</button>}
+          {canDo('createServices') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('addService')}</button>}
         </div>
 
         <div style={{ marginBottom: 20 }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={t('searchTreatments')} value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>
@@ -193,13 +197,13 @@ export default function ServicesPage() {
                   <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                     {canDo('editServices') && <button className="svc-action-btn svc-action-edit" onClick={() => openEdit(s)}
                       style={{ fontFamily: 'var(--font)' }}>
-                      ✏️ {t('edit')}
+                      <Icon name="edit" size={14} /> {t('edit')}
                     </button>}
                     {canDo('deleteServices') && <>
                       <div style={{ width: 1, background: 'var(--border)' }} />
                       <button className="svc-action-btn svc-action-del" onClick={() => setDeleteTarget(s)}
                         style={{ fontFamily: 'var(--font)' }}>
-                        🗑 {t('delete')}
+                        <Icon name="delete" size={14} /> {t('delete')}
                       </button>
                     </>}
                   </div>

@@ -113,33 +113,6 @@ export default function MusicPlayer() {
     setPlaying(true);
   }, []);
 
-  const startAudio = useCallback(() => {
-    if (startedRef.current) {
-      if (ctxRef.current?.state === 'suspended') ctxRef.current.resume();
-      return;
-    }
-    buildGraph();
-  }, [buildGraph]);
-
-  useEffect(() => {
-    // Try immediate autoplay
-    buildGraph();
-
-    // If browser blocked autoplay, resume or rebuild on first interaction
-    // WITHOUT resetting — keeps the scheduled timers alive
-    const events = ['click', 'keydown', 'mousedown', 'touchstart'] as const;
-    const onInteraction = () => {
-      events.forEach(ev => document.removeEventListener(ev, onInteraction));
-      if (ctxRef.current?.state === 'suspended') {
-        ctxRef.current.resume();
-      } else if (!startedRef.current) {
-        buildGraph();
-      }
-    };
-    events.forEach(ev => document.addEventListener(ev, onInteraction, { once: true, passive: true }));
-    return () => events.forEach(ev => document.removeEventListener(ev, onInteraction));
-  }, [buildGraph]);
-
   useEffect(() => {
     if (!masterRef.current || !ctxRef.current) return;
     masterRef.current.gain.setTargetAtTime(muted ? 0 : 0.13, ctxRef.current.currentTime, 0.5);
@@ -152,10 +125,70 @@ export default function MusicPlayer() {
     };
   }, []);
 
+  // Resume a suspended AudioContext automatically when the page becomes visible or focused.
+  // Browsers suspend AudioContext on tab switch / inactivity; this restores it silently.
+  useEffect(() => {
+    const resume = () => {
+      if (ctxRef.current?.state === 'suspended' && startedRef.current) {
+        ctxRef.current.resume().catch(() => {});
+      }
+    };
+    const onVisibility = () => { if (!document.hidden) resume(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', resume);
+    // Also resume on any click in case the above events don't fire (mobile/PWA)
+    document.addEventListener('click', resume, { capture: true });
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', resume);
+      document.removeEventListener('click', resume, { capture: true });
+    };
+  }, []);
+
+  // Auto-start on first user interaction anywhere on the page.
+  // Browser autoplay policy requires a user gesture — any click/key/touch counts.
+  // Skipped if the user previously clicked the mute button (stored in localStorage).
+  useEffect(() => {
+    try { if (localStorage.getItem('nexora-music-muted') === 'true') return; } catch {}
+    const start = () => {
+      document.removeEventListener('click',      start);
+      document.removeEventListener('keydown',    start);
+      document.removeEventListener('touchstart', start);
+      if (!startedRef.current) { buildGraph(); setMuted(false); }
+    };
+    document.addEventListener('click',      start);
+    document.addEventListener('keydown',    start);
+    document.addEventListener('touchstart', start, { passive: true });
+    return () => {
+      document.removeEventListener('click',      start);
+      document.removeEventListener('keydown',    start);
+      document.removeEventListener('touchstart', start);
+    };
+  }, [buildGraph, setMuted]);
+
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    startAudio(); // ensure audio starts if button is first interaction
-    if (startedRef.current) setMuted(!muted);
+
+    if (!startedRef.current) {
+      buildGraph();
+      setMuted(false);
+      try { localStorage.removeItem('nexora-music-muted'); } catch {}
+      return;
+    }
+
+    if (ctxRef.current?.state === 'suspended') {
+      ctxRef.current.resume();
+      setMuted(false);
+      try { localStorage.removeItem('nexora-music-muted'); } catch {}
+      return;
+    }
+
+    const nextMuted = !muted;
+    setMuted(nextMuted);
+    try {
+      if (nextMuted) localStorage.setItem('nexora-music-muted', 'true');
+      else localStorage.removeItem('nexora-music-muted');
+    } catch {}
   };
   const active = playing && !muted;
 
@@ -213,8 +246,8 @@ export default function MusicPlayer() {
       <button
         className={`mp-btn${active ? ' playing' : ''}${muted ? ' muted' : ''}`}
         onClick={toggle}
-        title={muted ? 'Unmute ambient music' : 'Mute ambient music'}
-        aria-label={muted ? 'Unmute' : 'Mute'}
+        title={!startedRef.current ? 'Play ambient music' : muted ? 'Unmute ambient music' : 'Mute ambient music'}
+        aria-label={!startedRef.current ? 'Play music' : muted ? 'Unmute' : 'Mute'}
       >
         {muted ? (
           <span className="mp-muted-icon">🔇</span>

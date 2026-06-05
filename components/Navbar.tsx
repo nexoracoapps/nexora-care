@@ -3,6 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard, Users, Calendar, ClipboardList, CalendarDays,
+  Pill, Scissors, Stethoscope, UserCog, Theater, Building2,
+  TrendingUp, CreditCard, BarChart2, CalendarOff, ShieldCheck,
+  Lock, Bell, ChevronDown, ChevronLeft, LogOut, Palette, Menu, X,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -15,24 +21,29 @@ const ALL     = ['ADMIN', 'MANAGER', 'STAFF'];
 const PRIV    = ['ADMIN', 'MANAGER'];
 const ADMIN_  = ['ADMIN'];
 
-const navItems: { href: string; labelKey: string; icon: string; roles: string[]; permKey?: PermissionKey; permKeys?: PermissionKey[] }[] = [
-  { href: '/dashboard',    labelKey: 'dashboard',       icon: '⊞',  roles: PRIV,    permKey: 'dashboard' },
-  { href: '/customers',    labelKey: 'customers',        icon: '👥', roles: ALL,     permKey: 'manageCustomers' },
-  { href: '/appointments',  labelKey: 'appointments',     icon: '📅', roles: ALL,     permKey: 'manageAppointments' },
-  { href: '/prescriptions', labelKey: 'prescriptions',    icon: '💊', roles: ALL,     permKey: 'viewPrescriptions' },
-  { href: '/calendar',     labelKey: 'calendarNav',      icon: '🗓️', roles: ALL,    permKeys: ['viewCalendar', 'manageAppointments'] },
-  { href: '/medicines',    labelKey: 'medicines',         icon: '💉', roles: PRIV,   permKey: 'manageMedicines' },
-  { href: '/services',     labelKey: 'services',         icon: '✦',  roles: PRIV,   permKey: 'manageServices' },
-  { href: '/providers',    labelKey: 'serviceProviders', icon: '🩺', roles: ALL,    permKeys: ['manageProviders', 'manageServices'] },
-  { href: '/users',        labelKey: 'users',            icon: '👤', roles: ADMIN_,  permKey: 'viewUsers' },
-  { href: '/roles',        labelKey: 'rolesNav',         icon: '🎭', roles: ADMIN_, permKeys: ['viewRoles', 'managePermissions'] },
-  { href: '/branches',     labelKey: 'branches',         icon: '🏢', roles: PRIV,    permKey: 'manageBranches' },
-  { href: '/revenue',      labelKey: 'revenueNav',       icon: '💰', roles: PRIV,   permKeys: ['viewRevenue', 'viewReports'] },
-  { href: '/payments',     labelKey: 'payments',         icon: '💳', roles: PRIV,    permKey: 'recordPayments' },
-  { href: '/reports',      labelKey: 'reports',          icon: '📊', roles: PRIV,    permKey: 'viewReports' },
-  { href: '/staff-absence',labelKey: 'staffAbsenceNav',  icon: '📆', roles: ALL,     permKey: 'manageStaffAbsence' },
-  { href: '/permissions',  labelKey: 'permissions',      icon: '🛡️', roles: ADMIN_,  permKey: 'managePermissions' },
-  { href: '/backup',       labelKey: 'backup',           icon: '🔒', roles: ADMIN_,  permKey: 'systemBackup' },
+type NavIcon = React.ElementType;
+
+const navItems: { href: string; labelKey: string; Icon: NavIcon; roles: string[]; permKey?: PermissionKey; permKeys?: PermissionKey[] }[] = [
+  // ALL roles — permission key is the sole gate; admin can enable/disable per role
+  { href: '/dashboard',    labelKey: 'dashboard',       Icon: LayoutDashboard, roles: ALL,   permKey: 'dashboard' },
+  { href: '/customers',    labelKey: 'customers',       Icon: Users,           roles: ALL,   permKey: 'manageCustomers' },
+  { href: '/appointments', labelKey: 'appointments',    Icon: CalendarDays,    roles: ALL,   permKey: 'manageAppointments' },
+  { href: '/prescriptions',labelKey: 'prescriptions',   Icon: ClipboardList,   roles: ALL,   permKey: 'viewPrescriptions' },
+  { href: '/calendar',     labelKey: 'calendarNav',     Icon: Calendar,        roles: ALL,   permKeys: ['viewCalendar', 'manageAppointments'] },
+  { href: '/medicines',    labelKey: 'medicines',       Icon: Pill,            roles: ALL,   permKey: 'manageMedicines' },
+  { href: '/services',     labelKey: 'services',        Icon: Scissors,        roles: ALL,   permKey: 'manageServices' },
+  { href: '/providers',    labelKey: 'serviceProviders',Icon: Stethoscope,     roles: ALL,   permKeys: ['manageProviders', 'manageServices'] },
+  { href: '/revenue',      labelKey: 'revenueNav',      Icon: TrendingUp,      roles: ALL,   permKey: 'viewRevenue' },
+  { href: '/payments',     labelKey: 'payments',        Icon: CreditCard,      roles: ALL,   permKey: 'recordPayments' },
+  { href: '/reports',      labelKey: 'reports',         Icon: BarChart2,       roles: ALL,   permKey: 'viewReports' },
+  { href: '/staff-absence',labelKey: 'staffAbsenceNav', Icon: CalendarOff,     roles: ALL,   permKey: 'manageStaffAbsence' },
+  // PRIV — user management & role/branch admin; STAFF excluded at API level too
+  { href: '/users',        labelKey: 'users',           Icon: UserCog,         roles: PRIV,  permKey: 'viewUsers' },
+  { href: '/branches',     labelKey: 'branches',        Icon: Building2,       roles: PRIV,  permKey: 'manageBranches' },
+  { href: '/roles',        labelKey: 'rolesNav',        Icon: Theater,         roles: PRIV,  permKeys: ['viewRoles', 'managePermissions'] },
+  { href: '/permissions',  labelKey: 'permissions',     Icon: ShieldCheck,     roles: PRIV,  permKey: 'managePermissions' },
+  // ADMIN only
+  { href: '/backup',       labelKey: 'backup',          Icon: Lock,            roles: ADMIN_,permKey: 'systemBackup' },
 ];
 
 export default function Navbar() {
@@ -145,12 +156,10 @@ export default function Navbar() {
         )}
         {!forMobile && (
           <button className="sidebar-collapse-btn" onClick={toggleSidebar} title={collapsed ? 'Expand' : 'Collapse'}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d={collapsed === isRTL ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
-            </svg>
+            <ChevronLeft size={14} style={{ transform: collapsed === isRTL ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </button>
         )}
-        <button className="sidebar-mobile-close" onClick={() => setSidebarOpen(false)}>✕</button>
+        <button className="sidebar-mobile-close" onClick={() => setSidebarOpen(false)}><X size={16} /></button>
       </div>
 
       {!collapsed && branches.length > 0 && canDo('branchSwitching') && (
@@ -198,7 +207,7 @@ export default function Navbar() {
             onClick={() => setSidebarOpen(false)}
             title={collapsed ? t(item.labelKey) : undefined}
           >
-            <span style={{ fontSize: '1rem', flexShrink: 0 }}>{item.icon}</span>
+            <item.Icon size={18} style={{ flexShrink: 0, opacity: 0.85 }} />
             {!collapsed && <span>{t(item.labelKey)}</span>}
           </Link>
         ))}
@@ -217,9 +226,7 @@ export default function Navbar() {
             title={t('signOut')}
             style={{ background: 'var(--grad)', border: 'none', borderRadius: '10px', padding: '10px 12px', color: '#fff', cursor: 'pointer', fontFamily: 'var(--font)', boxShadow: '0 4px 20px rgba(var(--rose-rgb),0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+            <LogOut size={16} />
           </button>
         </div>
       ) : (
@@ -238,7 +245,7 @@ export default function Navbar() {
                   fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                 }}
               >
-                🎨 {t('theme')}
+                <Palette size={14} /> {t('theme')}
               </button>
               {themeOpen && (
                 <div style={{
@@ -311,7 +318,7 @@ export default function Navbar() {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.4rem', cursor: 'pointer', padding: '4px' }}
         >
-          ☰
+          <Menu size={22} />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <NexoraCareIcon size={24} />
@@ -330,7 +337,7 @@ export default function Navbar() {
               fontSize: '1rem',
             }}
           >
-            🔔
+            <Bell size={20} />
             {notifications.length > 0 && (
               <span style={{
                 position: 'absolute', top: '4px', right: '4px',

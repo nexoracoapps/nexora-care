@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) router.replace('/landing');
-      else if (user.role === 'ADMIN') router.replace('/dashboard');
+      else if (user.role === 'ADMIN' || user.role === 'MANAGER') router.replace('/dashboard');
       else router.replace('/appointments');
     }
   }, [user, isLoading, router]);

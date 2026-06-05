@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { Pencil, Trash2 } from 'lucide-react';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -59,10 +61,11 @@ export default function SpecialistsPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const q = activeBranchId ? `?branchId=${activeBranchId}` : '';
-    const res = await fetch(`/api/providers${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setProviders(await res.json());
+    const ck = `/api/providers${activeBranchId ? `?branchId=${activeBranchId}` : ''}`;
+    const stale = swrGet<ServiceProvider[]>(ck);
+    if (stale) { setProviders(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setProviders(d); swrSet(ck, d); }
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -98,6 +101,7 @@ export default function SpecialistsPage() {
     if (!res.ok) return toast.error('Failed to save');
     toast.success(selected ? t('providerUpdated') : t('providerCreated'));
     setModalOpen(false);
+    swrBust('/api/providers');
     load();
   };
 
@@ -106,7 +110,7 @@ export default function SpecialistsPage() {
     setDeleting(true);
     const res = await fetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load(); }
     else toast.error(t('failedToDelete'));
   };
 
@@ -198,11 +202,11 @@ export default function SpecialistsPage() {
                   {/* Actions */}
                   {(canDo('editProviders') || canDo('deleteProviders')) && <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                     {canDo('editProviders') && <button className="prov-action-btn prov-action-edit" onClick={() => openEdit(p)}>
-                      ✏️ {t('edit')}
+                      <Pencil size={13} style={{ flexShrink: 0 }} /> {t('edit')}
                     </button>}
                     {canDo('editProviders') && canDo('deleteProviders') && <div style={{ width: 1, background: 'var(--border)' }} />}
                     {canDo('deleteProviders') && <button className="prov-action-btn prov-action-del" onClick={() => setDeleteTarget(p)}>
-                      🗑 {t('delete')}
+                      <Trash2 size={13} style={{ flexShrink: 0 }} /> {t('delete')}
                     </button>}
                   </div>}
                 </div>

@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { swrGet, swrSet } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -20,11 +21,13 @@ export default function ReportsPage() {
   useEffect(() => {
     const fetch_ = async () => {
       if (!user?.token) return;
-      setLoading(true);
       const q = new URLSearchParams({ period });
       if (activeBranchId) q.set('branchId', activeBranchId);
-      const res = await fetch(`/api/reports/dashboard?${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-      if (res.ok) setStats(await res.json());
+      const ck = `/api/reports/dashboard?${q}`;
+      const stale = swrGet<DashboardStats>(ck);
+      if (stale) { setStats(stale); setLoading(false); } else setLoading(true);
+      const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) { const d = await res.json(); setStats(d); swrSet(ck, d); }
       setLoading(false);
     };
     fetch_();
@@ -40,7 +43,7 @@ export default function ReportsPage() {
   const handlePrint = () => window.print();
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="viewReports">
+    <ProtectedRoute permKey="viewReports">
       <style dangerouslySetInnerHTML={{ __html: `
         @page { margin: 0; }
         @media print {

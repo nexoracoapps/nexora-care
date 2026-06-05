@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { swrGet, swrSet } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import Icon from '@/components/ui/Icon';
 import type { CallLog } from '@/types';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -19,9 +21,11 @@ export default function CallLogsPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const res = await fetch('/api/call-logs', { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setLogs(await res.json());
+    const ck = '/api/call-logs';
+    const stale = swrGet<typeof logs>(ck);
+    if (stale) { setLogs(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setLogs(d); swrSet(ck, d); }
     setLoading(false);
   }, [user]);
 
@@ -48,7 +52,7 @@ export default function CallLogsPage() {
   const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']}>
+    <ProtectedRoute permKey="viewCallLogs">
       <div>
         <div className="page-header">
           <div>
@@ -59,7 +63,7 @@ export default function CallLogsPage() {
 
         <div style={{ marginBottom: 20 }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={t('searchByCustomer')} value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>

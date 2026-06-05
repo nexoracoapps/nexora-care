@@ -56,7 +56,7 @@ export default function CalendarPage() {
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const [appts, setAppts] = useState<CalAppt[]>([]);
   const [providers, setProviders] = useState<CalProvider[]>([]);
-  const [filterProvider, setFilterProvider] = useState('');
+  const [filterProvider, setFilterProvider] = useState(() => user?.providerId ?? '');
   const [loading, setLoading] = useState(false);
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default');
   const [hasPushSub, setHasPushSub] = useState(false);
@@ -171,7 +171,12 @@ export default function CalendarPage() {
     setLoading(false);
   }, [user, activeBranchId, filterProvider, getRange]);
 
-  useEffect(() => { load(); }, [load]);
+  // Debounce calendar loads — prevents rapid navigation (e.g. clicking forward/back quickly)
+  // from firing multiple simultaneous API calls
+  useEffect(() => {
+    const t = setTimeout(() => { load(); }, 120);
+    return () => clearTimeout(t);
+  }, [load]);
 
   // Re-fetch when tab becomes visible again (user switched tabs to create/edit an appointment)
   useEffect(() => {

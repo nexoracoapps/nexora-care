@@ -1,11 +1,13 @@
 ﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { swrGet, swrSet } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Appointment } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 type PaymentAppointment = Appointment & { branch?: { name: string; nameAr?: string | null } };
 
@@ -23,10 +25,11 @@ export default function PaymentsPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const q = activeBranchId ? `?branchId=${activeBranchId}` : '';
-    const res = await fetch(`/api/payments${q}`, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setPayments(await res.json());
+    const ck = `/api/payments${activeBranchId ? `?branchId=${activeBranchId}` : ''}`;
+    const stale = swrGet<typeof payments>(ck);
+    if (stale) { setPayments(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setPayments(d); swrSet(ck, d); }
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -57,7 +60,7 @@ export default function PaymentsPage() {
   const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
 
   return (
-    <ProtectedRoute roles={['ADMIN','MANAGER']} permKey="recordPayments">
+    <ProtectedRoute permKey="recordPayments">
       <div>
         <div className="page-header">
           <div>
@@ -70,7 +73,7 @@ export default function PaymentsPage() {
 
         <div style={{ marginBottom: 20 }}>
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input className="search-input" placeholder={t('searchPayments')}
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -9,6 +10,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import { queuedFetch } from '@/lib/queuedFetch';
 import type { Appointment, Customer, Service, ServiceProvider, PaymentMethod } from '@/types';
+import Icon from '@/components/ui/Icon';
 
 // Convert a Date to the "YYYY-MM-DDTHH:MM" format that datetime-local inputs expect (local time, not UTC)
 const toLocalISO = (d: Date): string => {
@@ -107,20 +109,21 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
+    const bq = activeBranchId ? `?branchId=${activeBranchId}` : '';
+    const ckA = `/api/appointments${bq}`, ckC = `/api/customers${bq}`, ckS = '/api/services', ckP = `/api/providers${bq}`;
+    const staleA = swrGet<Appointment[]>(ckA), staleC = swrGet<Customer[]>(ckC), staleS = swrGet<Service[]>(ckS), staleP = swrGet<ServiceProvider[]>(ckP);
+    if (staleA && staleC && staleS && staleP) { setAppointments(staleA); setCustomers(staleC); setServices(staleS); setProviders(staleP); setLoading(false); } else setLoading(true);
     try {
-      const q = new URLSearchParams();
-      if (activeBranchId) q.set('branchId', activeBranchId);
       const [apptRes, custRes, svcRes, provRes] = await Promise.all([
-        fetch(`/api/appointments?${q}`, { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch(`/api/customers?${activeBranchId ? `branchId=${activeBranchId}` : ''}`, { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch('/api/services', { headers: { Authorization: `Bearer ${user.token}` } }),
-        fetch(`/api/providers?${activeBranchId ? `branchId=${activeBranchId}` : ''}`, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(ckA, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(ckC, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(ckS, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(ckP, { headers: { Authorization: `Bearer ${user.token}` } }),
       ]);
-      if (apptRes.ok) setAppointments(await apptRes.json());
-      if (custRes.ok) setCustomers(await custRes.json());
-      if (svcRes.ok) setServices(await svcRes.json());
-      if (provRes.ok) setProviders(await provRes.json());
+      if (apptRes.ok) { const d = await apptRes.json(); setAppointments(d); swrSet(ckA, d); }
+      if (custRes.ok) { const d = await custRes.json(); setCustomers(d); swrSet(ckC, d); }
+      if (svcRes.ok)  { const d = await svcRes.json();  setServices(d);  swrSet(ckS, d); }
+      if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckP, d); }
     } catch { /* ignore */ }
     setLoading(false);
   }, [user, activeBranchId]);
@@ -174,7 +177,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
         toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('apptUpdated'));
         setModal(null);
-        load(); notifyCalendar();
+        swrBust('/api/appointments'); load(); notifyCalendar();
       } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
       finally { setSaving(false); }
       return;
@@ -202,7 +205,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (failed.length > 0) throw new Error('Some appointments failed to create');
       toast.success(validLines.length > 1 ? `${validLines.length} appointments created` : t('apptCreated'));
       setModal(null);
-      load(); notifyCalendar();
+      swrBust('/api/appointments'); load(); notifyCalendar();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
     finally { setSaving(false); }
   };
@@ -216,7 +219,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
       toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('updatedSuccess'));
       setModal(null);
-      load(); notifyCalendar();
+      swrBust('/api/appointments'); load(); notifyCalendar();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   };
 
@@ -225,7 +228,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     setDeleting(true);
     const res = await fetch(`/api/appointments/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); notifyCalendar(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/appointments'); load(); notifyCalendar(); }
     else toast.error(t('failedToDelete'));
   };
 
@@ -256,13 +259,13 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
             <h1 className="page-title">{t('appointments')}</h1>
             <p className="page-sub">{filtered.length} {t('appointments').toLowerCase()}</p>
           </div>
-          {canDo('createAppointments') && <button className="btn btn-primary" onClick={openCreate}>+ {t('newAppointment')}</button>}
+          {canDo('createAppointments') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('newAppointment')}</button>}
         </div>
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div className="search-wrap" style={{ flex: 1, minWidth: 220 }}>
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={15} /></span>
             <input
               className="search-input"
               style={{ width: '100%' }}
@@ -424,7 +427,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                           }}>
                             {(() => {
                               const menuItems = [
-                                ...(canDo('editAppointments') ? [{ label: `✏️  ${t('editDetails')}`, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
+                                ...(canDo('editAppointments') ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
                                 ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' ? [
                                   { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
                                   { label: `✗  ${t('noShow')}`, color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
@@ -449,9 +452,10 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                                 <>
                                   {menuItems.map((item, i) => (
                                     <button key={i} onClick={item.action}
-                                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: item.color, transition: 'background 0.1s' }}
+                                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: item.color, transition: 'background 0.1s' }}
                                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                      {(item as any).isEdit && <Icon name="edit" size={14} />}
                                       {item.label}
                                     </button>
                                   ))}
@@ -460,10 +464,10 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                                   )}
                                   {canDo('deleteAppointments') && (
                                     <button onClick={() => { setDeleteTarget(appt); setOpenMenuId(null); }}
-                                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
+                                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500, color: '#e53e5a', transition: 'background 0.1s' }}
                                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,62,90,0.07)')}
                                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                      🗑  {t('delete')}
+                                      <Icon name="delete" size={14} />  {t('delete')}
                                     </button>
                                   )}
                                 </>
@@ -512,7 +516,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                 {/* Row 1: Date + Customer */}
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label className="form-label">🗓 {t('dateTimeLabel')} <span style={{ color: 'var(--rose)' }}>*</span></label>
+                    <label className="form-label"><Icon name="calendar" size={13} style={{marginRight:4,verticalAlign:'middle'}}/>{t('dateTimeLabel')} <span style={{ color: 'var(--rose)' }}>*</span></label>
                     <div style={{ display: 'flex', gap: 7, alignItems: 'stretch' }}>
                       <input className="form-input" type="datetime-local" value={form.dateTime}
                         onChange={e => setForm(f => ({ ...f, dateTime: e.target.value }))} style={{ flex: 1, minWidth: 0 }} />

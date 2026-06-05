@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
+import Icon from '@/components/ui/Icon';
 
 interface BranchWithCount {
   id: string; name: string; nameAr?: string | null; address?: string | null; phone?: string | null; createdAt: string;
@@ -48,9 +50,11 @@ export default function BranchesPage() {
 
   const load = useCallback(async () => {
     if (!user?.token) return;
-    setLoading(true);
-    const res = await fetch('/api/branches', { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) setBranches(await res.json());
+    const ck = '/api/branches';
+    const stale = swrGet<typeof branches>(ck);
+    if (stale) { setBranches(stale); setLoading(false); } else setLoading(true);
+    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+    if (res.ok) { const d = await res.json(); setBranches(d); swrSet(ck, d); }
     setLoading(false);
   }, [user]);
 
@@ -67,6 +71,7 @@ export default function BranchesPage() {
     if (!res.ok) return toast.error(t('failedToSave'));
     toast.success(selected ? t('branchUpdated') : t('branchCreated'));
     setModalOpen(false);
+    swrBust('/api/branches');
     load();
     refreshBranches();
   };
@@ -76,7 +81,7 @@ export default function BranchesPage() {
     setDeleting(true);
     const res = await fetch(`/api/branches/${deleteTarget.id}`, { method: 'DELETE', headers });
     setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); load(); refreshBranches(); }
+    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/branches'); load(); refreshBranches(); }
     else toast.error(t('failedToDelete'));
   };
 
@@ -99,7 +104,7 @@ export default function BranchesPage() {
             <h1 className="page-title">{t('branches')}</h1>
             <p className="page-sub">{branches.length} {t('branches').toLowerCase()}</p>
           </div>
-          {canDo('createBranches') && <button className="btn btn-primary" onClick={openCreate}>+ {t('addBranch')}</button>}
+          {canDo('createBranches') && <button className="action-btn action-btn-add" onClick={openCreate}><Icon name="add" size={15} /> {t('addBranch')}</button>}
         </div>
 
         {loading ? (
@@ -162,12 +167,12 @@ export default function BranchesPage() {
                   {/* Actions */}
                   <div style={{ display: 'flex', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
                     {canDo('editBranches') && <button className="br-action-btn br-action-edit" onClick={() => openEdit(b)}>
-                      ✏️ {t('edit')}
+                      <Icon name="edit" size={14} /> {t('edit')}
                     </button>}
                     {canDo('deleteBranches') && <>
                       {canDo('editBranches') && <div style={{ width: 1, background: 'var(--border)' }} />}
                       <button className="br-action-btn br-action-del" onClick={() => setDeleteTarget(b)}>
-                        🗑 {t('delete')}
+                        <Icon name="delete" size={14} /> {t('delete')}
                       </button>
                     </>}
                   </div>

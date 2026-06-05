@@ -20,15 +20,74 @@ const DIAL_CODES: Record<string, string> = {
   TN:'216',DZ:'213',MA:'212',SD:'249',TR:'90',PK:'92',IN:'91',
   PH:'63',US:'1',GB:'44',FR:'33',DE:'49',CA:'1',AU:'61',
 };
-const COUNTRY_LIST: [string,string,string][] = [
-  ['JO','🇯🇴','962'],['SA','🇸🇦','966'],['AE','🇦🇪','971'],['KW','🇰🇼','965'],
-  ['QA','🇶🇦','974'],['BH','🇧🇭','973'],['OM','🇴🇲','968'],['LB','🇱🇧','961'],
-  ['SY','🇸🇾','963'],['IQ','🇮🇶','964'],['EG','🇪🇬','20'],['PS','🇵🇸','970'],
-  ['YE','🇾🇪','967'],['LY','🇱🇾','218'],['TN','🇹🇳','216'],['DZ','🇩🇿','213'],
-  ['MA','🇲🇦','212'],['SD','🇸🇩','249'],['TR','🇹🇷','90'],['PK','🇵🇰','92'],
-  ['IN','🇮🇳','91'],['PH','🇵🇭','63'],['US','🇺🇸','1'],['GB','🇬🇧','44'],
-  ['FR','🇫🇷','33'],['DE','🇩🇪','49'],['CA','🇨🇦','1'],['AU','🇦🇺','61'],
+// [iso, flag, dialCode, englishName]
+const COUNTRY_LIST: [string,string,string,string][] = [
+  ['JO','🇯🇴','962','Jordan'],['SA','🇸🇦','966','Saudi Arabia'],['AE','🇦🇪','971','UAE'],
+  ['KW','🇰🇼','965','Kuwait'],['QA','🇶🇦','974','Qatar'],['BH','🇧🇭','973','Bahrain'],
+  ['OM','🇴🇲','968','Oman'],['LB','🇱🇧','961','Lebanon'],['SY','🇸🇾','963','Syria'],
+  ['IQ','🇮🇶','964','Iraq'],['EG','🇪🇬','20','Egypt'],['PS','🇵🇸','970','Palestine'],
+  ['YE','🇾🇪','967','Yemen'],['LY','🇱🇾','218','Libya'],['TN','🇹🇳','216','Tunisia'],
+  ['DZ','🇩🇿','213','Algeria'],['MA','🇲🇦','212','Morocco'],['SD','🇸🇩','249','Sudan'],
+  ['TR','🇹🇷','90','Turkey'],['PK','🇵🇰','92','Pakistan'],['IN','🇮🇳','91','India'],
+  ['PH','🇵🇭','63','Philippines'],['US','🇺🇸','1','United States'],['GB','🇬🇧','44','United Kingdom'],
+  ['FR','🇫🇷','33','France'],['DE','🇩🇪','49','Germany'],['CA','🇨🇦','1','Canada'],['AU','🇦🇺','61','Australia'],
 ];
+
+function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const sel = COUNTRY_LIST.find(([c]) => c === value);
+  const q = search.toLowerCase();
+  const filtered = q
+    ? COUNTRY_LIST.filter(([code,,dc,name]) => name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || dc.includes(q))
+    : COUNTRY_LIST;
+  return (
+    <div ref={ref} style={{ position:'relative', display:'flex', alignItems:'stretch' }}>
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); setSearch(''); }}
+        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 10px', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:96, outline:'none', display:'flex', alignItems:'center', gap:5, whiteSpace:'nowrap' }}
+      >
+        {sel ? <>{sel[1]} <span style={{fontSize:12}}>+{sel[2]}</span></> : <span style={{color:'var(--text-sub)',fontSize:13}}>+?</span>}
+        <span style={{ fontSize:9, opacity:0.4, marginLeft:'auto' }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, zIndex:9999, background:'var(--bg-surface)', border:'1px solid var(--border)', borderRadius:10, boxShadow:'0 8px 32px rgba(0,0,0,0.16)', width:220, maxHeight:280, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+          <div style={{ padding:'8px 10px', borderBottom:'1px solid var(--border)' }}>
+            <input
+              autoFocus
+              placeholder="Search country or code…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width:'100%', border:'1px solid var(--border)', borderRadius:6, padding:'5px 9px', fontSize:12, fontFamily:'var(--font)', outline:'none', background:'var(--bg-elevated)', color:'var(--text)', boxSizing:'border-box' }}
+            />
+          </div>
+          <div style={{ overflowY:'auto', flex:1 }}>
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }}
+              style={{ width:'100%', padding:'7px 12px', border:'none', background:'transparent', cursor:'pointer', textAlign:'left', fontSize:12, fontFamily:'var(--font)', color:'var(--text-sub)' }}>
+              — No country
+            </button>
+            {filtered.map(([code, flag, dc, name]) => (
+              <button key={code} type="button" onClick={() => { onChange(code); setOpen(false); setSearch(''); }}
+                style={{ width:'100%', padding:'7px 12px', border:'none', background: value===code ? 'rgba(var(--rose-rgb),0.08)' : 'transparent', cursor:'pointer', textAlign:'left', fontSize:13, fontFamily:'var(--font)', color: value===code ? 'var(--rose)' : 'var(--text)', display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:18, lineHeight:1 }}>{flag}</span>
+                <span style={{ flex:1 }}>{name}</span>
+                <span style={{ fontSize:12, color:'var(--text-sub)' }}>+{dc}</span>
+              </button>
+            ))}
+            {filtered.length === 0 && <p style={{ padding:'12px', fontSize:12, color:'var(--text-sub)', textAlign:'center', margin:0 }}>No results</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 export default function CustomersPage() {
@@ -673,16 +732,7 @@ export default function CustomersPage() {
                   <div className="form-group">
                     <label className="form-label">{t('phone')}</label>
                     <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden', background:'var(--bg-surface)' }}>
-                      <select
-                        value={form.country}
-                        onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-                        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 8px', fontSize:13, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:90, outline:'none' }}
-                      >
-                        <option value="">+?</option>
-                        {COUNTRY_LIST.map(([code, flag, dc]) => (
-                          <option key={code} value={code}>{flag} +{dc}</option>
-                        ))}
-                      </select>
+                      <PhonePrefix value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
                       <input
                         type="tel"
                         placeholder="790891028"

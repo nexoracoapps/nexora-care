@@ -60,10 +60,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       await tx.specialistRating.deleteMany({
         where: { appointment: { customerId: params.id } },
       });
-      // 3. Delete reminder sent records
-      await tx.reminderSent.deleteMany({
-        where: { appointment: { customerId: params.id } },
-      });
+      // 3. Delete reminder sent records (no relation on ReminderSent — resolve via appointment IDs)
+      const apptIds = (await tx.appointment.findMany({ where: { customerId: params.id }, select: { id: true } })).map(a => a.id);
+      if (apptIds.length > 0) {
+        await tx.reminderSent.deleteMany({ where: { appointmentId: { in: apptIds } } });
+      }
       // 4. Delete appointments
       await tx.appointment.deleteMany({ where: { customerId: params.id } });
       // 5. Delete call logs

@@ -71,7 +71,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       await tx.staffAbsence.deleteMany({ where: { userId: params.id } });
       await tx.auditLog.updateMany({ where: { userId: params.id }, data: { userId: null } });
       await tx.specialistRating.deleteMany({ where: { userId: params.id } });
-      await tx.callLog.updateMany({ where: { userId: params.id }, data: { userId: null } });
+      // CallLog has no userId field — no action needed
       await tx.user.delete({ where: { id: params.id } });
     });
     return apiOk({ message: `User "${target.username}" and all related records deleted successfully.` });

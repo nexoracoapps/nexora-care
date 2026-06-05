@@ -600,7 +600,19 @@ export default function CustomersPage() {
                         <span style={{ fontWeight: 600 }}>{c.name}</span>
                       </div>
                     </td>
-                    <td data-label="Phone" style={{ color: 'var(--text-muted)' }}>{c.phone || '—'}</td>
+                    <td data-label="Phone" style={{ color: 'var(--text-muted)' }}>
+                      {c.phone ? (
+                        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                          {c.country && (
+                            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'var(--text-sub)' }}>
+                              <span style={{ fontSize:17, lineHeight:1 }}>{flagEmoji(c.country)}</span>
+                              <span>{(() => { try { return new Intl.DisplayNames([lang === 'ar' ? 'ar' : 'en'], { type:'region' }).of(c.country) ?? c.country; } catch { return c.country; } })()}</span>
+                            </span>
+                          )}
+                          <span style={{ fontSize:13 }}>{c.phone}</span>
+                        </div>
+                      ) : '—'}
+                    </td>
                     <td data-label="Email" style={{ color: 'var(--text-sub)', fontSize: '0.875rem' }}>{c.email || '—'}</td>
                     <td data-label="Branch">
                       {c.branch?.name ? (

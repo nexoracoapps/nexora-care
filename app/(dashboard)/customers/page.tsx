@@ -37,7 +37,7 @@ function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string)
       <button
         type="button"
         onClick={() => { setOpen(o => !o); setSearch(''); }}
-        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 10px', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:100, outline:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap' }}
+        style={{ border:'none', borderRight:'1px solid var(--border)', background:'var(--bg-elevated)', padding:'0 10px', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', cursor:'pointer', minWidth:100, outline:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', borderRadius:'9px 0 0 9px' }}
       >
         {sel
           ? <><span style={{fontSize:20,lineHeight:1}}>{flagEmoji(sel[0])}</span><span style={{fontSize:12,color:'var(--text-sub)'}}>+{sel[1]}</span></>
@@ -723,14 +723,14 @@ export default function CustomersPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">{t('phone')}</label>
-                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden', background:'var(--bg-surface)' }}>
+                    <div style={{ display:'flex', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg-surface)' }}>
                       <PhonePrefix value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
                       <input
                         type="tel"
                         placeholder="790891028"
                         value={form.phone}
                         onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, '') }))}
-                        style={{ border:'none', outline:'none', flex:1, padding:'10px 12px', background:'transparent', fontSize:14, fontFamily:'var(--font)', color:'var(--text)' }}
+                        style={{ border:'none', outline:'none', flex:1, padding:'10px 12px', background:'transparent', fontSize:14, fontFamily:'var(--font)', color:'var(--text)', borderRadius:'0 9px 9px 0' }}
                       />
                     </div>
                   </div>

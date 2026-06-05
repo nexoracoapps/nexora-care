@@ -15,16 +15,17 @@ import Icon from '@/components/ui/Icon';
 
 type ModalType = 'create' | 'edit' | 'history' | 'whatsapp' | 'call-log' | 'delete' | 'email' | 'sms' | 'broadcast' | null;
 
-function FlagImg({ iso, size = 24 }: { iso: string; size?: number }) {
+// flagcdn.com only serves specific sizes: 20, 40, 80, 160, 320, 640
+function FlagImg({ iso, size = 20 }: { iso: string; size?: number }) {
   const lc = iso.toLowerCase();
   return (
     <img
-      src={`https://flagcdn.com/w${size}/${lc}.png`}
-      srcSet={`https://flagcdn.com/w${size * 2}/${lc}.png 2x`}
-      width={size} height={Math.round(size * 0.67)}
+      src={`https://flagcdn.com/w40/${lc}.png`}
+      srcSet={`https://flagcdn.com/w80/${lc}.png 2x`}
+      width={size} height={Math.round(size * 0.667)}
       alt={iso}
       style={{ borderRadius: 3, objectFit: 'cover', flexShrink: 0, display: 'block' }}
-      onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
+      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
     />
   );
 }
@@ -35,6 +36,12 @@ function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string)
   const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
+  // Translated country names for display + search
+  const countryNames = useMemo(
+    () => new Intl.DisplayNames([lang === 'ar' ? 'ar' : 'en'], { type: 'region' }),
+    [lang]
+  );
+
   useEffect(() => {
     const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
@@ -44,10 +51,15 @@ function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string)
   }, []);
 
   const q = search.toLowerCase();
-  const filtered = useMemo(() =>
-    q ? ALL_COUNTRIES.filter(([iso,, name]) => name.toLowerCase().includes(q) || iso.toLowerCase().includes(q))
-      : ALL_COUNTRIES,
-  [q]);
+  const filtered = useMemo(() => {
+    if (!q) return ALL_COUNTRIES;
+    return ALL_COUNTRIES.filter(([iso,, name]) => {
+      const translated = countryNames.of(iso) ?? '';
+      return name.toLowerCase().includes(q) ||
+             iso.toLowerCase().includes(q) ||
+             translated.toLowerCase().includes(q);
+    });
+  }, [q, countryNames]);
   const sel = ALL_COUNTRIES.find(([iso]) => iso === value);
 
   // Always keep dropdown anchored to left so it stays inside the modal in RTL
@@ -105,7 +117,7 @@ function PhonePrefix({ value, onChange }: { value: string; onChange: (v: string)
                 onMouseLeave={e => { if (value !== iso) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
                 <FlagImg iso={iso} size={24} />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: value === iso ? 600 : 400 }}>{name}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: value === iso ? 600 : 400 }}>{countryNames.of(iso) ?? name}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 500 }}>+{dc}</span>
               </button>
             ))}

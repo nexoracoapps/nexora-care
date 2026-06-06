@@ -4,7 +4,7 @@ import { getTokenFromRequest } from '@/lib/auth';
 
 /* POST /api/push/subscribe — save a browser push subscription */
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { endpoint, keys } = await req.json();
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
 /* DELETE /api/push/subscribe — remove subscription on logout */
 export async function DELETE(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { endpoint } = await req.json().catch(() => ({}));

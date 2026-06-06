@@ -40,6 +40,9 @@ export default function ProfilePage() {
         body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      // Server issues a fresh token after password change — update stored session
+      if (data.token) updateUser({ token: data.token });
       toast.success('Password changed successfully');
       setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }

@@ -10,7 +10,7 @@ function getTwilioClient() {
 }
 
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 

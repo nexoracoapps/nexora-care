@@ -5,7 +5,7 @@ import { getTokenFromRequest } from '@/lib/auth';
 import { apiError } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
   const formData = await req.formData();

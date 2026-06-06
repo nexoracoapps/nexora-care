@@ -86,6 +86,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // When the device comes back online or the tab regains focus, validate the
+  // stored token against the server. If the password was changed on another
+  // device, tokenVersion will have been incremented and the server returns 401.
+  useEffect(() => {
+    if (!user?.token) return;
+    const validate = async () => {
+      if (typeof navigator === 'undefined' || !navigator.onLine) return;
+      try {
+        const res = await fetch('/api/auth/profile', {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('nexora-user');
+          sessionStorage.removeItem('nexora-user');
+          setUser(null);
+          swrClear();
+          // Store a reason so the login page can show a helpful message
+          sessionStorage.setItem('nexora-logout-reason', 'password_changed');
+          router.push('/login');
+        }
+      } catch { /* offline — skip */ }
+    };
+    window.addEventListener('online', validate);
+    window.addEventListener('focus', validate);
+    return () => {
+      window.removeEventListener('online', validate);
+      window.removeEventListener('focus', validate);
+    };
+  }, [user?.token, router]);
+
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser, isLoading }}>
       {children}

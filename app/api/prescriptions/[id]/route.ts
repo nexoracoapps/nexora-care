@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
 import { apiError, apiOk } from '@/lib/utils';
@@ -16,7 +16,7 @@ const include = {
 };
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   const p = await prisma.prescription.findUnique({ where: { id: params.id }, include });
   if (!p) return apiError('Not found', 404);
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   const { notes, items } = await req.json();
 
@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   await prisma.prescription.delete({ where: { id: params.id } });
   return apiOk({ deleted: true });

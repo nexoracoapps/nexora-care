@@ -9,7 +9,7 @@ const include = {
 };
 
 export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
   const { searchParams } = new URL(req.url);
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 

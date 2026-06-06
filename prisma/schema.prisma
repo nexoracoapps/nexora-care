@@ -34,6 +34,7 @@ model User {
   branch       Branch?            @relation(fields: [branchId], references: [id])
   providerId   String?            @unique
   provider     ServiceProvider?   @relation(fields: [providerId], references: [id])
+  tokenVersion Int                @default(0)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   auditLogs    AuditLog[]

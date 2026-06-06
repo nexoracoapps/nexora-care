@@ -7,7 +7,7 @@ const { AccessToken } = twilio.jwt;
 const { VoiceGrant } = AccessToken;
 
 export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID;

@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       branchId: user.branchId,
       providerId: user.providerId ?? null,
+      tokenVersion: user.tokenVersion,
     });
 
     return apiOk({

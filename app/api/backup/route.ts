@@ -6,7 +6,7 @@ import { apiError } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (payload.role !== 'ADMIN') return apiError('Forbidden', 403);
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (payload.role !== 'ADMIN') return apiError('Forbidden', 403);
 

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { getTokenFromRequest } from '@/lib/auth';
@@ -14,7 +14,7 @@ const SELECT = {
 };
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN','MANAGER'].includes(payload.role)) return apiError('Forbidden', 403);
 
@@ -47,6 +47,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   };
   if (password) {
     data.password = await bcrypt.hash(password, 10);
+    // Invalidate all existing sessions for this user
+    data.tokenVersion = { increment: 1 };
   }
 
   const user = await prisma.user.update({ where: { id: params.id }, data, select: SELECT });
@@ -54,7 +56,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   if (!['ADMIN'].includes(payload.role)) return apiError('Forbidden — only ADMIN can delete users', 403);
 

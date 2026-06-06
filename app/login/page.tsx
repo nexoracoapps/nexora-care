@@ -92,6 +92,18 @@ function LoginPageInner() {
   /* ── Branch picker state ── */
   const [branchStep, setBranchStep] = useState<any[] | null>(null);
 
+  /* ── Show message if session was invalidated by a password change ── */
+  useEffect(() => {
+    const reason = sessionStorage.getItem('nexora-logout-reason');
+    if (reason === 'password_changed') {
+      sessionStorage.removeItem('nexora-logout-reason');
+      setError(isAr
+        ? 'تم تغيير كلمة المرور على جهاز آخر. يرجى تسجيل الدخول مجدداً.'
+        : 'Your password was changed. Please sign in again.');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Auto-login on mount if offline with a valid cached session ── */
   useEffect(() => {
     if (typeof navigator === 'undefined' || navigator.onLine) return;

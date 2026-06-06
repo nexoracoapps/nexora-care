@@ -6,7 +6,7 @@ import { apiError, apiOk } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
   const showAll = req.nextUrl.searchParams.get('all') === 'true';
   const where = (showAll && (payload.role === 'ADMIN' || payload.role === 'MANAGER'))
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'MANAGER')) return apiError('Unauthorized', 401);
   const body = await req.json();
   const { name, nameAr, category, dosageOptions, instructions, instructionsAr } = body;

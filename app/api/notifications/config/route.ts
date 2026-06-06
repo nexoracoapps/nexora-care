@@ -5,7 +5,7 @@ import { isEmailConfigured } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload) return apiError('Unauthorized', 401);
 
   const smsEnabled = !!(
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const payload = getTokenFromRequest(req);
+  const payload = await getTokenFromRequest(req);
   if (!payload || payload.role !== 'ADMIN') return apiError('Unauthorized', 401);
 
   const { reminderLeadMinutes } = await req.json();

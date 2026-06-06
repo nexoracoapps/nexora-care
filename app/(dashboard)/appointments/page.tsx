@@ -137,13 +137,6 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     }));
   }, []);
 
-  // Reload fresh data from server once offline queue has been flushed
-  useEffect(() => {
-    const handleSync = () => { swrBust('/api/appointments'); load(); };
-    window.addEventListener('nexora-sync-complete', handleSync);
-    return () => window.removeEventListener('nexora-sync-complete', handleSync);
-  }, [load]);
-
   const load = useCallback(async () => {
     if (!user?.token) return;
     const bq = activeBranchId ? `?branchId=${activeBranchId}` : '';
@@ -166,6 +159,13 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   }, [user, activeBranchId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Reload fresh data from server once offline queue has been flushed
+  useEffect(() => {
+    const handleSync = () => { swrBust('/api/appointments'); load(); };
+    window.addEventListener('nexora-sync-complete', handleSync);
+    return () => window.removeEventListener('nexora-sync-complete', handleSync);
+  }, [load]);
 
   const openCreate = () => {
     setSelected(null);

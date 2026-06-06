@@ -9,6 +9,7 @@ import { useBranch } from '@/context/BranchContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePermissions } from '@/context/PermissionsContext';
 import { queuedFetch } from '@/lib/queuedFetch';
+import { savePatch, applyStoredPatches, clearPatches, getAllPatchedIds } from '@/lib/offlinePatch';
 import type { Appointment, Customer, Service, ServiceProvider, PaymentMethod } from '@/types';
 import Icon from '@/components/ui/Icon';
 
@@ -34,6 +35,31 @@ const SERVICE_BADGE: Record<string, string> = {
 };
 const PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'CARD', 'TRANSFER', 'ONLINE', 'VISA', 'MASTERCARD', 'PAYPAL', 'APPLE_PAY'];
 
+function computeOptimisticFields(action: string, data: Record<string, unknown>, appt: Appointment): Partial<Appointment> {
+  switch (action) {
+    case 'complete':        return { status: 'COMPLETED' };
+    case 'no-show':         return { status: 'NO_SHOW' };
+    case 'cancel':          return { status: 'CANCELLED' };
+    case 'start-service':   return { status: 'IN_PROGRESS', serviceStatus: 'IN_PROGRESS' };
+    case 'deliver':         return { serviceStatus: 'DELIVERED' };
+    case 'partial-deliver': return { serviceStatus: 'PARTIAL' };
+    case 'not-deliver':     return { status: 'NO_SHOW', serviceStatus: 'NOT_DELIVERED' };
+    case 'pay': {
+      const f: Partial<Appointment> = { paymentStatus: 'PAID', status: 'COMPLETED' };
+      if (data.paymentMethod) f.paymentMethod = data.paymentMethod as PaymentMethod;
+      if (data.amount) f.amount = parseFloat(data.amount as string);
+      return f;
+    }
+    case 'unpay':
+      return { paymentStatus: 'UNPAID', paymentMethod: null, status: appt.serviceStatus !== 'PENDING' ? 'IN_PROGRESS' : 'SCHEDULED' };
+    case 'reschedule': {
+      const f: Partial<Appointment> = { status: 'SCHEDULED', serviceStatus: 'PENDING' };
+      if (data.dateTime) f.dateTime = data.dateTime as string;
+      return f;
+    }
+    default: return {};
+  }
+}
 
 type ModalType = 'create' | 'edit' | 'pay' | 'deliver' | 'reschedule' | 'history' | 'track' | null;
 
@@ -48,6 +74,7 @@ export default function AppointmentsPage() {
   const STATUS_COLOR: Record<string, string> = { SCHEDULED: '#059669', COMPLETED: '#2563eb', CANCELLED: '#dc2626', NO_SHOW: '#d97706' };
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set(getAllPatchedIds()));
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -110,30 +137,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const applyOptimistic = useCallback((apptId: string, action: string, data: Record<string, unknown>) => {
     setAppointments(prev => prev.map(a => {
       if (a.id !== apptId) return a;
-      const p = { ...a };
-      switch (action) {
-        case 'complete':        p.status = 'COMPLETED'; break;
-        case 'no-show':         p.status = 'NO_SHOW'; break;
-        case 'cancel':          p.status = 'CANCELLED'; break;
-        case 'start-service':   p.status = 'IN_PROGRESS'; p.serviceStatus = 'IN_PROGRESS'; break;
-        case 'deliver':         p.serviceStatus = 'DELIVERED'; break;
-        case 'partial-deliver': p.serviceStatus = 'PARTIAL'; break;
-        case 'not-deliver':     p.status = 'NO_SHOW'; p.serviceStatus = 'NOT_DELIVERED'; break;
-        case 'pay':
-          p.paymentStatus = 'PAID'; p.status = 'COMPLETED';
-          if (data.paymentMethod) p.paymentMethod = data.paymentMethod as PaymentMethod;
-          if (data.amount) p.amount = parseFloat(data.amount as string);
-          break;
-        case 'unpay':
-          p.paymentStatus = 'UNPAID'; p.paymentMethod = null;
-          p.status = a.serviceStatus !== 'PENDING' ? 'IN_PROGRESS' : 'SCHEDULED';
-          break;
-        case 'reschedule':
-          p.status = 'SCHEDULED'; p.serviceStatus = 'PENDING';
-          if (data.dateTime) p.dateTime = data.dateTime as string;
-          break;
-      }
-      return p;
+      return { ...a, ...computeOptimisticFields(action, data, a) };
     }));
   }, []);
 
@@ -142,7 +146,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     const bq = activeBranchId ? `?branchId=${activeBranchId}` : '';
     const ckA = `/api/appointments${bq}`, ckC = `/api/customers${bq}`, ckS = '/api/services', ckP = `/api/providers${bq}`;
     const staleA = swrGet<Appointment[]>(ckA), staleC = swrGet<Customer[]>(ckC), staleS = swrGet<Service[]>(ckS), staleP = swrGet<ServiceProvider[]>(ckP);
-    if (staleA && staleC && staleS && staleP) { setAppointments(staleA); setCustomers(staleC); setServices(staleS); setProviders(staleP); setLoading(false); } else setLoading(true);
+    if (staleA && staleC && staleS && staleP) { setAppointments(applyStoredPatches(staleA)); setCustomers(staleC); setServices(staleS); setProviders(staleP); setLoading(false); } else setLoading(true);
     try {
       const [apptRes, custRes, svcRes, provRes] = await Promise.all([
         fetch(ckA, { headers: { Authorization: `Bearer ${user.token}` } }),
@@ -150,11 +154,12 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         fetch(ckS, { headers: { Authorization: `Bearer ${user.token}` } }),
         fetch(ckP, { headers: { Authorization: `Bearer ${user.token}` } }),
       ]);
-      if (apptRes.ok) { const d = await apptRes.json(); setAppointments(d); swrSet(ckA, d); }
+      if (apptRes.ok) { const d = await apptRes.json(); swrSet(ckA, d); setAppointments(applyStoredPatches(d)); }
       if (custRes.ok) { const d = await custRes.json(); setCustomers(d); swrSet(ckC, d); }
       if (svcRes.ok)  { const d = await svcRes.json();  setServices(d);  swrSet(ckS, d); }
       if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckP, d); }
     } catch { /* ignore */ }
+    setPendingIds(new Set(getAllPatchedIds()));
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -162,7 +167,12 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
 
   // Reload fresh data from server once offline queue has been flushed
   useEffect(() => {
-    const handleSync = () => { swrBust('/api/appointments'); load(); };
+    const handleSync = () => {
+      clearPatches();
+      setPendingIds(new Set());
+      swrBust('/api/appointments');
+      load();
+    };
     window.addEventListener('nexora-sync-complete', handleSync);
     return () => window.removeEventListener('nexora-sync-complete', handleSync);
   }, [load]);
@@ -225,7 +235,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
     if (validLines.length === 0) return toast.error(t('required'));
     try {
       const results = await Promise.all(validLines.map(line =>
-        fetch('/api/appointments', {
+        queuedFetch('/api/appointments', {
           method: 'POST', headers,
           body: JSON.stringify({
             dateTime: new Date(form.dateTime).toISOString(),
@@ -238,8 +248,14 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
           }),
         })
       ));
-      const failed = results.filter(r => !r.ok);
+      const allQueued = results.every(r => r.status === 202);
+      const failed = results.filter(r => r.status !== 202 && !r.ok);
       if (failed.length > 0) throw new Error('Some appointments failed to create');
+      if (allQueued) {
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        setModal(null);
+        return;
+      }
       toast.success(validLines.length > 1 ? `${validLines.length} appointments created` : t('apptCreated'));
       setModal(null);
       swrBust('/api/appointments'); load(); notifyCalendar();
@@ -256,8 +272,11 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
       if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
       setModal(null);
       if (res.status === 202) {
-        // Offline: reflect the change immediately without waiting for sync
+        // Offline: reflect the change immediately and persist patch so it survives navigation
+        const fields = computeOptimisticFields(action, data, appt);
         applyOptimistic(appt.id, action, data);
+        savePatch(appt.id, action, fields);
+        setPendingIds(prev => new Set([...prev, appt.id]));
         toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
       } else {
         toast.success(t('updatedSuccess'));
@@ -413,11 +432,17 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                       </div>
                     </td>
 
-                    {/* Status — single badge only, always consistent height */}
+                    {/* Status — badge + pending sync indicator */}
                     <td data-label="Status">
                       <span className={`badge ${STATUS_BADGE[appt.status] ?? 'badge-pending'}`}>
                         {STATUS_LABEL[appt.status] ?? appt.status.replace(/_/g, ' ')}
                       </span>
+                      {pendingIds.has(appt.id) && (
+                        <div title={lang === 'ar' ? 'في انتظار المزامنة' : 'Pending sync'} style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 5, fontSize: '0.67rem', color: '#d97706', fontWeight: 600 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          {lang === 'ar' ? 'قيد المزامنة' : 'Pending sync'}
+                        </div>
+                      )}
                     </td>
 
                     {/* Amount + payment pill */}

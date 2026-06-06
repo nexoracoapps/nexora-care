@@ -92,6 +92,31 @@ function LoginPageInner() {
   /* ── Branch picker state ── */
   const [branchStep, setBranchStep] = useState<any[] | null>(null);
 
+  /* ── Auto-login on mount if offline with a valid cached session ── */
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || navigator.onLine) return;
+    const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
+    if (!raw) return;
+    try {
+      const cached = JSON.parse(raw);
+      if (cached?.token) {
+        const payload = JSON.parse(atob(cached.token.split('.')[1]));
+        if (!payload.exp || Date.now() / 1000 < payload.exp) {
+          login(cached, !!localStorage.getItem('nexora-user'));
+          const role = cached.role;
+          if (returnUrl) { router.push(returnUrl); return; }
+          if (!['ADMIN', 'MANAGER'].includes(role)) {
+            if (cached.branchId) setActiveBranchId(cached.branchId);
+            router.push('/appointments');
+          } else {
+            router.push('/dashboard');
+          }
+        }
+      }
+    } catch { /* malformed stored data */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Post-login routing ── */
   const afterLogin = async (loginData: any) => {
     // Always honour an explicit returnUrl (e.g. from the welcome/rate flow)
@@ -152,8 +177,8 @@ function LoginPageInner() {
         } catch { /* malformed stored data — fall through */ }
       }
       setError(isAr
-        ? 'أنت غير متصل بالإنترنت. يرجى الاتصال للدخول، أو استخدم جلسة محفوظة.'
-        : 'You\'re offline. Connect to the internet to sign in, or use a saved "Remember me" session.');
+        ? 'أنت غير متصل بالإنترنت. للعمل دون إنترنت، سجّل الدخول مرة واحدة وأنت متصل مع تفعيل "تذكرني".'
+        : 'You\'re offline and no saved session was found. Sign in once while online with "Remember me" checked — after that you can work fully offline.');
       setLoading(false);
       return;
     }

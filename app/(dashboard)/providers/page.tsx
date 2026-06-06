@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
+import { queuedFetch } from '@/lib/queuedFetch';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -46,7 +47,7 @@ interface UserOption { id: string; username: string; }
 export default function ProvidersPage() {
   const { user } = useAuth();
   const { activeBranchId, branches } = useBranch();
-  const { t, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
   const { canDo } = usePermissions();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,16 +72,18 @@ export default function ProvidersPage() {
     const ckProv = `/api/providers${activeBranchId ? `?branchId=${activeBranchId}` : ''}`, ckUsers = '/api/users';
     const staleProv = swrGet<ServiceProvider[]>(ckProv), staleUsers = swrGet<UserOption[]>(ckUsers);
     if (staleProv && staleUsers) { setProviders(staleProv); setUserOptions(staleUsers); setLoading(false); } else setLoading(true);
-    const [provRes, usrRes] = await Promise.all([
-      fetch(ckProv, { headers: { Authorization: `Bearer ${user.token}` } }),
-      fetch(ckUsers, { headers: { Authorization: `Bearer ${user.token}` } }),
-    ]);
-    if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckProv, d); }
-    if (usrRes.ok) {
-      const allUsers = await usrRes.json();
-      const d = allUsers.map((u: { id: string; username: string }) => ({ id: u.id, username: u.username }));
-      setUserOptions(d); swrSet(ckUsers, d);
-    }
+    try {
+      const [provRes, usrRes] = await Promise.all([
+        fetch(ckProv, { headers: { Authorization: `Bearer ${user.token}` } }),
+        fetch(ckUsers, { headers: { Authorization: `Bearer ${user.token}` } }),
+      ]);
+      if (provRes.ok) { const d = await provRes.json(); setProviders(d); swrSet(ckProv, d); }
+      if (usrRes.ok) {
+        const allUsers = await usrRes.json();
+        const d = allUsers.map((u: { id: string; username: string }) => ({ id: u.id, username: u.username }));
+        setUserOptions(d); swrSet(ckUsers, d);
+      }
+    } catch { /* offline — stale data shown */ }
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -113,7 +116,12 @@ export default function ProvidersPage() {
     try {
       const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
       const method = selected ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null, branchId: form.branchId || null }) });
+      const res = await queuedFetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null, branchId: form.branchId || null }) });
+      if (res.status === 202) {
+        setModalOpen(false);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        return;
+      }
       if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
       toast.success(selected ? t('providerUpdated') : t('providerCreated'));
       setModalOpen(false);
@@ -126,10 +134,18 @@ export default function ProvidersPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await fetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load(); new BroadcastChannel('nexora-providers').postMessage('changed'); }
-    else toast.error(t('failedToDelete'));
+    try {
+      const res = await queuedFetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setProviders(prev => prev.filter(p => p.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error(t('failedToDelete')); return; }
+      toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load(); new BroadcastChannel('nexora-providers').postMessage('changed');
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
 
   const openLink = (p: ServiceProvider) => {

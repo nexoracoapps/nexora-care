@@ -280,7 +280,12 @@ export default function CustomersPage() {
       const method = selected ? 'PUT' : 'POST';
       const dialCode = form.country ? (DIAL_CODE_MAP[form.country] ?? '') : '';
       const phone = form.phone ? `${dialCode}${form.phone}` : '';
-      const res = await fetch(url, { method, headers, body: JSON.stringify({ ...form, phone }) });
+      const res = await queuedFetch(url, { method, headers, body: JSON.stringify({ ...form, phone }) });
+      if (res.status === 202) {
+        setModal(null);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        return;
+      }
       if (!res.ok) throw new Error((await res.json()).error);
       toast.success(selected ? 'Customer updated' : 'Customer created');
       setModal(null);
@@ -365,10 +370,18 @@ export default function CustomersPage() {
   const deleteCustomer = async () => {
     if (!selected) return;
     setDeleting(true);
-    const res = await fetch(`/api/customers/${selected.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) { toast.success('Customer deleted'); setModal(null); swrBust('/api/customers'); load(); }
-    else toast.error('Failed to delete');
+    try {
+      const res = await queuedFetch(`/api/customers/${selected.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setCustomers(prev => prev.filter(c => c.id !== selected.id));
+        setModal(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error('Failed to delete'); return; }
+      toast.success('Customer deleted'); setModal(null); swrBust('/api/customers'); load();
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : 'Failed to delete'); }
   };
 
   const loadAllCallLogs = async () => {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
+import { queuedFetch } from '@/lib/queuedFetch';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -53,8 +54,10 @@ export default function BranchesPage() {
     const ck = '/api/branches';
     const stale = swrGet<typeof branches>(ck);
     if (stale) { setBranches(stale); setLoading(false); } else setLoading(true);
-    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) { const d = await res.json(); setBranches(d); swrSet(ck, d); }
+    try {
+      const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) { const d = await res.json(); setBranches(d); swrSet(ck, d); }
+    } catch { /* offline — stale data shown */ }
     setLoading(false);
   }, [user]);
 
@@ -68,7 +71,12 @@ export default function BranchesPage() {
     try {
       const url = selected ? `/api/branches/${selected.id}` : '/api/branches';
       const method = selected ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+      const res = await queuedFetch(url, { method, headers, body: JSON.stringify(form) });
+      if (res.status === 202) {
+        setModalOpen(false);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        return;
+      }
       if (!res.ok) throw new Error((await res.json())?.error || t('failedToSave'));
       toast.success(selected ? t('branchUpdated') : t('branchCreated'));
       setModalOpen(false);
@@ -81,10 +89,20 @@ export default function BranchesPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await fetch(`/api/branches/${deleteTarget.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/branches'); load(); refreshBranches(); }
-    else toast.error(t('failedToDelete'));
+    try {
+      const res = await queuedFetch(`/api/branches/${deleteTarget.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setBranches(prev => prev.filter(b => b.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error(t('failedToDelete')); return; }
+      toast.success(t('deleted'));
+      setDeleteTarget(null);
+      swrBust('/api/branches'); load(); refreshBranches();
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
 
   return (

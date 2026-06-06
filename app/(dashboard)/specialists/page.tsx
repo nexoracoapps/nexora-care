@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Pencil, Trash2 } from 'lucide-react';
 import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
+import { queuedFetch } from '@/lib/queuedFetch';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -44,7 +45,7 @@ function nameToGradient(name: string): string {
 export default function SpecialistsPage() {
   const { user } = useAuth();
   const { activeBranchId } = useBranch();
-  const { t, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
   const { canDo } = usePermissions();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,8 +65,10 @@ export default function SpecialistsPage() {
     const ck = `/api/providers${activeBranchId ? `?branchId=${activeBranchId}` : ''}`;
     const stale = swrGet<ServiceProvider[]>(ck);
     if (stale) { setProviders(stale); setLoading(false); } else setLoading(true);
-    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) { const d = await res.json(); setProviders(d); swrSet(ck, d); }
+    try {
+      const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) { const d = await res.json(); setProviders(d); swrSet(ck, d); }
+    } catch { /* offline — stale data shown */ }
     setLoading(false);
   }, [user, activeBranchId]);
 
@@ -98,7 +101,12 @@ export default function SpecialistsPage() {
     try {
       const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
       const method = selected ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null }) });
+      const res = await queuedFetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null }) });
+      if (res.status === 202) {
+        setModalOpen(false);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        return;
+      }
       if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
       toast.success(selected ? t('providerUpdated') : t('providerCreated'));
       setModalOpen(false);
@@ -110,10 +118,18 @@ export default function SpecialistsPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await fetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load(); }
-    else toast.error(t('failedToDelete'));
+    try {
+      const res = await queuedFetch(`/api/providers/${deleteTarget.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setProviders(prev => prev.filter(p => p.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error(t('failedToDelete')); return; }
+      toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/providers'); load();
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
 
   const filtered = providers.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()));

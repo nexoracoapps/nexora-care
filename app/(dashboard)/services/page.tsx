@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
+import { queuedFetch } from '@/lib/queuedFetch';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -49,7 +50,7 @@ function nameToGradient(name: string): string {
 
 export default function ServicesPage() {
   const { user } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
   const { canDo } = usePermissions();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,8 +69,10 @@ export default function ServicesPage() {
     const ck = '/api/services';
     const stale = swrGet<typeof services>(ck);
     if (stale) { setServices(stale); setLoading(false); } else setLoading(true);
-    const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
-    if (res.ok) { const d = await res.json(); setServices(d); swrSet(ck, d); }
+    try {
+      const res = await fetch(ck, { headers: { Authorization: `Bearer ${user.token}` } });
+      if (res.ok) { const d = await res.json(); setServices(d); swrSet(ck, d); }
+    } catch { /* offline — stale data shown */ }
     setLoading(false);
   }, [user]);
 
@@ -102,7 +105,12 @@ export default function ServicesPage() {
     try {
       const url = selected ? `/api/services/${selected.id}` : '/api/services';
       const method = selected ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, nameAr: form.nameAr || null, price: parseFloat(form.price) || 0, description: form.description || null }) });
+      const res = await queuedFetch(url, { method, headers, body: JSON.stringify({ name: form.name, nameAr: form.nameAr || null, price: parseFloat(form.price) || 0, description: form.description || null }) });
+      if (res.status === 202) {
+        setModalOpen(false);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+        return;
+      }
       if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
       try {
         const data = await res.json();
@@ -118,14 +126,21 @@ export default function ServicesPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await fetch(`/api/services/${deleteTarget.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) {
+    try {
+      const res = await queuedFetch(`/api/services/${deleteTarget.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setServices(prev => prev.filter(s => s.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error(t('failedToDelete')); return; }
       if (typeof window !== 'undefined') localStorage.removeItem(`serviceIcon_${deleteTarget.id}`);
       toast.success(t('deleted'));
       setDeleteTarget(null);
       swrBust('/api/services'); load();
-    } else toast.error(t('failedToDelete'));
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
 
   const filtered = services.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()));

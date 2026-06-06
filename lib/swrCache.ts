@@ -28,6 +28,8 @@ function lsRead<T>(key: string): T | null {
     const raw = localStorage.getItem(lsKey(key));
     if (!raw) return null;
     const entry: { d: T; t: number } = JSON.parse(raw);
+    // When offline, never discard stale data — stale is always better than empty
+    if (!navigator.onLine) return entry.d;
     if (Date.now() - entry.t > LS_TTL) { localStorage.removeItem(lsKey(key)); return null; }
     return entry.d;
   } catch { return null; }
@@ -48,10 +50,11 @@ function lsRemove(key: string): void {
 // ── public API ────────────────────────────────────────────────────────────────
 
 export function swrGet<T>(key: string): T | null {
-  // 1. In-memory hit (fastest path)
+  // 1. In-memory hit (fastest path); when offline never discard
   const mem = MEM.get(key);
-  if (mem && Date.now() - mem.t <= MEM_TTL) return mem.d as T;
-  MEM.delete(key);
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+  if (mem && (offline || Date.now() - mem.t <= MEM_TTL)) return mem.d as T;
+  if (!offline) MEM.delete(key);
 
   // 2. localStorage fallback (survives page refresh)
   const ls = lsRead<T>(key);

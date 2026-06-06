@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import NexoraCareIcon from '@/components/NexoraCareIcon';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -76,8 +77,33 @@ export default function LandingPage() {
   const ar = lang === 'ar';
   const dir = ar ? 'rtl' : 'ltr';
 
+  const [isOffline, setIsOffline] = useState(false);
+  const [hasCachedSession, setHasCachedSession] = useState(false);
+
+  useEffect(() => {
+    const update = () => setIsOffline(!navigator.onLine);
+    setIsOffline(!navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
+    if (raw) {
+      try {
+        const cached = JSON.parse(raw);
+        if (cached?.token) {
+          const payload = JSON.parse(atob(cached.token.split('.')[1]));
+          if (!payload.exp || Date.now() / 1000 < payload.exp) setHasCachedSession(true);
+        }
+      } catch { /* ignore */ }
+    }
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
+  }, []);
+
   const goLogin = () => {
     router.push('/login');
+  };
+
+  const goDashboard = () => {
+    router.push('/dashboard');
   };
 
   return (
@@ -161,6 +187,21 @@ export default function LandingPage() {
         }
       `}} />
 
+      {/* ── Offline Banner ── */}
+      {isOffline && (
+        <div style={{ background: 'linear-gradient(90deg,#d97706,#b45309)', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#fff' }}>
+          <span>📶</span>
+          <span>{ar ? 'أنت غير متصل بالإنترنت.' : 'You\'re offline.'}</span>
+          {hasCachedSession ? (
+            <button onClick={goDashboard} style={{ background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 8, padding: '4px 14px', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              {ar ? 'متابعة إلى لوحة التحكم ←' : 'Continue to Dashboard →'}
+            </button>
+          ) : (
+            <span style={{ opacity: 0.85 }}>{ar ? 'سجّل دخولك مرة واحدة عبر الإنترنت مع "تذكرني" لتتمكن من العمل بدون إنترنت.' : 'Sign in once online with "Remember me" to work offline.'}</span>
+          )}
+        </div>
+      )}
+
       {/* ── NAV ── */}
       <nav style={{ position:'sticky', top:0, zIndex:100, background:'rgba(18,11,26,0.96)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'0 20px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', height:62 }}>
@@ -179,14 +220,24 @@ export default function LandingPage() {
               onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.75)';}}>
               {ar ? 'EN' : 'عربي'}
             </button>
-            {/* Login — gradient CTA */}
-            <button
-              onClick={goLogin}
-              style={{ background:GRAD, color:'#fff', border:'none', borderRadius:12, padding:'8px 22px', fontWeight:800, fontSize:14, cursor:'pointer', boxShadow:'0 4px 18px rgba(229,62,90,0.42)', transition:'transform 0.15s, filter 0.15s', letterSpacing:'0.2px' }}
-              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.1)';}}
-              onMouseLeave={e=>{e.currentTarget.style.transform='none'; e.currentTarget.style.filter='none';}}>
-              {ar ? 'تسجيل الدخول' : 'Sign In'}
-            </button>
+            {/* Login / Dashboard CTA */}
+            {isOffline && hasCachedSession ? (
+              <button
+                onClick={goDashboard}
+                style={{ background:'linear-gradient(135deg,#d97706,#b45309)', color:'#fff', border:'none', borderRadius:12, padding:'8px 22px', fontWeight:800, fontSize:14, cursor:'pointer', boxShadow:'0 4px 18px rgba(217,119,6,0.42)', transition:'transform 0.15s, filter 0.15s', letterSpacing:'0.2px' }}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.1)';}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none'; e.currentTarget.style.filter='none';}}>
+                {ar ? '📶 متابعة بدون إنترنت' : '📶 Continue Offline'}
+              </button>
+            ) : (
+              <button
+                onClick={goLogin}
+                style={{ background:GRAD, color:'#fff', border:'none', borderRadius:12, padding:'8px 22px', fontWeight:800, fontSize:14, cursor:'pointer', boxShadow:'0 4px 18px rgba(229,62,90,0.42)', transition:'transform 0.15s, filter 0.15s', letterSpacing:'0.2px' }}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.1)';}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none'; e.currentTarget.style.filter='none';}}>
+                {ar ? 'تسجيل الدخول' : 'Sign In'}
+              </button>
+            )}
           </div>
         </div>
       </nav>

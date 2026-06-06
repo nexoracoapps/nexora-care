@@ -133,6 +133,31 @@ function LoginPageInner() {
   /* ── Login submit ── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
+
+    // Offline path: try to resume a cached valid session
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
+      if (raw) {
+        try {
+          const cached = JSON.parse(raw);
+          if (cached?.token) {
+            const payload = JSON.parse(atob(cached.token.split('.')[1]));
+            if (!payload.exp || Date.now() / 1000 < payload.exp) {
+              login(cached, !!localStorage.getItem('nexora-user'));
+              await afterLogin(cached);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch { /* malformed stored data — fall through */ }
+      }
+      setError(isAr
+        ? 'أنت غير متصل بالإنترنت. يرجى الاتصال للدخول، أو استخدم جلسة محفوظة.'
+        : 'You\'re offline. Connect to the internet to sign in, or use a saved "Remember me" session.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -141,7 +166,6 @@ function LoginPageInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
       login(data, remember);
-      // Tell the browser to save / update the stored credentials
       if (typeof window !== 'undefined' && window.PasswordCredential) {
         try {
           const cred = new window.PasswordCredential({ id: form.username, password: form.password });

@@ -20,6 +20,7 @@ export function useOfflineSync() {
     try {
       const queued = await getAllQueued();
       if (queued.length === 0) { setSyncing(false); return; }
+      window.dispatchEvent(new CustomEvent('nexora-sync-start'));
       let succeeded = 0;
       let failed    = 0;
       for (const item of queued) {

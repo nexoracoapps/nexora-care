@@ -288,10 +288,18 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const confirmDeleteAppt = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await fetch(`/api/appointments/${deleteTarget.id}`, { method: 'DELETE', headers });
-    setDeleting(false);
-    if (res.ok) { toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/appointments'); load(); notifyCalendar(); }
-    else toast.error(t('failedToDelete'));
+    try {
+      const res = await queuedFetch(`/api/appointments/${deleteTarget.id}`, { method: 'DELETE', headers });
+      setDeleting(false);
+      if (res.status === 202) {
+        setAppointments(prev => prev.filter(a => a.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
+        return;
+      }
+      if (!res.ok) { toast.error(t('failedToDelete')); return; }
+      toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/appointments'); load(); notifyCalendar();
+    } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
 
   const filtered = appointments.filter(a => {

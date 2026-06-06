@@ -236,13 +236,14 @@ export default function CustomersPage() {
     let country = c.country || '';
     if (country && DIAL_CODE_MAP[country]) {
       const dc = DIAL_CODE_MAP[country];
-      if (localPhone.startsWith(dc)) localPhone = localPhone.slice(dc.length);
+      if (localPhone.startsWith(dc)) localPhone = localPhone.slice(dc.length).replace(/^0+/, '');
     } else if (localPhone) {
       const sorted = Object.entries(DIAL_CODE_MAP).sort((a, b) => b[1].length - a[1].length);
       for (const [iso, dc] of sorted) {
-        if (localPhone.startsWith(dc)) { country = iso; localPhone = localPhone.slice(dc.length); break; }
+        if (localPhone.startsWith(dc)) { country = iso; localPhone = localPhone.slice(dc.length).replace(/^0+/, ''); break; }
       }
     }
+    localPhone = localPhone.replace(/^0+/, '');
     setForm({ name: c.name, phone: localPhone, email: c.email || '', country, branchId: c.branchId || '' });
     setModal('edit');
   };
@@ -279,7 +280,8 @@ export default function CustomersPage() {
       const url = selected ? `/api/customers/${selected.id}` : '/api/customers';
       const method = selected ? 'PUT' : 'POST';
       const dialCode = form.country ? (DIAL_CODE_MAP[form.country] ?? '') : '';
-      const phone = form.phone ? `${dialCode}${form.phone}` : '';
+      const localNum = form.phone.replace(/^0+/, '');
+      const phone = localNum ? `${dialCode}${localNum}` : '';
       const res = await queuedFetch(url, { method, headers, body: JSON.stringify({ ...form, phone }) });
       if (res.status === 202) {
         setModal(null);
@@ -712,8 +714,8 @@ export default function CustomersPage() {
                       {c.phone ? (
                         <div
                           style={{ display:'flex', flexDirection:'column', gap:5, cursor:'pointer', alignItems:'center' }}
-                          title={`${c.phone} — click to copy`}
-                          onClick={() => navigator.clipboard.writeText(c.phone!).then(() => toast.success(lang === 'ar' ? 'تم النسخ' : 'Copied!'))}
+                          title={`${c.phone.replace(/^0+/, '')} — click to copy`}
+                          onClick={() => navigator.clipboard.writeText(c.phone!.replace(/^0+/, '')).then(() => toast.success(lang === 'ar' ? 'تم النسخ' : 'Copied!'))}
                         >
                           {c.country && (
                             <span style={{ display:'inline-flex', alignItems:'center', gap:5, width:'fit-content', padding:'2px 8px 2px 5px', borderRadius:20, background:'var(--bg-elevated)', border:'1px solid var(--border)', fontSize:11, fontWeight:600, color:'var(--text-sub)' }}>
@@ -722,9 +724,13 @@ export default function CustomersPage() {
                             </span>
                           )}
                           <span style={{ fontSize:13, fontWeight:500, color:'var(--text)', letterSpacing:'0.02em', fontVariantNumeric:'tabular-nums' }}>
-                            {c.country && DIAL_CODE_MAP[c.country]
-                              ? `+${DIAL_CODE_MAP[c.country]} ${c.phone.slice(DIAL_CODE_MAP[c.country].length)}`
-                              : c.phone}
+                            {(() => {
+                              const dc = c.country ? DIAL_CODE_MAP[c.country] : null;
+                              if (dc && c.phone.startsWith(dc)) {
+                                return `+${dc} ${c.phone.slice(dc.length).replace(/^0+/, '')}`;
+                              }
+                              return c.phone.replace(/^0+/, '');
+                            })()}
                           </span>
                         </div>
                       ) : <span style={{ color:'var(--text-muted)' }}>—</span>}

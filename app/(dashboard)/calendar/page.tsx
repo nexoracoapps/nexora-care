@@ -11,6 +11,7 @@ type CalAppt = {
   id: string;
   dateTime: string;
   status: string;
+  serviceStatus: string;
   paymentStatus: string;
   amount?: number;
   customer?: { id: string; name: string; phone?: string };
@@ -64,6 +65,11 @@ export default function CalendarPage() {
   const [savingLead, setSavingLead] = useState(false);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [testingNotif, setTestingNotif] = useState(false);
+  const [actionAppt, setActionAppt] = useState<CalAppt | null>(null);
+  const [calSubAction, setCalSubAction] = useState<'pay' | 'reschedule' | null>(null);
+  const [calPayForm, setCalPayForm] = useState({ method: 'CASH', amount: '' });
+  const [calNewDateTime, setCalNewDateTime] = useState('');
+  const [actionSaving, setActionSaving] = useState(false);
   const notifiedRef = useRef<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
 
@@ -134,6 +140,42 @@ export default function CalendarPage() {
     } catch (e) {
       console.warn('[Push] subscribe failed', e);
       toast.error('Failed to enable reminders — ' + String(e));
+    }
+  };
+
+  const toLocalISO = (d: Date) => {
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  const doCalAction = async (appt: CalAppt, action: string, data: Record<string, unknown> = {}) => {
+    setActionSaving(true);
+    try {
+      const res = await fetch(`/api/appointments/${appt.id}/actions`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
+        body: JSON.stringify({ action, ...data }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.error || (lang === 'ar' ? 'فشل التحديث' : 'Failed to update'));
+        return;
+      }
+      const updates: Partial<CalAppt> = {};
+      if (action === 'complete')   { updates.status = 'COMPLETED'; }
+      if (action === 'no-show')    { updates.status = 'NO_SHOW'; }
+      if (action === 'cancel')     { updates.status = 'CANCELLED'; }
+      if (action === 'pay')        { updates.status = 'COMPLETED'; updates.paymentStatus = 'PAID'; }
+      if (action === 'unpay')      { updates.paymentStatus = 'UNPAID'; }
+      if (action === 'reschedule' && data.dateTime) { updates.dateTime = data.dateTime as string; updates.status = 'SCHEDULED'; }
+      setAppts(prev => prev.map(a => a.id === appt.id ? { ...a, ...updates } : a));
+      toast.success(lang === 'ar' ? 'تم التحديث' : 'Updated');
+      setActionAppt(null);
+      setCalSubAction(null);
+    } catch {
+      toast.error(lang === 'ar' ? 'فشل التحديث' : 'Failed to update');
+    } finally {
+      setActionSaving(false);
     }
   };
 
@@ -344,16 +386,22 @@ export default function CalendarPage() {
   const ApptCard = ({ a, compact }: { a: CalAppt; compact?: boolean }) => {
     const color = STATUS_COLOR[a.status] ?? '#6366f1';
     return (
-      <div style={{
-        background: `${color}12`,
-        borderRadius: compact ? 7 : 10,
-        padding: compact ? '5px 7px 5px 10px' : '9px 12px 9px 13px',
-        marginBottom: compact ? 4 : 6,
-        borderLeft: isRTL ? 'none' : `3px solid ${color}`,
-        borderRight: isRTL ? `3px solid ${color}` : 'none',
-        position: 'relative',
-        cursor: 'default',
-      }}>
+      <div
+        onClick={!compact ? () => { setActionAppt(a); setCalSubAction(null); setCalPayForm({ method: 'CASH', amount: a.amount?.toString() || '' }); setCalNewDateTime(toLocalISO(new Date(a.dateTime))); } : undefined}
+        style={{
+          background: `${color}12`,
+          borderRadius: compact ? 7 : 10,
+          padding: compact ? '5px 7px 5px 10px' : '9px 12px 9px 13px',
+          marginBottom: compact ? 4 : 6,
+          borderLeft: isRTL ? 'none' : `3px solid ${color}`,
+          borderRight: isRTL ? `3px solid ${color}` : 'none',
+          position: 'relative',
+          cursor: compact ? 'default' : 'pointer',
+          transition: compact ? undefined : 'all 0.12s',
+        }}
+        onMouseEnter={!compact ? e => { (e.currentTarget as HTMLElement).style.transform = 'translateX(2px)'; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${color}30`; } : undefined}
+        onMouseLeave={!compact ? e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; } : undefined}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <span style={{
             fontSize: compact ? '0.68rem' : '0.73rem', fontWeight: 800, color,
@@ -926,6 +974,113 @@ export default function CalendarPage() {
             <div className="cal-swipe-hint">← swipe to navigate →</div>
           </div>
       </div>
+
+      {/* ── Appointment Action Modal ── */}
+      {actionAppt && (
+        <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)' }} onClick={() => !actionSaving && (setActionAppt(null), setCalSubAction(null))}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 20, width: '100%', maxWidth: 380, boxShadow: '0 24px 80px rgba(0,0,0,0.2)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div style={{ height: 4, background: `${STATUS_COLOR[actionAppt.status] ?? 'var(--grad)'}` }} />
+            <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text)' }}>{actionAppt.customer?.name || '—'}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-sub)', marginTop: 2 }}>
+                    {actionAppt.service?.name && <span>✦ {actionAppt.service.name} · </span>}
+                    <span style={{ color: STATUS_COLOR[actionAppt.status] ?? 'var(--text-sub)', fontWeight: 700 }}>{statusLabel(actionAppt.status)}</span>
+                    <span style={{ marginLeft: 8 }}>{fmtTime(actionAppt.dateTime)}</span>
+                  </div>
+                </div>
+                <button onClick={() => { setActionAppt(null); setCalSubAction(null); }} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'var(--bg-elevated)', cursor: 'pointer', color: 'var(--text-sub)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            </div>
+
+            <div style={{ padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {calSubAction === null && (() => {
+                const isActive = actionAppt.status === 'SCHEDULED' || actionAppt.status === 'IN_PROGRESS';
+                const canReschedule = (actionAppt.status === 'SCHEDULED' && actionAppt.paymentStatus === 'UNPAID') || actionAppt.status === 'NO_SHOW';
+                return (
+                  <>
+                    {isActive && (
+                      <>
+                        <button disabled={actionSaving} onClick={() => doCalAction(actionAppt, 'complete')}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid #10b981', background: '#10b98112', color: '#10b981', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          ✓ {lang === 'ar' ? 'تم الإنجاز' : 'Mark Complete'}
+                        </button>
+                        <button disabled={actionSaving} onClick={() => doCalAction(actionAppt, 'no-show')}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid #f59e0b', background: '#f59e0b12', color: '#f59e0b', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          ✗ {lang === 'ar' ? 'لم يحضر' : 'No Show'}
+                        </button>
+                        <button disabled={actionSaving} onClick={() => doCalAction(actionAppt, 'cancel')}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid #ef4444', background: '#ef444412', color: '#ef4444', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          ⊘ {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                        </button>
+                      </>
+                    )}
+                    {actionAppt.status !== 'CANCELLED' && actionAppt.status !== 'NO_SHOW' && (
+                      actionAppt.paymentStatus === 'UNPAID' ? (
+                        <button disabled={actionSaving} onClick={() => setCalSubAction('pay')}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid #10b981', background: '#10b98112', color: '#10b981', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          💳 {lang === 'ar' ? 'تسجيل الدفع' : 'Record Payment'}
+                        </button>
+                      ) : (
+                        <button disabled={actionSaving} onClick={() => doCalAction(actionAppt, 'unpay')}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid #f59e0b', background: '#f59e0b12', color: '#f59e0b', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          ↩ {lang === 'ar' ? 'إلغاء الدفع' : 'Revert Payment'}
+                        </button>
+                      )
+                    )}
+                    {canReschedule && (
+                      <button disabled={actionSaving} onClick={() => setCalSubAction('reschedule')}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text)', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                        📅 {lang === 'ar' ? 'إعادة الجدولة' : 'Reschedule'}
+                      </button>
+                    )}
+                    {(isActive || canReschedule || (actionAppt.status !== 'CANCELLED' && actionAppt.status !== 'NO_SHOW')) ? null : (
+                      <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>
+                        {lang === 'ar' ? 'لا توجد إجراءات متاحة' : 'No actions available'}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {calSubAction === 'pay' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)', marginBottom: 2 }}>💳 {lang === 'ar' ? 'تسجيل الدفع' : 'Record Payment'}</div>
+                  <select value={calPayForm.method} onChange={e => setCalPayForm(f => ({ ...f, method: e.target.value }))}
+                    className="form-select">
+                    {['CASH','CARD','TRANSFER','ONLINE','VISA','MASTERCARD','PAYPAL','APPLE_PAY'].map(m => <option key={m} value={m}>{m.replace('_',' ')}</option>)}
+                  </select>
+                  <input className="form-input" type="number" step="0.01" placeholder="0.00"
+                    value={calPayForm.amount} onChange={e => setCalPayForm(f => ({ ...f, amount: e.target.value }))} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setCalSubAction(null)} style={{ flex: 1, padding: '10px', border: '1.5px solid var(--border)', borderRadius: 12, background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{lang === 'ar' ? 'رجوع' : 'Back'}</button>
+                    <button disabled={actionSaving} onClick={() => doCalAction(actionAppt, 'pay', { paymentMethod: calPayForm.method, amount: calPayForm.amount })}
+                      style={{ flex: 2, padding: '10px', border: 'none', borderRadius: 12, background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: actionSaving ? 'not-allowed' : 'pointer', opacity: actionSaving ? 0.7 : 1 }}>
+                      {actionSaving ? '...' : (lang === 'ar' ? 'تأكيد الدفع' : 'Confirm Payment')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {calSubAction === 'reschedule' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)', marginBottom: 2 }}>📅 {lang === 'ar' ? 'إعادة الجدولة' : 'Reschedule'}</div>
+                  <input className="form-input" type="datetime-local" value={calNewDateTime}
+                    onChange={e => setCalNewDateTime(e.target.value)} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setCalSubAction(null)} style={{ flex: 1, padding: '10px', border: '1.5px solid var(--border)', borderRadius: 12, background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{lang === 'ar' ? 'رجوع' : 'Back'}</button>
+                    <button disabled={actionSaving || !calNewDateTime} onClick={() => doCalAction(actionAppt, 'reschedule', { dateTime: new Date(calNewDateTime).toISOString() })}
+                      style={{ flex: 2, padding: '10px', border: 'none', borderRadius: 12, background: calNewDateTime ? 'var(--rose)' : 'var(--bg-elevated)', color: calNewDateTime ? '#fff' : 'var(--text-muted)', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700, cursor: (actionSaving || !calNewDateTime) ? 'not-allowed' : 'pointer', opacity: actionSaving ? 0.7 : 1 }}>
+                      {actionSaving ? '...' : (lang === 'ar' ? 'تأكيد' : 'Confirm')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status legend */}
       <div className="glass-card" style={{ marginTop: 10 }}>

@@ -1,10 +1,11 @@
 /* ─────────────────────────────────────────────────────────
-   NexoraCare Service Worker v9 — Next.js-Safe Offline-First
+   NexoraCare Service Worker v10 — Next.js-Safe Offline-First
+   + Background Sync for queued WhatsApp / mutation requests
    ───────────────────────────────────────────────────────── */
 
-const SHELL_CACHE  = 'nexora-shell-v9';
-const API_CACHE    = 'nexora-api-v9';
-const STATIC_CACHE = 'nexora-static-v9';
+const SHELL_CACHE  = 'nexora-shell-v10';
+const API_CACHE    = 'nexora-api-v10';
+const STATIC_CACHE = 'nexora-static-v10';
 
 /* ── Install ── */
 self.addEventListener('install', event => {
@@ -16,15 +17,7 @@ self.addEventListener('install', event => {
   );
 });
 
-/* ── Activate ── */
-self.addEventListener('activate', event => {
-  const keep = [SHELL_CACHE, API_CACHE, STATIC_CACHE];
-  event.waitUntil(
-    caches.keys()
-      .then(ks => Promise.all(ks.filter(k => !keep.includes(k)).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
+/* ── Activate — handled at bottom with flush ── */
 
 /* ── Fetch ── */
 self.addEventListener('fetch', event => {
@@ -132,5 +125,77 @@ self.addEventListener('notificationclick', event => {
       for (const c of clients) { if (c.url.includes(target) && 'focus' in c) return c.focus(); }
       return self.clients.openWindow(target);
     })
+  );
+});
+
+/* ── Background Sync: flush offline-queued requests ── */
+const IDB_NAME  = 'nexora-offline-v1';
+const IDB_STORE = 'queue';
+
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE, { keyPath: 'id' });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function getQueued(db) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).getAll();
+    req.onsuccess = () => resolve((req.result || []).sort((a, b) => a.timestamp - b.timestamp));
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function deleteQueued(db, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+
+async function flushQueue() {
+  const db    = await openIDB();
+  const items = await getQueued(db);
+  for (const item of items) {
+    try {
+      const res = await fetch(item.url, {
+        method:  item.method,
+        headers: item.headers,
+        body:    item.body,
+      });
+      if (res.ok || res.status < 500) {
+        // Request delivered (even if API returned 4xx — don't retry)
+        await deleteQueued(db, item.id);
+        // Notify open clients that a queued message was sent
+        self.clients.matchAll({ type: 'window' }).then(cs =>
+          cs.forEach(c => c.postMessage({ type: 'QUEUE_FLUSHED', id: item.id, url: item.url }))
+        );
+      }
+    } catch {
+      // Still offline — leave in queue, will retry on next sync
+    }
+  }
+}
+
+self.addEventListener('sync', event => {
+  if (event.tag === 'nexora-queue-flush') {
+    event.waitUntil(flushQueue());
+  }
+});
+
+/* Fallback: also flush on SW activate (catches browsers without Background Sync API) */
+self.addEventListener('activate', event => {
+  const keep = [SHELL_CACHE, API_CACHE, STATIC_CACHE];
+  event.waitUntil(
+    caches.keys()
+      .then(ks => Promise.all(ks.filter(k => !keep.includes(k)).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => flushQueue().catch(() => {}))
   );
 });

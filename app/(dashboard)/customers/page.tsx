@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ALL_COUNTRIES, DIAL_CODE_MAP, flagEmoji } from '@/lib/countryDialCodes';
 import toast from 'react-hot-toast';
 import { swrGet, swrSet, swrBust } from '@/lib/swrCache';
+import { queuedFetch } from '@/lib/queuedFetch';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
@@ -199,6 +200,29 @@ export default function CustomersPage() {
     fetch('/api/notifications/config', { headers: { Authorization: `Bearer ${user.token}` } })
       .then(r => r.json()).then(d => setNotifConfig(d)).catch(() => {});
   }, [user]);
+
+  // Flush offline queue when internet comes back
+  useEffect(() => {
+    const handleOnline = () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          (reg as any).sync?.register('nexora-queue-flush').catch(() => {});
+        });
+      }
+    };
+    // Also listen for SW messages about flushed items
+    const handleSwMsg = (e: MessageEvent) => {
+      if (e.data?.type === 'QUEUE_FLUSHED' && e.data?.url?.includes('whatsapp')) {
+        toast.success(lang === 'ar' ? 'تم إرسال رسالة واتساب المعلقة!' : 'Queued WhatsApp message delivered!');
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    navigator.serviceWorker?.addEventListener('message', handleSwMsg);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      navigator.serviceWorker?.removeEventListener('message', handleSwMsg);
+    };
+  }, [lang]);
 
   const openCreate = () => {
     setSelected(null);
@@ -435,15 +459,30 @@ export default function CustomersPage() {
   const sendWhatsApp = async (phone: string, message: string) => {
     setWaSending(true); setWaError(''); setWaResult(false);
     try {
-      const res = await fetch('/api/whatsapp/send', {
+      const res = await queuedFetch('/api/whatsapp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
         body: JSON.stringify({ phone, message }),
       });
       const data = await res.json();
+      if (data.queued) {
+        setWaResult(true);
+        toast(lang === 'ar'
+          ? 'لا يوجد إنترنت — سيتم إرسال الرسالة عند عودة الاتصال'
+          : 'No internet — message queued, will send when back online',
+          { icon: '📶' });
+        // Register background sync so SW flushes queue when online
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            (reg as any).sync?.register('nexora-queue-flush').catch(() => {});
+          });
+        }
+        setTimeout(() => setModal(null), 2000);
+        return;
+      }
       if (!res.ok) { setWaError(data.error || data.message || 'Failed to send'); return; }
       setWaResult(true);
-      toast.success('WhatsApp message sent!');
+      toast.success(lang === 'ar' ? 'تم إرسال رسالة واتساب!' : 'WhatsApp message sent!');
       setTimeout(() => setModal(null), 1500);
     } catch { setWaError('Failed to send'); }
     finally { setWaSending(false); }

@@ -1,5 +1,5 @@
 export type Role = string;
-export type AppointmentStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+export type AppointmentStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'IN_PROGRESS';
 export type ServiceStatus = 'PENDING' | 'IN_PROGRESS' | 'DELIVERED' | 'PARTIAL' | 'NOT_DELIVERED';
 export type PaymentStatus = 'UNPAID' | 'PAID';
 export type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'ONLINE' | 'VISA' | 'MASTERCARD' | 'PAYPAL' | 'APPLE_PAY';

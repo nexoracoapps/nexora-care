@@ -473,6 +473,14 @@ const translations = {
     statusNoShow: 'No Show',
     paymentPaid: 'Paid',
     paymentUnpaid: 'Unpaid',
+    trackService: 'Track Service',
+    serviceBooked: 'Appointment Booked',
+    serviceInProgress: 'Service In Progress',
+    serviceDeliveredLabel: 'Service Delivered',
+    paymentReceived: 'Payment Received',
+    trackStep: 'Step',
+    waQueuedOffline: 'No internet — message queued and will send when back online',
+    waQueueCount: (n: number) => `${n} WhatsApp message${n === 1 ? '' : 's'} queued (offline)`,
   },
 
   ar: {
@@ -942,6 +950,14 @@ const translations = {
     statusNoShow: 'لم يحضر',
     paymentPaid: 'مدفوع',
     paymentUnpaid: 'غير مدفوع',
+    trackService: 'تتبع الخدمة',
+    serviceBooked: 'تم حجز الموعد',
+    serviceInProgress: 'الخدمة جارية',
+    serviceDeliveredLabel: 'تم تسليم الخدمة',
+    paymentReceived: 'تم استلام الدفع',
+    trackStep: 'خطوة',
+    waQueuedOffline: 'لا يوجد إنترنت — سيتم إرسال الرسالة عند عودة الاتصال',
+    waQueueCount: (n: number) => `${n} رسالة واتساب في قائمة الانتظار (غير متصل)`,
   },
 };
 

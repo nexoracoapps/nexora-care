@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         where: { id: params.id },
         select: { status: true },
       });
-      if (current && current.status === 'SCHEDULED') {
+      if (current && (current.status === 'SCHEDULED' || current.status === 'IN_PROGRESS')) {
         data.status = 'COMPLETED';
       }
       break;

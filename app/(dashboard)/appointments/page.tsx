@@ -35,7 +35,7 @@ const SERVICE_BADGE: Record<string, string> = {
 const PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'CARD', 'TRANSFER', 'ONLINE', 'VISA', 'MASTERCARD', 'PAYPAL', 'APPLE_PAY'];
 
 
-type ModalType = 'create' | 'edit' | 'pay' | 'deliver' | 'reschedule' | 'history' | null;
+type ModalType = 'create' | 'edit' | 'pay' | 'deliver' | 'reschedule' | 'history' | 'track' | null;
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
@@ -445,9 +445,10 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                                 ] : [
                                   { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
                                 ]) : []),
-                                ...(canDo('editAppointments') && appt.status === 'SCHEDULED' ? [
+                                ...(canDo('editAppointments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' && appt.paymentStatus === 'UNPAID' ? [
                                   { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(toLocalISO(new Date(appt.dateTime))); setModal('reschedule'); setOpenMenuId(null); } },
                                 ] : []),
+                                { label: `📍  ${t('trackService')}`, color: '#7c3aed', action: () => { setSelected(appt); setModal('track'); setOpenMenuId(null); } },
                               ];
                               return (
                                 <>
@@ -780,6 +781,115 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
             </div>
           </div>
         )}
+
+        {/* ── Service Track Modal ── */}
+        {modal === 'track' && selected && (() => {
+          const appt = selected;
+          const dt = new Date(appt.dateTime);
+          const dateStr = dt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const timeStr = dt.toLocaleTimeString(lang === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+
+          // Determine which steps are done
+          const isBooked    = true;
+          const isStarted   = appt.status === 'IN_PROGRESS' || appt.serviceStatus === 'IN_PROGRESS' || appt.serviceStatus === 'DELIVERED' || appt.serviceStatus === 'PARTIAL' || appt.serviceStatus === 'NOT_DELIVERED' || appt.status === 'COMPLETED';
+          const isDelivered = appt.serviceStatus === 'DELIVERED' || appt.serviceStatus === 'PARTIAL' || appt.serviceStatus === 'NOT_DELIVERED' || appt.status === 'COMPLETED';
+          const isPaid      = appt.paymentStatus === 'PAID';
+
+          const steps = [
+            { label: t('serviceBooked'),        done: isBooked,    current: isBooked && !isStarted,   icon: '📋' },
+            { label: t('serviceInProgress'),    done: isStarted,   current: isStarted && !isDelivered, icon: '⚡' },
+            { label: t('serviceDeliveredLabel'), done: isDelivered, current: isDelivered && !isPaid,   icon: '✅' },
+            { label: t('paymentReceived'),       done: isPaid,      current: false,                    icon: '💳' },
+          ];
+          const doneCount  = steps.filter(s => s.done).length;
+          const pct        = Math.round((doneCount / steps.length) * 100);
+
+          const dotColor   = (done: boolean, current: boolean) =>
+            done ? '#10b981' : current ? '#7c3aed' : 'var(--border)';
+          const labelColor = (done: boolean) => done ? 'var(--text)' : 'var(--text-muted)';
+
+          return (
+            <div className="modal-overlay">
+              <div className="modal modal-sm" style={{ maxWidth: 420 }}>
+                <div style={{ height: 4, background: 'linear-gradient(90deg,#7c3aed,#a78bfa)', borderRadius: '12px 12px 0 0' }} />
+                <div className="modal-header" style={{ paddingTop: 18 }}>
+                  <div>
+                    <h2 className="modal-title" style={{ fontSize: 16, marginBottom: 2 }}>📍 {t('trackService')}</h2>
+                    <div style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 500 }}>
+                      {appt.customer?.name} · {appt.service?.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{dateStr} · {timeStr}</div>
+                  </div>
+                  <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+                </div>
+                <div className="modal-body" style={{ paddingTop: 8 }}>
+                  {/* Progress bar */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-sub)', marginBottom: 6 }}>
+                      <span>{doneCount}/{steps.length} {t('trackStep')}</span>
+                      <span style={{ fontWeight: 700, color: pct === 100 ? '#10b981' : '#7c3aed' }}>{pct}%</span>
+                    </div>
+                    <div style={{ height: 8, background: 'var(--bg-elevated)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? 'linear-gradient(90deg,#10b981,#059669)' : 'linear-gradient(90deg,#7c3aed,#a78bfa)', borderRadius: 99, transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+
+                  {/* Timeline */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {steps.map((step, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'stretch', gap: 12 }}>
+                        {/* dot + line */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 28, flexShrink: 0 }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                            background: step.done ? '#10b981' : step.current ? '#7c3aed' : 'var(--bg-elevated)',
+                            border: `2px solid ${dotColor(step.done, step.current)}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: step.done ? 13 : 14,
+                            boxShadow: step.current ? '0 0 0 4px rgba(124,58,237,0.15)' : 'none',
+                            transition: 'all 0.2s',
+                          }}>
+                            {step.done ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            ) : (
+                              <span style={{ fontSize: 12 }}>{step.icon}</span>
+                            )}
+                          </div>
+                          {i < steps.length - 1 && (
+                            <div style={{ width: 2, flex: 1, minHeight: 28, background: step.done ? '#10b981' : 'var(--border)', marginTop: 2 }} />
+                          )}
+                        </div>
+                        {/* label */}
+                        <div style={{ paddingBottom: i < steps.length - 1 ? 20 : 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: 3 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: step.done || step.current ? 700 : 500, color: labelColor(step.done || step.current), lineHeight: 1.3 }}>
+                            {step.label}
+                          </div>
+                          {step.current && !step.done && (
+                            <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, marginTop: 2 }}>● {lang === 'ar' ? 'الحالي' : 'Current'}</div>
+                          )}
+                          {i === 0 && (
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{dateStr}, {timeStr}</div>
+                          )}
+                          {i === 2 && appt.serviceStatus && appt.serviceStatus !== 'PENDING' && (
+                            <div style={{ fontSize: 11, color: isDelivered ? '#10b981' : 'var(--text-muted)', marginTop: 2, fontWeight: 600 }}>
+                              {SERVICE_LABEL[appt.serviceStatus] ?? appt.serviceStatus}
+                            </div>
+                          )}
+                          {i === 3 && isPaid && appt.paymentMethod && (
+                            <div style={{ fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 600 }}>{appt.paymentMethod}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setModal(null)}>{t('close')}</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Delete Confirmation Modal ── */}
         {deleteTarget && (

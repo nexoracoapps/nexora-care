@@ -65,15 +65,17 @@ export default function BranchesPage() {
 
   const save = async () => {
     if (!form.name) return toast.error(t('branchNameRequired'));
-    const url = selected ? `/api/branches/${selected.id}` : '/api/branches';
-    const method = selected ? 'PUT' : 'POST';
-    const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
-    if (!res.ok) return toast.error(t('failedToSave'));
-    toast.success(selected ? t('branchUpdated') : t('branchCreated'));
-    setModalOpen(false);
-    swrBust('/api/branches');
-    load();
-    refreshBranches();
+    try {
+      const url = selected ? `/api/branches/${selected.id}` : '/api/branches';
+      const method = selected ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+      if (!res.ok) throw new Error((await res.json())?.error || t('failedToSave'));
+      toast.success(selected ? t('branchUpdated') : t('branchCreated'));
+      setModalOpen(false);
+      swrBust('/api/branches');
+      load();
+      refreshBranches();
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : t('failedToSave')); }
   };
 
   const confirmDelete = async () => {

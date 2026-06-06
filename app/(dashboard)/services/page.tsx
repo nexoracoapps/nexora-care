@@ -99,18 +99,20 @@ export default function ServicesPage() {
 
   const save = async () => {
     if (!form.name) return toast.error(t('required'));
-    const url = selected ? `/api/services/${selected.id}` : '/api/services';
-    const method = selected ? 'PUT' : 'POST';
-    const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, nameAr: form.nameAr || null, price: parseFloat(form.price) || 0, description: form.description || null }) });
-    if (!res.ok) return toast.error('Failed to save');
     try {
-      const data = await res.json();
-      const sid = selected?.id || data?.id;
-      if (sid && typeof window !== 'undefined') localStorage.setItem(`serviceIcon_${sid}`, form.icon);
-    } catch {}
-    toast.success(selected ? t('serviceUpdated') : t('serviceCreated'));
-    setModalOpen(false);
-    swrBust('/api/services'); load();
+      const url = selected ? `/api/services/${selected.id}` : '/api/services';
+      const method = selected ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, nameAr: form.nameAr || null, price: parseFloat(form.price) || 0, description: form.description || null }) });
+      if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
+      try {
+        const data = await res.json();
+        const sid = selected?.id || data?.id;
+        if (sid && typeof window !== 'undefined') localStorage.setItem(`serviceIcon_${sid}`, form.icon);
+      } catch {}
+      toast.success(selected ? t('serviceUpdated') : t('serviceCreated'));
+      setModalOpen(false);
+      swrBust('/api/services'); load();
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to save'); }
   };
 
   const confirmDelete = async () => {

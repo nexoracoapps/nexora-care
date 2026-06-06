@@ -110,15 +110,17 @@ export default function ProvidersPage() {
 
   const save = async () => {
     if (!form.name) return toast.error(t('required'));
-    const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
-    const method = selected ? 'PUT' : 'POST';
-    const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null, branchId: form.branchId || null }) });
-    if (!res.ok) return toast.error('Failed to save');
-    toast.success(selected ? t('providerUpdated') : t('providerCreated'));
-    setModalOpen(false);
-    swrBust('/api/providers');
-    load();
-    new BroadcastChannel('nexora-providers').postMessage('changed');
+    try {
+      const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
+      const method = selected ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null, branchId: form.branchId || null }) });
+      if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
+      toast.success(selected ? t('providerUpdated') : t('providerCreated'));
+      setModalOpen(false);
+      swrBust('/api/providers');
+      load();
+      new BroadcastChannel('nexora-providers').postMessage('changed');
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to save'); }
   };
 
   const confirmDelete = async () => {

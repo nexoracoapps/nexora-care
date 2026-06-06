@@ -1,0 +1,7 @@
+[
+  {
+    "step": "EXCEPTION",
+    "ok": false,
+    "detail": "page.goto: net::ERR_CONNECTION_RESET at https://nexora-care-nu.vercel.app/login\nCall log:\n\u001b[2m  - navigating to \"https://nexora-care-nu.vercel.app/login\", waiting until \"domcontentloaded\"\u001b[22m\n"
+  }
+]

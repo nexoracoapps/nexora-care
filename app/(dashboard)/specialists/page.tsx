@@ -95,14 +95,16 @@ export default function SpecialistsPage() {
 
   const save = async () => {
     if (!form.name) return toast.error(t('required'));
-    const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
-    const method = selected ? 'PUT' : 'POST';
-    const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null }) });
-    if (!res.ok) return toast.error('Failed to save');
-    toast.success(selected ? t('providerUpdated') : t('providerCreated'));
-    setModalOpen(false);
-    swrBust('/api/providers');
-    load();
+    try {
+      const url = selected ? `/api/providers/${selected.id}` : '/api/providers';
+      const method = selected ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers, body: JSON.stringify({ name: form.name, type: form.type, bio: form.bio || null, photoUrl: form.photoUrl || null }) });
+      if (!res.ok) throw new Error((await res.json())?.error || 'Failed to save');
+      toast.success(selected ? t('providerUpdated') : t('providerCreated'));
+      setModalOpen(false);
+      swrBust('/api/providers');
+      load();
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to save'); }
   };
 
   const confirmDelete = async () => {

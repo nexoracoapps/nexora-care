@@ -78,17 +78,16 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   // Counts visible items for a given appointment so we can pre-calculate dropdown height
   // at click time — avoids ref/layout timing issues entirely.
   const calcMenuHeight = (appt: Appointment): number => {
-    let n = 0;
+    let n = 1; // Track always shown
     if (canDo('editAppointments') && appt.status !== 'CANCELLED') n++;
-    if (canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED') n += 3;
+    if (canDo('updateAppointmentStatus') && (appt.status === 'SCHEDULED' || appt.status === 'IN_PROGRESS')) n += 3; // complete + no-show + cancel
     if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED') n++;
-    if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW') n++;
+    if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status === 'IN_PROGRESS') n++;
     if (canDo('recordPayments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW') n++;
-    if (canDo('editAppointments') && appt.status === 'SCHEDULED') n++;
+    if (canDo('editAppointments') && appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID') n++;
     const hasDel = canDo('deleteAppointments');
     const hasSep = hasDel && n > 0;
     if (hasDel) n++;
-    // 36px per item, 9px separator, 8px container vertical padding
     return n * 36 + (hasSep ? 9 : 0) + 8;
   };
 
@@ -399,7 +398,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                     {/* Actions */}
                     <td data-label="Actions">
                       <div className="dd-wrap" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
-                      {appt.status === 'COMPLETED' ? null : (<>
+                      <>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={e => {
@@ -427,27 +426,35 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             minWidth: 190, padding: '4px 0', overflow: 'hidden',
                           }}>
                             {(() => {
+                              const isActive = appt.status === 'SCHEDULED' || appt.status === 'IN_PROGRESS';
                               const menuItems = [
+                                // Edit
                                 ...(canDo('editAppointments') && appt.status !== 'CANCELLED' ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
-                                ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' ? [
+                                // Status overrides — available while appointment is active
+                                ...(canDo('updateAppointmentStatus') && isActive ? [
                                   { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
-                                  { label: `✗  ${t('noShow')}`, color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
+                                  { label: `✗  ${t('noShow')}`,       color: '#f59e0b', action: () => { doAction(appt, 'no-show'); setOpenMenuId(null); } },
                                   { label: `⊘  ${t('cancelAction')}`, color: '#ef4444', action: () => { doAction(appt, 'cancel'); setOpenMenuId(null); } },
                                 ] : []),
-                                ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED' ? [
+                                // Start Service — SCHEDULED + service not started yet
+                                ...(canDo('updateAppointmentStatus') && appt.status === 'SCHEDULED' && appt.serviceStatus === 'PENDING' ? [
                                   { label: `▶  ${t('startService')}`, color: '#f59e0b', action: () => { doAction(appt, 'start-service'); setOpenMenuId(null); } },
                                 ] : []),
-                                ...(canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? [
+                                // Deliver Service — service is in progress
+                                ...(canDo('updateAppointmentStatus') && appt.status === 'IN_PROGRESS' && appt.serviceStatus === 'IN_PROGRESS' ? [
                                   { label: `📦  ${t('deliverService')}`, color: '#10b981', action: () => { setSelected(appt); setDeliverForm({ status: 'DELIVERED', notes: '', nextVisit: '' }); setModal('deliver'); setOpenMenuId(null); } },
                                 ] : []),
+                                // Record / Revert Payment
                                 ...(canDo('recordPayments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' ? (appt.paymentStatus === 'UNPAID' ? [
                                   { label: `💳  ${t('recordPayment')}`, color: '#10b981', action: () => { setSelected(appt); setPayForm({ method: 'CASH', amount: appt.amount?.toString() || '' }); setModal('pay'); setOpenMenuId(null); } },
                                 ] : [
                                   { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
                                 ]) : []),
-                                ...(canDo('editAppointments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW' && appt.paymentStatus === 'UNPAID' ? [
+                                // Reschedule — only when still scheduled and unpaid (service not started)
+                                ...(canDo('editAppointments') && appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID' ? [
                                   { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(toLocalISO(new Date(appt.dateTime))); setModal('reschedule'); setOpenMenuId(null); } },
                                 ] : []),
+                                // Track — always available
                                 { label: `📍  ${t('trackService')}`, color: '#7c3aed', action: () => { setSelected(appt); setModal('track'); setOpenMenuId(null); } },
                               ];
                               return (
@@ -477,8 +484,7 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             })()}
                           </div>
                         )}
-                      {/* close COMPLETED guard */}
-                      </>)}
+                      </>
                       </div>
                     </td>
                   </tr>

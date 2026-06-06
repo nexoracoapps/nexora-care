@@ -20,52 +20,79 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data: Record<string, unknown> = {};
 
   switch (action) {
+    // ── Manual admin override: force-complete regardless of payment ──
     case 'complete':
       data.status = 'COMPLETED';
       break;
+
     case 'no-show':
       data.status = 'NO_SHOW';
       break;
+
     case 'cancel':
       data.status = 'CANCELLED';
       break;
+
+    // ── Service lifecycle ──
     case 'start-service':
       data.status = 'IN_PROGRESS';
+      data.serviceStatus = 'IN_PROGRESS';
       break;
+
+    // Deliver actions: update serviceStatus only — status stays IN_PROGRESS until paid
+    case 'deliver':
+      data.serviceStatus = 'DELIVERED';
+      if (notes !== undefined) data.deliveryNotes = notes;
+      if (nextVisit !== undefined) data.nextVisit = nextVisit;
+      break;
+
+    case 'partial-deliver':
+      data.serviceStatus = 'PARTIAL';
+      if (notes !== undefined) data.deliveryNotes = notes;
+      if (nextVisit !== undefined) data.nextVisit = nextVisit;
+      break;
+
+    case 'not-deliver':
+      data.status = 'NO_SHOW';
+      data.serviceStatus = 'NOT_DELIVERED';
+      if (notes !== undefined) data.deliveryNotes = notes;
+      break;
+
+    // ── Payment: auto-complete on payment for any active appointment ──
     case 'pay': {
       data.paymentStatus = 'PAID';
       if (paymentMethod) data.paymentMethod = paymentMethod;
       if (amount !== undefined) data.amount = parseFloat(amount);
-      // Auto-advance status: a fully paid appointment is considered Delivered/Completed
       const current = await prisma.appointment.findUnique({
         where: { id: params.id },
         select: { status: true },
       });
-      if (current && (current.status === 'SCHEDULED' || current.status === 'IN_PROGRESS')) {
+      if (current && current.status !== 'CANCELLED' && current.status !== 'NO_SHOW') {
         data.status = 'COMPLETED';
       }
       break;
     }
+
     case 'unpay':
       data.paymentStatus = 'UNPAID';
       data.paymentMethod = null;
+      // Revert to IN_PROGRESS if service was delivered, otherwise SCHEDULED
+      {
+        const current = await prisma.appointment.findUnique({
+          where: { id: params.id },
+          select: { serviceStatus: true },
+        });
+        const hasServiceStarted = current && current.serviceStatus !== 'PENDING';
+        data.status = hasServiceStarted ? 'IN_PROGRESS' : 'SCHEDULED';
+      }
       break;
+
     case 'reschedule':
       if (dateTime) data.dateTime = new Date(dateTime);
       data.status = 'SCHEDULED';
+      data.serviceStatus = 'PENDING';
       break;
-    case 'deliver':
-      data.status = 'COMPLETED';
-      if (notes !== undefined) data.notes = notes;
-      break;
-    case 'partial-deliver':
-      data.status = 'COMPLETED';
-      if (notes !== undefined) data.notes = notes;
-      break;
-    case 'not-deliver':
-      data.status = 'NO_SHOW';
-      if (notes !== undefined) data.notes = notes;
-      break;
+
     default:
       return apiError('Unknown action');
   }
@@ -76,9 +103,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     include,
   });
 
-  const pushAction = action === 'cancel' ? 'cancelled'
+  const pushAction =
+    action === 'cancel' ? 'cancelled'
     : action === 'reschedule' ? 'rescheduled'
-    : action === 'complete' || action === 'deliver' || action === 'partial-deliver' ? 'completed'
+    : action === 'complete' || action === 'pay' ? 'completed'
     : action === 'no-show' || action === 'not-deliver' ? 'no-show'
     : 'updated';
   notifyAppointment(appointment, pushAction).catch(() => {});

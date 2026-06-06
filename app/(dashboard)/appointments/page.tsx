@@ -106,12 +106,14 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   // at click time — avoids ref/layout timing issues entirely.
   const calcMenuHeight = (appt: Appointment): number => {
     let n = 1; // Track always shown
-    if (canDo('editAppointments') && appt.status !== 'CANCELLED') n++;
+    const canEdit = appt.status !== 'CANCELLED' && appt.status !== 'COMPLETED' && appt.paymentStatus !== 'PAID';
+    if (canDo('editAppointments') && canEdit) n++;
     if (canDo('updateAppointmentStatus') && (appt.status === 'SCHEDULED' || appt.status === 'IN_PROGRESS')) n += 3; // complete + no-show + cancel
     if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'PENDING' && appt.status === 'SCHEDULED') n++;
     if (canDo('updateAppointmentStatus') && appt.serviceStatus === 'IN_PROGRESS' && appt.status === 'IN_PROGRESS') n++;
     if (canDo('recordPayments') && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW') n++;
-    if (canDo('editAppointments') && appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID') n++;
+    const canReschedule = (appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID') || appt.status === 'NO_SHOW';
+    if (canDo('editAppointments') && canReschedule) n++;
     const hasDel = canDo('deleteAppointments');
     const hasSep = hasDel && n > 0;
     if (hasDel) n++;
@@ -297,7 +299,11 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         toast.success(lang === 'ar' ? '📡 تم الحذف محلياً — سيُرسل عند عودة الاتصال' : '📡 Deleted offline — will sync when back online');
         return;
       }
-      if (!res.ok) { toast.error(t('failedToDelete')); return; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.error || t('failedToDelete'));
+        return;
+      }
       toast.success(t('deleted')); setDeleteTarget(null); swrBust('/api/appointments'); load(); notifyCalendar();
     } catch (e: unknown) { setDeleting(false); toast.error(e instanceof Error ? e.message : t('failedToDelete')); }
   };
@@ -505,8 +511,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                             {(() => {
                               const isActive = appt.status === 'SCHEDULED' || appt.status === 'IN_PROGRESS';
                               const menuItems = [
-                                // Edit
-                                ...(canDo('editAppointments') && appt.status !== 'CANCELLED' ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
+                                // Edit — hidden for completed/paid appointments
+                                ...(canDo('editAppointments') && appt.status !== 'CANCELLED' && appt.status !== 'COMPLETED' && appt.paymentStatus !== 'PAID' ? [{ label: t('editDetails'), isEdit: true, color: 'var(--text)', action: () => { openEdit(appt); setOpenMenuId(null); } }] : []),
                                 // Status overrides — available while appointment is active
                                 ...(canDo('updateAppointmentStatus') && isActive ? [
                                   { label: `✓  ${t('markComplete')}`, color: '#10b981', action: () => { doAction(appt, 'complete'); setOpenMenuId(null); } },
@@ -527,8 +533,8 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
                                 ] : [
                                   { label: `↩  ${t('revertPayment')}`, color: '#f59e0b', action: () => { doAction(appt, 'unpay'); setOpenMenuId(null); } },
                                 ]) : []),
-                                // Reschedule — only when still scheduled and unpaid (service not started)
-                                ...(canDo('editAppointments') && appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID' ? [
+                                // Reschedule — when scheduled+unpaid, or when no-show
+                                ...(canDo('editAppointments') && ((appt.status === 'SCHEDULED' && appt.paymentStatus === 'UNPAID') || appt.status === 'NO_SHOW') ? [
                                   { label: `📅  ${t('reschedule')}`, color: 'var(--text)', action: () => { setSelected(appt); setNewDateTime(toLocalISO(new Date(appt.dateTime))); setModal('reschedule'); setOpenMenuId(null); } },
                                 ] : []),
                                 // Track — always available

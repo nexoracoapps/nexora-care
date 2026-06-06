@@ -106,6 +106,44 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
 
   const notifyCalendar = () => window.dispatchEvent(new CustomEvent('nexora-appointments-changed'));
 
+  // Apply instant local state changes when offline so the UI reflects the action immediately
+  const applyOptimistic = useCallback((apptId: string, action: string, data: Record<string, unknown>) => {
+    setAppointments(prev => prev.map(a => {
+      if (a.id !== apptId) return a;
+      const p = { ...a };
+      switch (action) {
+        case 'complete':        p.status = 'COMPLETED'; break;
+        case 'no-show':         p.status = 'NO_SHOW'; break;
+        case 'cancel':          p.status = 'CANCELLED'; break;
+        case 'start-service':   p.status = 'IN_PROGRESS'; p.serviceStatus = 'IN_PROGRESS'; break;
+        case 'deliver':         p.serviceStatus = 'DELIVERED'; break;
+        case 'partial-deliver': p.serviceStatus = 'PARTIAL'; break;
+        case 'not-deliver':     p.status = 'NO_SHOW'; p.serviceStatus = 'NOT_DELIVERED'; break;
+        case 'pay':
+          p.paymentStatus = 'PAID'; p.status = 'COMPLETED';
+          if (data.paymentMethod) p.paymentMethod = data.paymentMethod as PaymentMethod;
+          if (data.amount) p.amount = parseFloat(data.amount as string);
+          break;
+        case 'unpay':
+          p.paymentStatus = 'UNPAID'; p.paymentMethod = null;
+          p.status = a.serviceStatus !== 'PENDING' ? 'IN_PROGRESS' : 'SCHEDULED';
+          break;
+        case 'reschedule':
+          p.status = 'SCHEDULED'; p.serviceStatus = 'PENDING';
+          if (data.dateTime) p.dateTime = data.dateTime as string;
+          break;
+      }
+      return p;
+    }));
+  }, []);
+
+  // Reload fresh data from server once offline queue has been flushed
+  useEffect(() => {
+    const handleSync = () => { swrBust('/api/appointments'); load(); };
+    window.addEventListener('nexora-sync-complete', handleSync);
+    return () => window.removeEventListener('nexora-sync-complete', handleSync);
+  }, [load]);
+
   const load = useCallback(async () => {
     if (!user?.token) return;
     const bq = activeBranchId ? `?branchId=${activeBranchId}` : '';
@@ -216,9 +254,15 @@ const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
         body: JSON.stringify({ action, ...data }),
       });
       if (res.status !== 202 && !res.ok) throw new Error((await res.json()).error);
-      toast.success(res.status === 202 ? '📡 Offline — saved locally' : t('updatedSuccess'));
       setModal(null);
-      swrBust('/api/appointments'); load(); notifyCalendar();
+      if (res.status === 202) {
+        // Offline: reflect the change immediately without waiting for sync
+        applyOptimistic(appt.id, action, data);
+        toast.success(lang === 'ar' ? '📡 تم الحفظ محلياً — سيُرسل عند عودة الاتصال' : '📡 Saved offline — will sync when back online');
+      } else {
+        toast.success(t('updatedSuccess'));
+        swrBust('/api/appointments'); load(); notifyCalendar();
+      }
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   };
 

@@ -8,6 +8,10 @@ import { swrClear } from '@/lib/swrCache';
 // useLayoutEffect on client (before paint = no flash), useEffect on server (SSR safe)
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+// Auto-logout after 30 minutes of inactivity
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+const INACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const;
+
 interface AuthContextValue {
   user: AuthUser | null;
   login: (user: AuthUser, remember?: boolean) => void;
@@ -27,6 +31,13 @@ const AuthContext = createContext<AuthContextValue>({
 function readStoredUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   try {
+    // nexora-session-active lives in sessionStorage which is cleared when the
+    // browser/PWA is closed. If it's missing we treat it as a new session and
+    // wipe any persistent localStorage data so the user must log in again.
+    if (!sessionStorage.getItem('nexora-session-active')) {
+      localStorage.removeItem('nexora-user');
+      return null;
+    }
     const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
     if (!raw) return null;
     const parsed: AuthUser = JSON.parse(raw);
@@ -35,6 +46,7 @@ function readStoredUser(): AuthUser | null {
       if (payload.exp && Date.now() / 1000 > payload.exp) {
         localStorage.removeItem('nexora-user');
         sessionStorage.removeItem('nexora-user');
+        sessionStorage.removeItem('nexora-session-active');
         return null;
       }
     }
@@ -57,6 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback((userData: AuthUser, remember = false) => {
     setUser(userData);
+    // Mark the session as active — cleared automatically when the browser/PWA closes
+    sessionStorage.setItem('nexora-session-active', '1');
     if (remember) {
       localStorage.setItem('nexora-user', JSON.stringify(userData));
       sessionStorage.removeItem('nexora-user');
@@ -70,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     localStorage.removeItem('nexora-user');
     sessionStorage.removeItem('nexora-user');
+    sessionStorage.removeItem('nexora-session-active');
     swrClear();
     router.push('/login');
   }, [router]);
@@ -85,6 +100,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
   }, []);
+
+  // Auto-logout after INACTIVITY_TIMEOUT_MS of no user interaction
+  useEffect(() => {
+    if (!user) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(logout, INACTIVITY_TIMEOUT_MS);
+    };
+    reset();
+    INACTIVITY_EVENTS.forEach(e => window.addEventListener(e, reset, { passive: true }));
+    return () => {
+      clearTimeout(timer);
+      INACTIVITY_EVENTS.forEach(e => window.removeEventListener(e, reset));
+    };
+  }, [user, logout]);
 
   // When the device comes back online or the tab regains focus, validate the
   // stored token against the server. If the password was changed on another

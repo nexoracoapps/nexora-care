@@ -107,6 +107,9 @@ function LoginPageInner() {
   /* ── Auto-login on mount if offline with a valid cached session ── */
   useEffect(() => {
     if (typeof navigator === 'undefined' || navigator.onLine) return;
+    // Respect session-close logout — if the app was closed the session marker is
+    // gone even when localStorage still has data.
+    if (!sessionStorage.getItem('nexora-session-active')) return;
     const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
     if (!raw) return;
     try {
@@ -171,8 +174,15 @@ function LoginPageInner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
 
-    // Offline path: try to resume a cached valid session
+    // Offline path: try to resume a cached valid session (only within the same browser session)
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (!sessionStorage.getItem('nexora-session-active')) {
+        setError(isAr
+          ? 'أنت غير متصل بالإنترنت. للعمل دون إنترنت، سجّل الدخول مرة واحدة وأنت متصل مع تفعيل "تذكرني".'
+          : 'You\'re offline and no saved session was found. Sign in once while online with "Remember me" checked — after that you can work fully offline.');
+        setLoading(false);
+        return;
+      }
       const raw = localStorage.getItem('nexora-user') || sessionStorage.getItem('nexora-user');
       if (raw) {
         try {
